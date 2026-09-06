@@ -3,3 +3,6 @@ src/vaksinku-app.html
 src/VaksinKu-App.html
 __pycache__/
 *.dc.html
+
+# keluaran build sementara
+app/*.bundle.html
