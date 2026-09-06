@@ -108,7 +108,7 @@ PAKET_TRIPLE = {
 # ---------------------------------------------------------------- jadwal anak
 # Jadwal Vaksin Anak sesuai IDAI terbaru 2024
 JADWAL_ANAK = [
-    ("0 bulan", "Lahir", ["Hep B 0"]),
+    ("0 bulan", "Lahir", ["Hep B 0", "Polio 0"]),
     ("1 bulan", None, ["BCG"]),
     ("2 bulan", None, ["Combo DPT 1", "PCV 1", "Rotavirus 1"]),
     ("3 bulan", None, ["Combo DPT 2"]),

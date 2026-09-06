@@ -90,9 +90,9 @@ ini butuh koneksi internet (hasil akhirnya tidak).
 ## Catatan
 
 Pada katalog halaman "Jadwal Vaksin Anak", kotak **0 bulan (lahir)** memuat
-dua butir yang sama-sama tertulis "Hep B 0". Di aplikasi butir tersebut
-ditampilkan satu kali; mohon dikonfirmasi apakah butir kedua seharusnya
-"Polio 0" agar bisa diperbaiki.
+dua butir yang sama-sama tertulis "Hep B 0". Sesuai konfirmasi, butir kedua
+adalah **Polio 0** dan sudah diperbaiki di aplikasi — mohon ikut dikoreksi
+pada katalog cetak/digitalnya.
 
 Harga **Meningitis (Menivax)** untuk dokter spesialis tidak tercantum di
 katalog, sehingga pada tarif dokter spesialis ditampilkan sebagai
