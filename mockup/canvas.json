@@ -1,0 +1,17 @@
+{
+  "artboards": [
+    { "file": "Splash.dc.html", "x": 0, "y": 0, "w": 390, "h": 890, "title": "1. Splash" },
+    { "file": "Onboarding.dc.html", "x": 470, "y": 0, "w": 390, "h": 890, "title": "2. Onboarding" },
+    { "file": "Login.dc.html", "x": 940, "y": 0, "w": 390, "h": 890, "title": "3. Login" },
+    { "file": "Main.dc.html", "x": 1410, "y": 0, "w": 390, "h": 1560, "title": "4. Beranda" },
+    { "file": "Booking.dc.html", "x": 1880, "y": 0, "w": 390, "h": 2080, "title": "5. Booking Vaksinasi" },
+    { "file": "RekamMedis.dc.html", "x": 2350, "y": 0, "w": 390, "h": 1720, "title": "6. Rekam Medis" },
+    { "file": "Chat.dc.html", "x": 2820, "y": 0, "w": 390, "h": 890, "title": "7. Chat & Konsultasi" },
+    { "file": "Profile.dc.html", "x": 3290, "y": 0, "w": 390, "h": 1120, "title": "8. Profil" },
+    { "file": "Korporat.dc.html", "x": 3760, "y": 0, "w": 390, "h": 1380, "title": "9. Modul Korporat/Sekolah" }
+  ],
+  "annotations": [
+    { "id": "brief-note", "x": 0, "y": -190, "w": 900, "text": "VaksinKu — Alternatif Desain Mockup\nDiadaptasi dari pola UX imuni (booking & record platform) + konsep VaksinKu: layanan hybrid rumah/klinik, transparansi biaya di awal, kalender promo musiman, dan modul korporat/sekolah sebagai diferensiator. Palet & font mengikuti identitas logo VaksinKu (teal #56C3C7, magenta #D11972, Baloo 2 + Plus Jakarta Sans)." }
+  ],
+  "launch": { "view": "canvas" }
+}

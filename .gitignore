@@ -1,0 +1,5 @@
+# intermediate build output (font-CDN version)
+src/vaksinku-app.html
+src/VaksinKu-App.html
+__pycache__/
+*.dc.html
