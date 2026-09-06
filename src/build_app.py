@@ -3,6 +3,13 @@
 import sys, os, base64
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from gen import icon, ICONS
+from data_katalog import (
+    BRAND, PILAR, LAYANAN, TERMASUK, HARGA, HARGA_INTERNASIONAL, PAKET_TRIPLE,
+    JADWAL_ANAK, JADWAL_DEWASA, JADWAL_DEWASA_CATATAN, dosis,
+    JADWAL_PRANIKAH_VAKSIN, JADWAL_PRANIKAH_WAKTU, JADWAL_LANSIA,
+    VAKSIN_INTERNASIONAL_WAJIB, VAKSIN_INTERNASIONAL_TAMBAHAN,
+    DOKTER, KLINIK, ALUR_RESERVASI,
+)
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 
@@ -87,10 +94,12 @@ onboarding = f'''
     <div style="font-size:13px;color:var(--ink-3);margin-top:6px;line-height:1.55;">VaksinKu menyesuaikan rekomendasi &amp; paket berdasarkan kebutuhan keluarga Anda.</div>
     <div style="height:18px;"></div>
     <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;">
-      {need_card("family","Vaksin Anak","Imunisasi dasar &amp; lanjutan","anak",True)}
-      {need_card("user","Vaksin Dewasa","HPV, flu, tifoid, dll","dewasa")}
-      {need_card("plane","Umroh &amp; Haji","Meningitis wajib jamaah","umroh")}
-      {need_card("heart","Lansia","Influenza, pneumonia","lansia")}
+      {need_card("cake","Vaksin Anak","Usia 0–5 tahun, jadwal IDAI","anak",True)}
+      {need_card("family","Anak Sekolah","Usia 6–18 tahun","sekolah")}
+      {need_card("user","Vaksin Dewasa","Rekomendasi PAPDI","dewasa")}
+      {need_card("heart","Pranikah","HPV, MMR, tetanus","pranikah")}
+      {need_card("heart","Lansia","50 tahun ke atas","lansia")}
+      {need_card("plane","Internasional","Haji, umrah, studi (ICV)","internasional")}
     </div>
   </div>
   <div class="grow"></div>
@@ -111,7 +120,9 @@ login = f'''
 <div id="screen-login" class="screen">
 <div class="frame">
   <div class="col grow" style="padding:0 30px;align-items:center;justify-content:center;">
-    <div style="display:flex;flex-direction:column;align-items:center;gap:8px;margin-bottom:38px;">{logo_mark(46)}</div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:10px;margin-bottom:34px;">{logo_mark(46)}
+      <div style="font-size:11.5px;font-weight:700;color:var(--teal-dark);letter-spacing:.02em;text-align:center;">{BRAND["tagline"]}</div>
+    </div>
     <div class="disp" style="font-size:21px;font-weight:800;text-align:center;">Masuk untuk mulai vaksinasi</div>
     <div style="font-size:13px;color:var(--ink-3);text-align:center;margin-top:8px;line-height:1.6;">Kelola jadwal, rekam medis, dan keluarga Anda dalam satu akun VaksinKu.</div>
     <div style="height:34px;"></div>
@@ -122,7 +133,7 @@ login = f'''
     <div style="font-size:11.5px;color:var(--ink-4);text-align:center;margin-top:22px;line-height:1.6;">Dengan melanjutkan, Anda menyetujui Syarat &amp; Ketentuan serta Kebijakan Privasi VaksinKu.</div>
   </div>
   <div class="col" style="align-items:center;gap:6px;padding-bottom:26px;">
-    <div style="font-size:12.5px;color:var(--ink-3);">Butuh bantuan? WhatsApp <span style="color:var(--magenta-dark);font-weight:700;">[Nomor CS VaksinKu]</span></div>
+    <div style="font-size:12.5px;color:var(--ink-3);">Butuh bantuan? WhatsApp <span style="color:var(--magenta-dark);font-weight:700;">{BRAND["call_center"]}</span></div>
     <div style="font-size:11px;color:var(--ink-4);">Versi 1.0.0 (Prototipe)</div>
   </div>
 </div>
@@ -151,12 +162,12 @@ booking_card = f'''
   <div style="height:12px;"></div>
   <div class="row" style="gap:12px;align-items:center;">
     <div style="width:44px;height:44px;border-radius:50%;background:var(--teal-tint);display:flex;align-items:center;justify-content:center;font-weight:800;color:var(--teal-dark);font-family:'Baloo 2';">AP</div>
-    <div class="col" style="gap:2px;"><div style="font-weight:700;font-size:14.5px;">Vaksin Influenza — Nadia</div><div style="font-size:12px;color:var(--ink-3);">dr. Melati Anggraini, Sp.A</div></div>
+    <div class="col" style="gap:2px;"><div style="font-weight:700;font-size:14.5px;">Vaksin Influenza — Nadia</div><div style="font-size:12px;color:var(--ink-3);">dr. Dwi Fachri JH, Sp.A</div></div>
   </div>
   <div style="height:14px;"></div>
   <div class="row" style="gap:16px;">
     <div class="row" style="gap:6px;align-items:center;">{icon("calendar",15,"var(--teal-dark)")}<span style="font-size:12px;color:var(--ink-2);">Sab, 12 Sep • 10.00</span></div>
-    <div class="row" style="gap:6px;align-items:center;">{icon("house",15,"var(--teal-dark)")}<span style="font-size:12px;color:var(--ink-2);">Di Rumah</span></div>
+    <div class="row" style="gap:6px;align-items:center;">{icon("house",15,"var(--teal-dark)")}<span style="font-size:12px;color:var(--ink-2);">Home Care</span></div>
   </div>
   <div class="divider" style="margin:14px 0;"></div>
   <div class="row" style="gap:10px;">
@@ -182,16 +193,19 @@ growth_card = f'''
 </div>'''
 
 seasonal_banner = f'''
-<div style="border-radius:20px;padding:20px;background:linear-gradient(135deg,var(--teal-dark) 0%,var(--magenta-dark) 130%);color:#fff;position:relative;overflow:hidden;">
+<div class="tap" style="border-radius:20px;padding:20px;background:linear-gradient(135deg,var(--teal-dark) 0%,var(--magenta-dark) 130%);color:#fff;position:relative;overflow:hidden;" onclick="showScreen('paket')">
   <div style="position:absolute;right:-30px;top:-30px;width:130px;height:130px;border-radius:50%;background:rgba(255,255,255,.08);"></div>
   <div style="position:absolute;right:20px;bottom:-40px;width:90px;height:90px;border-radius:50%;background:rgba(255,255,255,.08);"></div>
   <div style="position:relative;">
-    <div class="disp" style="font-size:17px;font-weight:800;">Musim Umroh &amp; Haji</div>
-    <div style="font-size:12.5px;opacity:.9;margin-top:4px;line-height:1.5;">Vaksin Meningitis wajib jamaah, siap sebelum berangkat.</div>
-    <div class="row" style="gap:8px;margin-top:12px;flex-wrap:wrap;">
-      <span style="background:rgba(255,255,255,.18);border-radius:999px;padding:5px 11px;font-size:11px;font-weight:700;">Meningitis</span>
-      <span style="background:rgba(255,255,255,.18);border-radius:999px;padding:5px 11px;font-size:11px;font-weight:700;">Influenza</span>
-      <span style="background:rgba(255,255,255,.18);border-radius:999px;padding:5px 11px;font-size:11px;font-weight:700;">Tifoid</span>
+    <div class="row" style="align-items:center;gap:8px;">
+      <span style="background:#fff;color:var(--magenta-dark);border-radius:999px;padding:3px 10px;font-size:10px;font-weight:800;letter-spacing:.03em;">PROMO</span>
+      <span style="font-size:11px;opacity:.85;">Haji &amp; Umrah</span>
+    </div>
+    <div class="disp" style="font-size:17px;font-weight:800;margin-top:8px;">Paket Polio + Meningitis</div>
+    <div style="font-size:12.5px;opacity:.9;margin-top:2px;line-height:1.5;">Wajib bagi jamaah haji &amp; umrah. Sudah termasuk e-ICV.</div>
+    <div class="row" style="align-items:baseline;gap:10px;margin-top:12px;">
+      <span class="disp" style="font-size:22px;font-weight:800;">Rp620.000</span>
+      <span style="font-size:12.5px;opacity:.7;text-decoration:line-through;">Rp650.000</span>
     </div>
   </div>
 </div>'''
@@ -203,9 +217,41 @@ def info_col(ic, label, onclick):
     </div>'''
 
 info_row = f'''<div class="card row" style="gap:8px;">
-  {info_col("doc","Price List","toast(&#39;Price list akan tersedia di versi lengkap&#39;)")}
-  {info_col("gift","Paket Vaksinasi","toast(&#39;Paket vaksinasi akan tersedia di versi lengkap&#39;)")}
-  {info_col("search","Artikel Edukasi","toast(&#39;Artikel edukasi akan tersedia di versi lengkap&#39;)")}
+  {info_col("tag","Daftar Harga","showScreen(&#39;harga&#39;)")}
+  {info_col("calendar","Jadwal Vaksin","showScreen(&#39;jadwal&#39;)")}
+  {info_col("globe","Vaksin Internasional","showScreen(&#39;paket&#39;)")}
+</div>'''
+
+def layanan_col(ic, label, sub):
+    return f'''<div class="col tap" style="align-items:center;gap:8px;flex:1;" onclick="showScreen('booking')">
+      <div style="width:46px;height:46px;border-radius:14px;background:var(--magenta-tint);display:flex;align-items:center;justify-content:center;">{icon(ic,21,"var(--magenta-dark)")}</div>
+      <div style="font-size:11.5px;font-weight:700;text-align:center;line-height:1.3;">{label}</div>
+      <div style="font-size:10px;color:var(--ink-4);text-align:center;line-height:1.3;">{sub}</div>
+    </div>'''
+
+layanan_row = f'''<div class="card">
+  <div class="row" style="align-items:center;margin-bottom:14px;">
+    <div style="font-weight:700;font-size:14.5px;">Pilih cara vaksinasi</div>
+    <div class="grow"></div>
+    <span class="chip chip-teal">3 layanan</span>
+  </div>
+  <div class="row" style="gap:8px;">
+    {layanan_col("house","Home Care","Ke rumah")}
+    {layanan_col("pin","On Site Klinik","Di klinik")}
+    {layanan_col("building","On Site Corporate","Di kantor")}
+  </div>
+  <div class="divider" style="margin:14px 0 12px;"></div>
+  <div class="row" style="gap:6px;flex-wrap:wrap;">
+    <span style="font-size:11px;color:var(--ink-3);font-weight:600;">Sudah termasuk:</span>
+    {"".join(f'<span class="chip chip-teal" style="padding:4px 9px;font-size:10.5px;">{t}</span>' for t in TERMASUK)}
+  </div>
+</div>'''
+
+klinik_card = f'''<div class="card row tap" style="align-items:center;gap:14px;" onclick="showScreen('tentang')">
+  <div style="width:42px;height:42px;border-radius:12px;background:var(--teal-tint);display:flex;align-items:center;justify-content:center;flex-shrink:0;">{icon("pin",20,"var(--teal-dark)")}</div>
+  <div class="col grow" style="gap:2px;"><div style="font-weight:700;font-size:13.5px;">3 Klinik di Tanjungpinang</div>
+  <div style="font-size:11.5px;color:var(--ink-3);">Alrasha HCC · Klinik Utama Alrasha Ibumas · Ibumas</div></div>
+  {icon("chevron",16,"var(--ink-4)")}
 </div>'''
 
 corp_teaser = f'''
@@ -220,7 +266,7 @@ home = f'''
 <div class="frame">
   {home_header}
   <div class="col" style="padding:18px 20px 12px;gap:14px;">
-    {booking_card}{reminder_card}{growth_card}{seasonal_banner}{info_row}{corp_teaser}
+    {booking_card}{reminder_card}{info_row}{layanan_row}{seasonal_banner}{growth_card}{klinik_card}{corp_teaser}
   </div>
   <div class="grow"></div>
   {navbar("home")}
@@ -253,14 +299,30 @@ section2 = f'''<div class="section" style="padding-top:14px;padding-bottom:6px;"
 </div>'''
 
 section3 = f'''<div class="section" style="padding-top:14px;padding-bottom:6px;">
-  <span class="label">Lokasi Layanan<span class="req">*</span></span>
-  <div class="row" style="gap:10px;margin-bottom:10px;">
-    <div class="loc-opt tap choice active" onclick="pickChoice(this,'loc-opt')">{icon("house",20,"currentColor")}<span>Di Rumah</span></div>
-    <div class="loc-opt tap choice" onclick="pickChoice(this,'loc-opt')">{icon("pin",20,"currentColor")}<span>Klinik Terdekat</span></div>
+  <span class="label">Layanan Vaksinasi<span class="req">*</span></span>
+  <div class="row" style="gap:8px;margin-bottom:10px;">
+    <div class="loc-opt tap choice active" onclick="pickChoice(this,'loc-opt')">{icon("house",20,"currentColor")}<span>Home Care</span></div>
+    <div class="loc-opt tap choice" onclick="pickChoice(this,'loc-opt')">{icon("pin",20,"currentColor")}<span>On Site Klinik</span></div>
+    <div class="loc-opt tap choice" onclick="pickChoice(this,'loc-opt')">{icon("building",20,"currentColor")}<span>On Site Corporate</span></div>
   </div>
   <div class="row" style="align-items:center;gap:10px;background:var(--teal-tint);border-radius:14px;padding:12px 14px;">
-    {icon("pin",16,"var(--teal-dark)")}<span class="grow" style="font-size:12.5px;color:var(--ink-2);">Jl. Gurame No. 5, Lengkong, Kota Bandung</span>
+    {icon("pin",16,"var(--teal-dark)")}<span class="grow" style="font-size:12.5px;color:var(--ink-2);">Jl. Hang Lekir, Batu 10, Tanjungpinang</span>
     <span class="tap" style="font-size:12px;font-weight:700;color:var(--magenta-dark);" onclick="toast('Ubah alamat akan tersedia di versi lengkap')">Ubah</span>
+  </div>
+</div>'''
+
+section_dokter = f'''<div class="section" style="padding-top:14px;padding-bottom:6px;">
+  <span class="label">Pilih Dokter<span class="req">*</span></span>
+  <span class="hint">Harga vaksin menyesuaikan pilihan dokter. Semua vaksinator bersertifikat.</span>
+  <div class="row" style="gap:10px;">
+    <div class="dok-opt tap choice active" onclick="pickDokter(this,400000)">
+      <div class="row" style="align-items:center;gap:8px;"><span class="dok-dot"></span><span style="font-weight:700;font-size:13px;">Dokter Umum</span></div>
+      <div style="font-size:11.5px;color:var(--ink-3);margin-top:6px;">Rp400.000</div>
+    </div>
+    <div class="dok-opt tap choice" onclick="pickDokter(this,450000)">
+      <div class="row" style="align-items:center;gap:8px;"><span class="dok-dot"></span><span style="font-weight:700;font-size:13px;">Dokter Spesialis</span></div>
+      <div style="font-size:11.5px;color:var(--ink-3);margin-top:6px;">Rp450.000</div>
+    </div>
   </div>
 </div>'''
 
@@ -270,7 +332,7 @@ section4 = f'''<div class="section" style="padding-top:14px;padding-bottom:6px;"
   <div class="col" style="gap:10px;">
     <div class="row tap" style="align-items:center;gap:12px;border:1.4px solid var(--line);border-radius:14px;padding:12px 14px;" onclick="toast('Detail pasien akan tersedia di versi lengkap')">
       <div style="width:34px;height:34px;border-radius:50%;background:var(--teal-tint);display:flex;align-items:center;justify-content:center;font-weight:800;color:var(--teal-dark);font-size:12px;font-family:'Baloo 2';">N</div>
-      <div class="col grow" style="gap:1px;"><div style="font-weight:700;font-size:13.5px;">Nadia Perdana</div><div style="font-size:11.5px;color:var(--ink-3);">5 tahun · Vaksin Influenza</div></div>
+      <div class="col grow" style="gap:1px;"><div style="font-weight:700;font-size:13.5px;">Nadia Perdana</div><div style="font-size:11.5px;color:var(--ink-3);">5 tahun · Influenza (Vaxigrip Tetra)</div></div>
       {icon("chevron",16,"var(--ink-4)")}
     </div>
     <div class="tap" style="border:1.4px dashed var(--teal);border-radius:14px;padding:12px;display:flex;align-items:center;justify-content:center;gap:8px;color:var(--teal-dark);font-weight:700;font-size:13px;" onclick="toast('Tambah pasien akan tersedia di versi lengkap')">{icon("plus",16,"var(--teal-dark)")} Tambah pasien</div>
@@ -301,12 +363,13 @@ section5 = f'''<div class="section" style="padding-top:14px;padding-bottom:6px;"
 
 summary = f'''<div class="section" style="padding-top:14px;">
   <div class="card" style="border:1.4px solid var(--teal);background:var(--teal-tint);">
-    <div class="row" style="align-items:center;gap:7px;margin-bottom:12px;">{icon("check-c",16,"var(--teal-dark)")}<span style="font-size:12px;font-weight:700;color:var(--teal-dark);">Transparan, tanpa biaya tersembunyi</span></div>
-    <div class="row" style="justify-content:space-between;margin-bottom:8px;"><span style="font-size:13px;color:var(--ink-2);">Vaksin Influenza x1</span><span style="font-size:13px;color:var(--ink);">Rp350.000</span></div>
-    <div class="row" style="justify-content:space-between;margin-bottom:8px;"><span style="font-size:13px;color:var(--ink-2);">Biaya layanan ke rumah</span><span style="font-size:13px;color:var(--ink);">Rp75.000</span></div>
+    <div class="row" style="align-items:center;gap:7px;margin-bottom:12px;">{icon("check-c",16,"var(--teal-dark)")}<span style="font-size:12px;font-weight:700;color:var(--teal-dark);">Price list terbuka, tanpa biaya tersembunyi</span></div>
+    <div class="row" style="justify-content:space-between;margin-bottom:8px;"><span style="font-size:13px;color:var(--ink-2);">Influenza 4 strain — Vaxigrip Tetra</span><span class="est-line" style="font-size:13px;color:var(--ink);">Rp400.000</span></div>
+    <div class="row" style="justify-content:space-between;margin-bottom:8px;"><span style="font-size:13px;color:var(--ink-2);">Jasa dokter &amp; tindakan</span><span style="font-size:13px;color:var(--teal-dark);font-weight:700;">Termasuk</span></div>
+    <div class="row" style="justify-content:space-between;margin-bottom:8px;"><span style="font-size:13px;color:var(--ink-2);">Bahan medis habis pakai</span><span style="font-size:13px;color:var(--teal-dark);font-weight:700;">Termasuk</span></div>
     <div class="divider" style="margin:10px 0;"></div>
-    <div class="row" style="justify-content:space-between;"><span class="disp" style="font-weight:800;font-size:14px;">Total Estimasi</span><span class="disp" style="font-weight:800;font-size:15px;color:var(--magenta-dark);">Rp425.000</span></div>
-    <div style="font-size:11px;color:var(--ink-3);margin-top:8px;line-height:1.5;">Estimasi dapat menyesuaikan hasil skrining kesehatan di lokasi.</div>
+    <div class="row" style="justify-content:space-between;"><span class="disp" style="font-weight:800;font-size:14px;">Total Estimasi</span><span class="disp est-total" style="font-weight:800;font-size:15px;color:var(--magenta-dark);">Rp400.000</span></div>
+    <div style="font-size:11px;color:var(--ink-3);margin-top:8px;line-height:1.5;">Harga sesuai price list VaksinKu. Biaya kunjungan Home Care &amp; On Site dikonfirmasi saat reservasi.</div>
   </div>
 </div>'''
 
@@ -320,14 +383,14 @@ payment = f'''<div class="section" style="padding-top:2px;">
 </div>'''
 
 booking_footer = f'''<div style="position:sticky;bottom:0;background:#fff;border-top:1px solid var(--line);padding:14px 20px 20px;display:flex;align-items:center;gap:14px;">
-  <div class="col" style="gap:1px;"><div style="font-size:10.5px;color:var(--ink-4);">Total estimasi</div><div class="disp" style="font-weight:800;font-size:16px;color:var(--magenta-dark);">Rp425.000</div></div>
+  <div class="col" style="gap:1px;"><div style="font-size:10.5px;color:var(--ink-4);">Total estimasi</div><div class="disp est-total" style="font-weight:800;font-size:16px;color:var(--magenta-dark);">Rp400.000</div></div>
   <button class="btn btn-primary grow tap" onclick="confirmBooking()">Konfirmasi Booking</button>
 </div>'''
 
 booking = f'''
 <div id="screen-booking" class="screen">
 <div class="frame">
-  {booking_hdr}{section1}{section2}{section3}{section4}{section5}{summary}{payment}
+  {booking_hdr}{section1}{section2}{section3}{section_dokter}{section4}{section5}{summary}{payment}
   <div style="height:8px;"></div>
   {booking_footer}
 </div>
@@ -412,9 +475,9 @@ def history_row(date, title, sub):
 
 history_card = f'''<div class="card">
   <div style="font-weight:700;font-size:14.5px;margin-bottom:4px;">Riwayat Vaksinasi</div><div class="divider"></div>
-  {history_row("2 Sep 2026","Vaksin Varicella (dosis 1)","dr. Melati Anggraini · Di Rumah")}<div class="divider"></div>
-  {history_row("14 Jul 2026","Vaksin Tifoid","dr. Melati Anggraini · Klinik Sunter")}<div class="divider"></div>
-  {history_row("2 Mar 2026","Vaksin DPT-HB-Hib 3","dr. Bagas Wirawan · Di Rumah")}
+  {history_row("2 Sep 2026","Varicella 1 (Varivax)","dr. Dwi Fachri JH, Sp.A · Home Care")}<div class="divider"></div>
+  {history_row("14 Jul 2026","Tifoid (Typhim Vi)","dr. Dwi Fachri JH, Sp.A · Klinik Utama Alrasha Ibumas")}<div class="divider"></div>
+  {history_row("2 Mar 2026","Combo DPT 3 (Pentabio)","Tim Dokter Umum · Klinik Alrasha HCC")}
 </div>'''
 
 rekammedis = f'''
@@ -447,9 +510,10 @@ def chat_row(initials, bg, name, preview, time, badge=None, unread=False, icon_n
       <div class="col" style="align-items:flex-end;gap:6px;"><span style="font-size:10.5px;color:var(--ink-4);">{time}</span>{dot}</div>
     </div>'''
 
-chat_rows = (chat_row("M", "var(--teal)", "dr. Melati Anggraini, Sp.A", "Baik, silakan lanjutkan jadwal vaksin minggu depan ya Bu.", "09.42", unread=True)
-    + chat_row(None, "var(--magenta)", "CS VaksinKu", "Halo! Ada yang bisa dibantu terkait booking Anda?", "Kemarin", badge="24 JAM", icon_name="whatsapp")
-    + chat_row("B", "#C7CBCF", "dr. Bagas Wirawan, Sp.PD", "Terima kasih atas kunjungannya!", "2 hari lalu"))
+chat_rows = (chat_row("DF", "var(--teal)", DOKTER[0][0], "Baik, jadwal vaksin Influenza Nadia kita lanjutkan minggu depan ya Bu.", "09.42", unread=True)
+    + chat_row(None, "var(--magenta)", f"CS VaksinKu · {BRAND['call_center']}", "Halo! Ada yang bisa dibantu terkait reservasi Anda?", "Kemarin", badge="24 JAM", icon_name="whatsapp")
+    + chat_row("AP", "#8FB8BC", DOKTER[1][0], "Untuk vaksin meningitis umrah, idealnya 4 minggu sebelum berangkat.", "2 hari lalu")
+    + chat_row("LA", "#C7CBCF", DOKTER[2][0], "Terima kasih atas kunjungannya!", "5 hari lalu"))
 
 chat = f'''
 <div id="screen-chat" class="screen">
@@ -497,12 +561,14 @@ def prow(ic, label, sub=None, mag=False, onclick="toast('Fitur ini akan tersedia
 
 menu_card = f'''<div class="card" style="padding:8px 16px;">
   {prow("doc","Rekam Medis",onclick="showScreen('rekammedis')")}<div class="divider"></div>
-  {prow("family","Daftar Pasien","Keluarga & anggota terdaftar")}<div class="divider"></div>
-  {prow("pin","Daftar Alamat")}<div class="divider"></div>
-  {prow("chart","Riwayat Transaksi & Invoice")}<div class="divider"></div>
+  {prow("family","Daftar Pasien","Keluarga &amp; anggota terdaftar")}<div class="divider"></div>
+  {prow("tag","Daftar Harga Vaksinasi","Price list terbuka",onclick="showScreen('harga')")}<div class="divider"></div>
+  {prow("calendar","Jadwal Vaksin","Anak, dewasa, pranikah, lansia",onclick="showScreen('jadwal')")}<div class="divider"></div>
+  {prow("globe","Vaksin Internasional","Haji, umrah, studi &amp; e-ICV",onclick="showScreen('paket')")}<div class="divider"></div>
+  {prow("pin","Lokasi Klinik","3 klinik di Tanjungpinang",onclick="showScreen('tentang')")}<div class="divider"></div>
+  {prow("chart","Riwayat Transaksi &amp; Invoice")}<div class="divider"></div>
   {prow("building","Mitra Institusi","Mode Admin Sekolah / Kantor",mag=True,onclick="showScreen('korporat')")}<div class="divider"></div>
-  {prow("doc","Syarat & Ketentuan")}<div class="divider"></div>
-  {prow("whatsapp","Bantuan","WhatsApp CS VaksinKu")}
+  {prow("whatsapp","Bantuan","Call Center " + BRAND["call_center"])}
 </div>'''
 
 profile = f'''
@@ -568,11 +634,350 @@ korporat = f'''
 </div>
 '''
 
+# ---------------------------------------------------------------- DAFTAR HARGA
+def harga_group(nama, baris):
+    rows = ""
+    for _, _, sediaan, merk, spes, umum in baris:
+        sub = f'<div style="font-size:10.5px;color:var(--ink-4);margin-top:1px;">{merk}</div>' if merk != sediaan else ""
+        spes_html = ('<span class="p-spes" style="color:var(--ink-4);">Hubungi CS</span>' if spes == "—"
+                     else f'<span class="p-spes">Rp{spes}</span>')
+        rows += f'''<div class="row" style="align-items:flex-start;gap:10px;padding:10px 0;border-top:1px solid var(--line);">
+          <div class="col grow" style="min-width:0;"><div style="font-size:12.5px;font-weight:600;">{sediaan}</div>{sub}</div>
+          <div class="disp" style="font-size:13px;font-weight:800;color:var(--magenta-dark);white-space:nowrap;">
+            <span class="p-umum">Rp{umum}</span>{spes_html}
+          </div>
+        </div>'''
+    return f'''<div class="card" style="padding:16px 18px;">
+      <div class="row" style="align-items:center;gap:8px;">
+        <div style="width:30px;height:30px;border-radius:9px;background:var(--teal-tint);display:flex;align-items:center;justify-content:center;flex-shrink:0;">{icon("syringe",16,"var(--teal-dark)")}</div>
+        <div style="font-weight:700;font-size:14px;">{nama}</div>
+      </div>
+      <div style="margin-top:6px;">{rows}</div>
+    </div>'''
+
+_urut, _grup = [], {}
+for row in HARGA:
+    nama = row[1]
+    if nama not in _grup:
+        _grup[nama] = []
+        _urut.append(nama)
+    _grup[nama].append(row)
+harga_groups = "".join(harga_group(n, _grup[n]) for n in _urut)
+
+harga = f'''
+<div id="screen-harga" class="screen">
+<div class="frame">
+  <div class="hdr-bar"><span class="tap" onclick="showScreen('home')">{BACK_ICON}</span><div class="disp">Daftar Harga Vaksinasi</div></div>
+  <div style="padding:16px 20px 0;">
+    <div class="row" style="align-items:center;gap:8px;background:var(--teal-tint);border-radius:14px;padding:12px 14px;">
+      {icon("check-c",16,"var(--teal-dark)")}
+      <span style="font-size:11.5px;color:var(--teal-dark);font-weight:600;line-height:1.45;">Harga sudah termasuk jasa dokter, vaksin, bahan habis pakai &amp; administrasi.</span>
+    </div>
+  </div>
+  <div style="padding:14px 20px 0;position:sticky;top:0;background:var(--bg);z-index:5;">
+    <div class="row" style="gap:8px;">
+      <div class="tarif-opt tap choice active" onclick="setTarif(this,'umum')">Dokter Umum</div>
+      <div class="tarif-opt tap choice" onclick="setTarif(this,'spes')">Dokter Spesialis</div>
+    </div>
+  </div>
+  <div id="harga-wrap" class="umum col" style="padding:14px 20px 24px;gap:12px;">
+    {harga_groups}
+    <div style="font-size:11px;color:var(--ink-4);line-height:1.5;padding:0 4px;">Harga dapat berubah sewaktu-waktu. Konfirmasi terakhir saat reservasi melalui call center {BRAND["call_center"]}.</div>
+  </div>
+</div>
+</div>
+'''
+
+# ---------------------------------------------------------------- JADWAL VAKSIN
+def anak_step(usia, badge, isi, last=False):
+    badge_html = f'<span class="chip chip-mag" style="padding:3px 9px;font-size:9.5px;">{badge}</span>' if badge else ""
+    line = "" if last else '<div style="position:absolute;left:7px;top:22px;bottom:-14px;width:2px;background:var(--line);"></div>'
+    items = "".join(f'<div style="font-size:12px;color:var(--ink-2);line-height:1.6;">{i}</div>' for i in isi)
+    return f'''<div style="position:relative;padding-left:26px;padding-bottom:14px;">
+      {line}
+      <div style="position:absolute;left:0;top:5px;width:16px;height:16px;border-radius:50%;background:#fff;border:3px solid var(--teal);"></div>
+      <div class="row" style="align-items:center;gap:8px;margin-bottom:4px;"><span class="disp" style="font-weight:800;font-size:13.5px;">{usia}</span>{badge_html}</div>
+      {items}
+    </div>'''
+
+anak_steps = "".join(
+    anak_step(u, b, i, last=(idx == len(JADWAL_ANAK) - 1))
+    for idx, (u, b, i) in enumerate(JADWAL_ANAK)
+)
+
+def dewasa_group(usia, keys, active=False):
+    rows = ""
+    for k in keys:
+        nama, ds = dosis(k)
+        rows += f'''<div class="row" style="align-items:flex-start;gap:12px;padding:9px 0;border-top:1px solid var(--line);">
+          <div style="font-size:12.5px;font-weight:700;width:120px;flex-shrink:0;">{nama}</div>
+          <div style="font-size:11.5px;color:var(--ink-3);line-height:1.5;">{ds}</div>
+        </div>'''
+    cls = "usia-pane" + (" active" if active else "")
+    return f'<div class="{cls}" data-usia="{usia}"><div class="card" style="padding:14px 18px;">{rows}</div></div>'
+
+dewasa_tabs = "".join(
+    f'<div class="usia-opt tap choice{" active" if i == 0 else ""}" onclick="pickUsia(this,{i})">{u}</div>'
+    for i, (u, _) in enumerate(JADWAL_DEWASA)
+)
+dewasa_panes = "".join(dewasa_group(u, k, active=(i == 0)) for i, (u, k) in enumerate(JADWAL_DEWASA))
+
+pranikah_cards = "".join(
+    f'''<div class="row" style="align-items:flex-start;gap:12px;padding:11px 0;border-top:1px solid var(--line);">
+      <div style="width:34px;height:34px;border-radius:10px;background:var(--magenta-tint);display:flex;align-items:center;justify-content:center;flex-shrink:0;">{icon("syringe",16,"var(--magenta-dark)")}</div>
+      <div class="col grow" style="gap:2px;"><div style="font-weight:700;font-size:13px;">{n}</div>
+      <div style="font-size:11.5px;color:var(--ink-3);line-height:1.5;">{d} · {ket}</div></div>
+    </div>''' for n, d, ket in JADWAL_PRANIKAH_VAKSIN
+)
+pranikah_timeline = "".join(
+    f'''<div class="row" style="align-items:flex-start;gap:12px;padding:10px 0;border-top:1px solid var(--line);">
+      <div class="chip chip-mag" style="width:82px;justify-content:center;flex-shrink:0;">{w}</div>
+      <div class="col" style="gap:2px;">{"".join(f'<div style="font-size:12px;color:var(--ink-2);line-height:1.55;">{i}</div>' for i in isi)}</div>
+    </div>''' for w, isi in JADWAL_PRANIKAH_WAKTU
+)
+
+lansia_cards = "".join(
+    f'''<div class="card">
+      <div class="row" style="align-items:center;gap:10px;">{icon("check-c",18,"var(--green)")}<div style="font-weight:700;font-size:14px;">{n}</div></div>
+      <div class="chip chip-teal" style="margin-top:10px;">{d}</div>
+      <div style="font-size:12px;color:var(--ink-2);line-height:1.6;margin-top:10px;">{ket}</div>
+    </div>''' for n, d, ket in JADWAL_LANSIA
+)
+
+jadwal = f'''
+<div id="screen-jadwal" class="screen">
+<div class="frame">
+  <div class="hdr-bar"><span class="tap" onclick="showScreen('home')">{BACK_ICON}</span><div class="disp">Jadwal Vaksin</div></div>
+  <div class="row" style="gap:8px;padding:16px 20px 6px;overflow-x:auto;">
+    <div class="jad-opt tap choice active" onclick="pickJadwal(this,'anak')">Anak</div>
+    <div class="jad-opt tap choice" onclick="pickJadwal(this,'dewasa')">Dewasa</div>
+    <div class="jad-opt tap choice" onclick="pickJadwal(this,'pranikah')">Pranikah</div>
+    <div class="jad-opt tap choice" onclick="pickJadwal(this,'lansia')">Lansia</div>
+  </div>
+
+  <div class="jad-pane active" data-jad="anak">
+    <div class="col" style="padding:12px 20px 24px;gap:12px;">
+      <div style="font-size:12px;color:var(--ink-3);line-height:1.55;">Sesuai jadwal imunisasi anak <b>IDAI terbaru 2024</b>. Ceklis otomatis mengikuti rekam medis pasien.</div>
+      <div class="card">{anak_steps}</div>
+    </div>
+  </div>
+
+  <div class="jad-pane" data-jad="dewasa">
+    <div class="col" style="padding:12px 20px 24px;gap:12px;">
+      <div style="font-size:12px;color:var(--ink-3);line-height:1.55;">Sesuai rekomendasi <b>PAPDI 2025</b> — Perhimpunan Dokter Spesialis Penyakit Dalam Indonesia.</div>
+      <div class="row" style="gap:8px;overflow-x:auto;padding-bottom:2px;">{dewasa_tabs}</div>
+      {dewasa_panes}
+      <div class="row" style="align-items:flex-start;gap:8px;background:var(--amber-tint);border-radius:12px;padding:11px 13px;">
+        {icon("bell",15,"#9C6B0E")}<span style="font-size:11px;color:#8A6A21;line-height:1.5;">{JADWAL_DEWASA_CATATAN}</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="jad-pane" data-jad="pranikah">
+    <div class="col" style="padding:12px 20px 24px;gap:12px;">
+      <div class="card" style="padding:14px 18px;">
+        <div style="font-weight:700;font-size:14px;">Vaksin pranikah terdiri dari</div>
+        {pranikah_cards}
+      </div>
+      <div class="card" style="padding:14px 18px;">
+        <div style="font-weight:700;font-size:14px;">Jadwal pemberian</div>
+        <div style="font-size:11.5px;color:var(--ink-4);margin-top:2px;margin-bottom:4px;">Dihitung mundur dari tanggal pernikahan.</div>
+        {pranikah_timeline}
+      </div>
+      <div style="background:var(--magenta);color:#fff;border-radius:14px;padding:13px 16px;text-align:center;font-weight:700;font-size:13px;font-family:'Baloo 2';">Lengkapi vaksin pranikah sebelum menikah!</div>
+    </div>
+  </div>
+
+  <div class="jad-pane" data-jad="lansia">
+    <div class="col" style="padding:12px 20px 24px;gap:12px;">
+      <div style="font-size:12px;color:var(--ink-3);line-height:1.55;">Lansia usia <b>50 tahun ke atas</b> juga membutuhkan vaksinasi.</div>
+      {lansia_cards}
+      <div style="background:var(--magenta-tint);border-radius:14px;padding:13px 16px;text-align:center;font-weight:700;font-size:13px;color:var(--magenta-dark);font-family:'Baloo 2';">Lindungi orang tua yang disayangi dengan vaksin!</div>
+    </div>
+  </div>
+</div>
+</div>
+'''
+
+# ---------------------------------------------------------------- VAKSIN INTERNASIONAL
+intl_wajib = "".join(
+    f'''<div class="row" style="align-items:flex-start;gap:12px;padding:12px 0;border-top:1px solid var(--line);">
+      <div style="width:34px;height:34px;border-radius:10px;background:var(--teal-tint);display:flex;align-items:center;justify-content:center;flex-shrink:0;">{icon("shield",17,"var(--teal-dark)")}</div>
+      <div class="col grow" style="gap:3px;"><div style="font-weight:700;font-size:13px;">{n}</div>
+      <div style="font-size:11.5px;color:var(--ink-3);line-height:1.55;">{k}</div></div>
+    </div>''' for n, k in VAKSIN_INTERNASIONAL_WAJIB
+)
+intl_tambahan = "".join(
+    f'''<div class="row" style="align-items:flex-start;gap:12px;padding:12px 0;border-top:1px solid var(--line);">
+      <div style="width:34px;height:34px;border-radius:10px;background:var(--magenta-tint);display:flex;align-items:center;justify-content:center;flex-shrink:0;">{icon("plus",17,"var(--magenta-dark)")}</div>
+      <div class="col grow" style="gap:3px;"><div style="font-weight:700;font-size:13px;">{n}</div>
+      <div style="font-size:11.5px;color:var(--ink-3);line-height:1.55;">{k}</div></div>
+    </div>''' for n, k in VAKSIN_INTERNASIONAL_TAMBAHAN
+)
+
+def intl_price(nama, harga, coret):
+    coret_html = f'<div style="font-size:11px;color:var(--ink-4);text-decoration:line-through;">Rp{coret}</div>' if coret else ""
+    promo = '<span class="chip chip-mag" style="padding:3px 8px;font-size:9.5px;">PROMO</span>' if coret else ""
+    return f'''<div class="card row" style="align-items:center;gap:12px;padding:15px 18px;">
+      <div class="col grow" style="gap:3px;"><div class="row" style="align-items:center;gap:7px;"><span style="font-weight:700;font-size:13px;">{nama}</span>{promo}</div>{coret_html}</div>
+      <div class="disp" style="font-size:17px;font-weight:800;color:var(--magenta-dark);white-space:nowrap;">Rp{harga}</div>
+    </div>'''
+
+paket_triple = f'''<div class="card" style="border:1.6px solid var(--magenta);padding:18px;">
+  <div class="row" style="align-items:center;gap:8px;">
+    <div class="disp" style="font-weight:800;font-size:15px;">{PAKET_TRIPLE["nama"]}</div>
+    <span class="chip chip-mag" style="padding:3px 8px;font-size:9.5px;">HEMAT</span>
+  </div>
+  <div class="col" style="gap:7px;margin-top:12px;">
+    {"".join(f'<div class="row" style="align-items:center;gap:8px;">{icon("check-c",15,"var(--teal-dark)")}<span style="font-size:12.5px;color:var(--ink-2);">{i}</span></div>' for i in PAKET_TRIPLE["isi"])}
+  </div>
+  <div class="divider" style="margin:14px 0;"></div>
+  <div class="row" style="align-items:baseline;gap:10px;">
+    <span class="disp" style="font-size:22px;font-weight:800;color:var(--magenta-dark);">Rp{PAKET_TRIPLE["harga"]}</span>
+    <span style="font-size:12.5px;color:var(--ink-4);text-decoration:line-through;">Rp{PAKET_TRIPLE["coret"]}</span>
+  </div>
+</div>'''
+
+paket = f'''
+<div id="screen-paket" class="screen">
+<div class="frame">
+  <div class="hdr-bar"><span class="tap" onclick="showScreen('home')">{BACK_ICON}</span><div class="disp">Vaksin Internasional</div></div>
+  <div class="col" style="padding:16px 20px 24px;gap:14px;">
+    <div style="font-size:12px;color:var(--ink-3);line-height:1.6;">Bagi jamaah <b>haji &amp; umrah</b> wajib vaksin Meningitis dan Polio. WHO merekomendasikan vaksinasi tambahan Influenza dan Pneumonia.</div>
+
+    <div class="card" style="padding:14px 18px;">
+      <div class="row" style="align-items:center;gap:8px;"><div style="font-weight:700;font-size:14px;">Vaksin wajib</div><span class="chip chip-teal">Regulasi Arab Saudi</span></div>
+      {intl_wajib}
+    </div>
+
+    <div class="card" style="padding:14px 18px;">
+      <div class="row" style="align-items:center;gap:8px;"><div style="font-weight:700;font-size:14px;">Vaksin tambahan</div><span class="chip chip-amber">Rekomendasi WHO</span></div>
+      {intl_tambahan}
+    </div>
+
+    <div class="disp" style="font-size:15px;font-weight:800;padding-top:4px;">Harga vaksinasi internasional</div>
+    {"".join(intl_price(n, h, c) for n, h, c in HARGA_INTERNASIONAL)}
+    {paket_triple}
+
+    <div class="card row" style="align-items:center;gap:14px;background:var(--teal-tint);border-color:transparent;">
+      <div style="width:42px;height:42px;border-radius:12px;background:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;">{icon("qr",20,"var(--teal-dark)")}</div>
+      <div class="col grow" style="gap:2px;"><div style="font-weight:700;font-size:13.5px;">Buku Kuning Elektronik (e-ICV)</div>
+      <div style="font-size:11.5px;color:var(--ink-2);">Diterbitkan langsung di klinik setelah vaksinasi.</div></div>
+    </div>
+
+    <button class="btn btn-primary tap" onclick="showScreen('booking')">{icon("plus",16,"#fff")} Booking Vaksin Internasional</button>
+  </div>
+</div>
+</div>
+'''
+
+# ---------------------------------------------------------------- TENTANG & LOKASI
+pilar_cards = "".join(
+    f'''<div class="card">
+      <div class="row" style="align-items:center;gap:10px;">
+        <div style="width:34px;height:34px;border-radius:10px;background:var(--teal-tint);display:flex;align-items:center;justify-content:center;">{icon(ic,18,"var(--teal-dark)")}</div>
+        <div class="disp" style="font-weight:800;font-size:15px;">{judul}</div>
+      </div>
+      <div class="col" style="gap:8px;margin-top:12px;">
+        {"".join(f'<div class="row" style="align-items:flex-start;gap:8px;">{icon("check-c",14,"var(--teal-dark)")}<span style="font-size:12px;color:var(--ink-2);line-height:1.55;">{p}</span></div>' for p in poin)}
+      </div>
+    </div>''' for ic, judul, poin in PILAR
+)
+
+layanan_cards = "".join(
+    f'''<div class="card">
+      <div class="row" style="align-items:center;gap:10px;">
+        <div style="width:36px;height:36px;border-radius:11px;background:var(--magenta-tint);display:flex;align-items:center;justify-content:center;">{icon(ic,18,"var(--magenta-dark)")}</div>
+        <div class="col"><div class="disp" style="font-weight:800;font-size:14.5px;">{nama}</div>
+        <div style="font-size:11.5px;color:var(--ink-3);">{ringkas}</div></div>
+      </div>
+      <div style="font-size:12px;color:var(--ink-2);line-height:1.6;margin-top:11px;">{detail}</div>
+      <div class="chip chip-teal" style="margin-top:10px;">{tagline}</div>
+    </div>''' for ic, nama, ringkas, detail, tagline in LAYANAN
+)
+
+alur_steps = "".join(
+    f'''<div class="row" style="align-items:flex-start;gap:12px;padding:9px 0;">
+      <div class="disp" style="width:24px;height:24px;border-radius:50%;background:var(--teal);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0;">{i+1}</div>
+      <span style="font-size:12px;color:var(--ink-2);line-height:1.55;padding-top:3px;">{s}</span>
+    </div>''' for i, s in enumerate(ALUR_RESERVASI)
+)
+
+dokter_rows = "".join(
+    f'''<div class="row" style="align-items:center;gap:12px;padding:11px 0;border-top:1px solid var(--line);">
+      <div style="width:40px;height:40px;border-radius:50%;background:var(--teal-tint);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <span class="disp" style="font-weight:800;font-size:13px;color:var(--teal-dark);">{ini}</span></div>
+      <div class="col grow" style="gap:1px;"><div style="font-weight:700;font-size:13px;">{nama}</div>
+      <div style="font-size:11.5px;color:var(--ink-3);">{spes}</div></div>
+    </div>''' for nama, spes, ini in DOKTER
+)
+
+klinik_rows = "".join(
+    f'''<div class="row tap" style="align-items:flex-start;gap:12px;padding:12px 0;border-top:1px solid var(--line);" onclick="toast('Peta lokasi akan tersedia di versi lengkap')">
+      <div style="width:34px;height:34px;border-radius:10px;background:var(--magenta-tint);display:flex;align-items:center;justify-content:center;flex-shrink:0;">{icon("pin",16,"var(--magenta-dark)")}</div>
+      <div class="col grow" style="gap:2px;"><div style="font-weight:700;font-size:13px;">{nama}</div>
+      <div style="font-size:11.5px;color:var(--ink-3);line-height:1.5;">{alamat}</div></div>
+      {icon("chevron",15,"var(--ink-4)")}
+    </div>''' for nama, alamat in KLINIK
+)
+
+tentang = f'''
+<div id="screen-tentang" class="screen">
+<div class="frame">
+  <div class="hdr-bar"><span class="tap" onclick="showScreen('home')">{BACK_ICON}</span><div class="disp">Tentang &amp; Lokasi</div></div>
+  <div class="col" style="padding:18px 20px 24px;gap:14px;">
+    <div class="col" style="align-items:center;gap:10px;padding:6px 0 4px;">
+      {logo_mark(30)}
+      <div style="font-size:12px;font-weight:700;color:var(--teal-dark);text-align:center;">{BRAND["tagline"]}</div>
+      <div style="font-size:11.5px;color:var(--ink-3);text-align:center;line-height:1.6;">Layanan vaksinasi dari {BRAND["group"]} untuk segala usia.</div>
+    </div>
+
+    {pilar_cards}
+
+    <div class="disp" style="font-size:15px;font-weight:800;padding-top:6px;">Kemudahan dari VaksinKu</div>
+    {layanan_cards}
+
+    <div class="card" style="padding:14px 18px;">
+      <div style="font-weight:700;font-size:14px;margin-bottom:2px;">Alur reservasi</div>
+      {alur_steps}
+    </div>
+
+    <div class="card" style="padding:14px 18px;">
+      <div style="font-weight:700;font-size:14px;">Dokter vaksinasi</div>
+      <div style="font-size:11.5px;color:var(--ink-4);margin-top:2px;margin-bottom:2px;">{BRAND["group"]}</div>
+      {dokter_rows}
+    </div>
+
+    <div class="card" style="padding:14px 18px;">
+      <div style="font-weight:700;font-size:14px;">Lokasi klinik</div>
+      <div style="font-size:11.5px;color:var(--ink-4);margin-top:2px;margin-bottom:2px;">Tanjungpinang, Kepulauan Riau</div>
+      {klinik_rows}
+    </div>
+
+    <div class="card" style="background:var(--teal-dark);border-color:transparent;color:#fff;">
+      <div class="row" style="align-items:center;gap:12px;">
+        <div style="width:42px;height:42px;border-radius:50%;background:rgba(255,255,255,.16);display:flex;align-items:center;justify-content:center;flex-shrink:0;">{icon("whatsapp",20,"#fff")}</div>
+        <div class="col grow" style="gap:2px;"><div style="font-size:11px;opacity:.85;">{BRAND["call_center_label"]}</div>
+        <div class="disp" style="font-weight:800;font-size:18px;">{BRAND["call_center"]}</div></div>
+      </div>
+      <div class="divider" style="margin:14px 0;background:rgba(255,255,255,.18);"></div>
+      <div class="row" style="gap:16px;flex-wrap:wrap;">
+        <span style="font-size:11.5px;opacity:.9;">{BRAND["instagram"]}</span>
+        <span style="font-size:11.5px;opacity:.9;">{BRAND["website"]}</span>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+'''
+
 # ---------------------------------------------------------------- QUICK NAV
 quicknav_items = [
     ("splash","1 · Splash"), ("onboarding","2 · Onboarding"), ("login","3 · Login"),
     ("home","4 · Beranda"), ("booking","5 · Booking"), ("rekammedis","6 · Rekam Medis"),
     ("chat","7 · Chat"), ("profile","8 · Profil"), ("korporat","9 · Korporat"),
+    ("harga","10 · Daftar Harga"), ("jadwal","11 · Jadwal Vaksin"),
+    ("paket","12 · Vaksin Internasional"), ("tentang","13 · Tentang & Lokasi"),
 ]
 quicknav_html = "".join(
     f'<div class="qn-pill{" active" if k=="splash" else ""}" data-target="{k}" onclick="showScreen(\'{k}\')">{label}</div>'
@@ -688,6 +1093,26 @@ img{display:block;max-width:100%;}
 .need-card.active{border:1.6px solid var(--magenta);background:var(--magenta-tint);}
 .need-card.active .ic-circle{background:var(--magenta);color:#fff;}
 .need-card.active .chk{display:flex;}
+.dok-opt{flex:1;border:1.4px solid var(--line);border-radius:16px;padding:13px 14px;background:#fff;}
+.dok-opt .dok-dot{width:15px;height:15px;border-radius:50%;border:2px solid var(--ink-4);display:inline-block;flex-shrink:0;}
+.dok-opt.active{border:1.6px solid var(--magenta);background:var(--magenta-tint);}
+.dok-opt.active .dok-dot{border-color:var(--magenta);background:radial-gradient(circle,var(--magenta) 45%,#fff 48%);}
+
+/* ---- tarif toggle on the price list ---- */
+.tarif-opt{flex:1;text-align:center;padding:11px 8px;border-radius:999px;border:1.4px solid var(--line);background:#fff;font-size:12.5px;font-weight:700;color:var(--ink-2);}
+.tarif-opt.active{background:var(--teal-dark);border-color:var(--teal-dark);color:#fff;}
+#harga-wrap.umum .p-spes{display:none;}
+#harga-wrap.spes .p-umum{display:none;}
+
+/* ---- jadwal tabs ---- */
+.jad-opt{padding:9px 16px;border-radius:999px;border:1.4px solid var(--line);background:#fff;font-size:12.5px;font-weight:700;color:var(--ink-2);white-space:nowrap;}
+.jad-opt.active{background:var(--magenta);border-color:var(--magenta);color:#fff;}
+.jad-pane{display:none;}
+.jad-pane.active{display:block;}
+.usia-opt{padding:8px 13px;border-radius:999px;border:1.4px solid var(--line);background:#fff;font-size:11.5px;font-weight:700;color:var(--ink-2);white-space:nowrap;}
+.usia-opt.active{background:var(--teal-dark);border-color:var(--teal-dark);color:#fff;}
+.usia-pane{display:none;}
+.usia-pane.active{display:block;}
 
 /* ---- toast ---- */
 #toast-host{position:absolute;left:0;right:0;bottom:96px;display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:none;z-index:50;}
@@ -728,6 +1153,28 @@ function confirmBooking(){
   toast("Booking berhasil dikonfirmasi! Menuju beranda...");
   setTimeout(function(){ showScreen("home"); }, 1300);
 }
+function setTarif(el, mode){
+  pickChoice(el, "tarif-opt");
+  var wrap = document.getElementById("harga-wrap");
+  if(wrap){ wrap.className = wrap.className.replace(/\\b(umum|spes)\\b/, mode); }
+}
+function pickJadwal(el, key){
+  pickChoice(el, "jad-opt");
+  document.querySelectorAll(".jad-pane").forEach(function(p){
+    p.classList.toggle("active", p.dataset.jad === key);
+  });
+}
+function pickUsia(el, idx){
+  pickChoice(el, "usia-opt");
+  document.querySelectorAll(".usia-pane").forEach(function(p, i){
+    p.classList.toggle("active", i === idx);
+  });
+}
+function pickDokter(el, harga){
+  pickChoice(el, "dok-opt");
+  var teks = "Rp" + harga.toLocaleString("id-ID");
+  document.querySelectorAll(".est-line, .est-total").forEach(function(n){ n.textContent = teks; });
+}
 setTimeout(function(){
   var splash = document.getElementById("screen-splash");
   if(splash && splash.classList.contains("active")){ showScreen("onboarding"); }
@@ -761,6 +1208,10 @@ HTML = f'''<!doctype html>
       {chat}
       {profile}
       {korporat}
+      {harga}
+      {jadwal}
+      {paket}
+      {tentang}
       <div id="toast-host"></div>
     </div>
   </div>
