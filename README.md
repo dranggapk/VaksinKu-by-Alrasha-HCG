@@ -24,6 +24,7 @@ tautan, atau ditambahkan ke layar utama ponsel lewat menu "Add to Home screen".
 | **Reservasi** | Form tervalidasi: layanan, lokasi, pasien, dokter, vaksin, tanggal & jam |
 | **Biaya nyata** | Total dihitung dari price list resmi; ganti dokter umum ↔ spesialis mengubah total seketika |
 | **Kirim ke WhatsApp** | Ringkasan reservasi dikirim ke CS **0811-7744-74** dengan satu ketukan |
+| **Konsultasi dokter** | Pertanyaan disusun bersama konteks medis pasien, dikirim ke WhatsApp dokter; jawaban dicatat kembali sebagai arsip percakapan |
 | **Rekam medis** | Riwayat vaksinasi per pasien, otomatis terisi saat reservasi ditandai selesai |
 | **Tumbuh kembang** | Catat berat, tinggi, lingkar kepala; grafik berat badan terhadap usia |
 | **Daftar harga** | 17 kategori vaksin, dengan pencarian dan pilihan tarif dokter |
@@ -39,6 +40,11 @@ tautan, atau ditambahkan ke layar utama ponsel lewat menu "Add to Home screen".
 - **Reservasi belum otomatis masuk sistem klinik.** Aplikasi menyusun ringkasan
   dan mengirimkannya ke WhatsApp CS untuk dikonfirmasi petugas. Untuk booking
   yang benar-benar otomatis dibutuhkan server dan integrasi jadwal klinik.
+- **Konsultasi bukan chat real-time.** Tidak ada balasan otomatis dan tidak ada
+  jawaban yang dibuat aplikasi. Pertanyaan dikirim lewat WhatsApp ke dokter/CS,
+  lalu jawaban yang Anda terima dicatat sendiri ke dalam aplikasi supaya
+  tersimpan bersama rekam medis. Fitur ini juga bukan untuk keadaan gawat
+  darurat — peringatan tersebut ditampilkan di layar konsultasi.
 - **Slot waktu belum terhubung ketersediaan riil**; jadwal final dikonfirmasi CS.
 - Grafik pertumbuhan menampilkan data pasien sendiri, belum dibandingkan dengan
   kurva WHO (butuh tabel standar WHO yang resmi).
@@ -63,7 +69,7 @@ app/                 Sumber aplikasi
 src/
   data_katalog.py    Isi katalog (harga, jadwal, layanan, dokter, klinik)
   build_bundle.py    Merakit semuanya + font & logo menjadi satu berkas HTML
-  uji_app.py         Uji fungsional otomatis di browser headless (32 uji)
+  uji_app.py         Uji fungsional otomatis di browser headless (45 uji)
   tangkap_layar.py   Tangkap layar aplikasi dengan data contoh
   gen.py             Design system generator mockup statis (versi lama)
   build_app.py       Generator prototipe klik (versi lama)
@@ -77,7 +83,8 @@ katalog/             Halaman katalog hasil koreksi (lihat katalog/README.md)
 cd src
 python3 build_bundle.py       # → VaksinKu-App.html (font tertanam, siap offline)
 python3 build_bundle.py --tanpa-font   # lebih cepat, font dari Google Fonts
-python3 uji_app.py            # jalankan 32 uji fungsional
+python3 uji_app.py            # jalankan 45 uji fungsional
+python3 tangkap_layar.py      # tangkap layar dengan data contoh
 ```
 
 `build_bundle.py` mengunduh font dari Google Fonts saat dijalankan, jadi langkah

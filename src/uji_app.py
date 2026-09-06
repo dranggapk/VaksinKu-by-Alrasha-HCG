@@ -151,6 +151,51 @@ TEST_JS = r"""
     klik('[data-act="set-tarif"][data-arg="spesialis"]');
     ok('tarif spesialis tampil', document.body.textContent.indexOf('Rp550.000') > 0 || document.body.textContent.indexOf('Rp375.000') > 0);
 
+    /* 9b. konsultasi dokter */
+    window.open = function (u) { window.__waTerakhir = u; return null; };
+    ganti('#/chat');
+    ok('layar konsultasi tampil', document.body.textContent.indexOf('Cara kerja konsultasi') > 0);
+    ok('nav konsultasi ada', document.body.textContent.indexOf('Konsultasi') > 0);
+
+    klik('[data-act="go"][data-arg="chat-baru"]');
+    klik('[data-act="kirim-konsul"]');
+    ok('konsultasi kosong ditolak', (st().konsultasi || []).length === 0 && document.querySelectorAll('.errmsg').length > 0,
+       document.querySelectorAll('.errmsg').length + ' pesan galat');
+
+    var sel = document.querySelector('[data-fieldk="pasienId"]');
+    sel.value = st().pasien[0].id;
+    sel.dispatchEvent(new Event('input', { bubbles: true }));
+    klik('[data-act="set-topik"][data-arg="1"]');
+    var ta = document.querySelector('[data-fieldk="pertanyaan"]');
+    ta.value = 'Anak saya demam 38 derajat sejak semalam setelah vaksin. Apakah perlu dibawa ke klinik?';
+    ta.dispatchEvent(new Event('input', { bubbles: true }));
+    var pv = document.querySelector('.pratinjau').textContent;
+    ok('pratinjau memuat pertanyaan', pv.indexOf('demam 38 derajat') > 0);
+    ok('pratinjau melampirkan data pasien', pv.indexOf('Kelengkapan vaksin sesuai usia') > 0,
+       'konteks ' + (pv.indexOf('Usia:') > 0 ? 'ada' : 'tidak ada'));
+
+    klik('[data-act="kirim-konsul"]');
+    var kk = (st().konsultasi || [])[0];
+    ok('konsultasi tersimpan', !!kk && kk.status === 'terkirim', kk ? kk.kode + ' · ' + kk.topik : '-');
+    ok('pesan pertama tercatat', !!kk && kk.pesan.length === 1 && kk.pesan[0].dari === 'saya');
+    ok('WhatsApp dibuka dengan isi pesan', (window.__waTerakhir || '').indexOf('wa.me') > 0 &&
+       decodeURIComponent(window.__waTerakhir).indexOf('demam 38 derajat') > 0,
+       (window.__waTerakhir || '').slice(0, 30) + '...');
+    ok('draft konsultasi dibersihkan', st().draftKonsul == null);
+
+    /* catat jawaban dokter */
+    var fj = document.getElementById('form-jawaban');
+    fj.elements.jawaban.value = 'Demam ringan pasca vaksin wajar. Kompres hangat, cukupi cairan. Bila di atas 39 derajat atau kejang, segera ke klinik.';
+    fj.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    var kk2 = st().konsultasi[0];
+    ok('jawaban dokter tercatat', kk2.pesan.length === 2 && kk2.pesan[1].dari === 'dokter');
+    ok('status jadi dijawab', kk2.status === 'dijawab', kk2.status);
+    ok('gelembung percakapan tampil', document.querySelectorAll('.bubble').length === 2,
+       document.querySelectorAll('.bubble').length + ' gelembung');
+
+    klik('[data-act="selesai-konsul"]');
+    ok('konsultasi bisa diselesaikan', st().konsultasi[0].status === 'selesai');
+
     /* 10. layar informasi */
     [['#/internasional', 'Meningitis'], ['#/tentang', K2.klinik[0][0]], ['#/jadwal-info/pranikah', 'HPV'],
      ['#/jadwal-info/lansia', 'Pneumonia'], ['#/riwayat-booking', 'VK-'], ['#/alamat', 'alamat']].forEach(function (r) {

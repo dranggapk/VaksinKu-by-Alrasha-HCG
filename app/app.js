@@ -36,7 +36,9 @@
     coin: '<circle cx="12" cy="12" r="8.4"/><path d="M12 8v8M9.4 10.2c0-1.1 1.1-2 2.6-2s2.6.7 2.6 1.8-1 1.6-2.6 2-2.6.9-2.6 2 1.1 1.8 2.6 1.8 2.6-.7 2.6-1.6"/>',
     search: '<circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.3-4.3"/>',
     info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v5.5M12 7.6v.6"/>',
-    bell: '<path d="M6 10a6 6 0 0 1 12 0c0 4 1.4 5.4 2 6H4c.6-.6 2-2 2-6Z"/><path d="M10 19a2 2 0 0 0 4 0"/>'
+    bell: '<path d="M6 10a6 6 0 0 1 12 0c0 4 1.4 5.4 2 6H4c.6-.6 2-2 2-6Z"/><path d="M10 19a2 2 0 0 0 4 0"/>',
+    chat: '<path d="M4 5h16a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H9l-5 4V6a1 1 0 0 1 1-1Z"/><path d="M8 10h8M8 13h5"/>',
+    kirim: '<path d="M20.5 3.5 3.5 10.2l6.4 2.9 2.9 6.4 7.7-16Z"/><path d="M9.9 13.1 20.5 3.5"/>'
   };
   function ic(name, size, sw) {
     return '<svg width="' + (size || 20) + '" height="' + (size || 20) + '" viewBox="0 0 24 24" fill="none" ' +
@@ -90,8 +92,8 @@
   var KEY = 'vaksinku.v1';
   var kosong = {
     versi: 1, profil: { nama: '', hp: '', jenisKelamin: '' },
-    pasien: [], alamat: [], booking: [], riwayat: [], pertumbuhan: [],
-    poin: 0, draft: null, ui: { pasienAktif: '' }
+    pasien: [], alamat: [], booking: [], riwayat: [], pertumbuhan: [], konsultasi: [],
+    poin: 0, draft: null, draftKonsul: null, ui: { pasienAktif: '' }
   };
   var S, storageOk = true;
 
@@ -276,6 +278,213 @@
     window.open('https://wa.me/' + WA + '?text=' + encodeURIComponent(pesanWA(b)), '_blank');
   }
 
+  /* ============================ konsultasi dokter ============================ */
+  var TOPIK = [
+    'Jadwal & kelengkapan vaksin',
+    'Efek samping (KIPI)',
+    'Kondisi pasien sebelum vaksin',
+    'Vaksin internasional (haji, umrah, studi)',
+    'Tumbuh kembang anak',
+    'Lainnya'
+  ];
+
+  function draftKonsul() {
+    if (!S.draftKonsul) S.draftKonsul = { pasienId: '', dokterIdx: '', topik: '', pertanyaan: '', lampirkan: true };
+    return S.draftKonsul;
+  }
+  function konteksPasien(pasienId) {
+    var p = S.pasien.filter(function (x) { return x.id === pasienId; })[0];
+    if (!p) return [];
+    var baris = ['Usia: ' + umurTeks(umurBulan(p.tglLahir))];
+    var r = ringkasJadwal(p);
+    if (r && r.total) {
+      baris.push('Kelengkapan vaksin sesuai usia: ' + r.persen + '% (' + r.selesai + '/' + r.total + ')');
+      if (r.belum.length) {
+        baris.push('Belum dicatat: ' + r.belum.slice(0, 6).map(function (b) { return b.label; }).join(', ') +
+          (r.belum.length > 6 ? ', dan ' + (r.belum.length - 6) + ' lainnya' : ''));
+      }
+    }
+    var riw = riwayatPasien(p.id);
+    if (riw.length) baris.push('Vaksin terakhir: ' + riw[0].label + ' (' + tgl(riw[0].tanggal) + ')');
+    var t = S.pertumbuhan.filter(function (x) { return x.pasienId === p.id; })
+      .sort(function (a, b) { return a.tanggal.localeCompare(b.tanggal); }).pop();
+    if (t) {
+      var ukur = [];
+      if (t.berat) ukur.push('BB ' + t.berat + ' kg');
+      if (t.tinggi) ukur.push('TB ' + t.tinggi + ' cm');
+      if (t.kepala) ukur.push('LK ' + t.kepala + ' cm');
+      if (ukur.length) baris.push('Pengukuran ' + tgl(t.tanggal) + ': ' + ukur.join(', '));
+    }
+    return baris;
+  }
+  function pesanKonsultasi(k) {
+    var L = ['Halo VaksinKu, saya ingin berkonsultasi dengan dokter.', ''];
+    L.push('Kode konsultasi: ' + k.kode);
+    L.push('Pendaftar: ' + (k.pendaftar.nama || '-') + (k.pendaftar.hp ? ' (' + k.pendaftar.hp + ')' : ''));
+    if (k.pasienId) L.push('Untuk pasien: ' + namaPasien(k.pasienId));
+    if (k.dokter) L.push('Dokter yang dituju: ' + k.dokter);
+    L.push('Topik: ' + k.topik);
+    L.push('');
+    L.push('Pertanyaan:');
+    L.push(k.pertanyaan);
+    if (k.konteks && k.konteks.length) {
+      L.push('');
+      L.push('--- Data dari aplikasi VaksinKu ---');
+      k.konteks.forEach(function (b) { L.push('• ' + b); });
+    }
+    return L.join('\n');
+  }
+  function kirimKonsultasiWA(k) {
+    window.open('https://wa.me/' + WA + '?text=' + encodeURIComponent(pesanKonsultasi(k)), '_blank');
+  }
+  function validasiKonsul(d) {
+    var e = {};
+    if (!d.topik) e.topik = 'Pilih topik konsultasi.';
+    if (String(d.pertanyaan).trim().length < 10) e.pertanyaan = 'Tuliskan pertanyaan Anda minimal 10 karakter agar dokter bisa menjawab tepat.';
+    if (!String(S.profil.nama).trim() || !String(S.profil.hp).trim()) e.profil = 'Lengkapi nama dan nomor HP di Profil agar dokter bisa membalas.';
+    return e;
+  }
+
+  function scChat() {
+    var body = topbar('Konsultasi Dokter', 'Tanya dokter VaksinKu');
+    body += '<div class="pad stack g14">';
+    body += '<div class="card tint stack g8">' +
+      '<div class="row mid g8">' + ic('info', 16) + '<span class="small" style="font-weight:700;color:var(--teal-dark);">Cara kerja konsultasi</span></div>' +
+      '<div class="tiny" style="color:var(--ink-2);line-height:1.65;">Pertanyaan Anda disusun lengkap dengan data pasien, lalu dikirim ke WhatsApp ' +
+      h(K.brand.callCenter) + ' untuk diteruskan ke dokter. Jawaban dokter yang Anda terima bisa dicatat di sini agar tersimpan bersama rekam medis keluarga.</div></div>';
+
+    body += '<button class="btn primary" data-act="go" data-arg="chat-baru">' + ic('chat', 17) + ' Mulai konsultasi baru</button>';
+
+    if (S.konsultasi.length) {
+      body += '<div class="sect-title" style="padding-top:4px;">Riwayat konsultasi</div>';
+      S.konsultasi.forEach(function (k) {
+        var st = { terkirim: ['mag', 'Menunggu jawaban'], dijawab: ['green', 'Sudah dijawab'], selesai: ['grey', 'Selesai'] }[k.status];
+        var akhir = k.pesan[k.pesan.length - 1];
+        body += '<button class="card row mid g12 tap" style="text-align:left;width:100%;" data-act="go" data-arg="chat-detail/' + k.id + '">' +
+          '<div class="icon-sq mag" style="border-radius:12px;">' + ic('chat', 18) + '</div>' +
+          '<div class="stack grow g4"><div class="row mid g8"><span class="chip ' + st[0] + '">' + st[1] + '</span>' +
+          '<span class="tiny muted">' + h(k.kode) + '</span></div>' +
+          '<div class="small" style="font-weight:700;">' + h(k.topik) + '</div>' +
+          '<div class="tiny muted" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' +
+          (k.pasienId ? h(namaPasien(k.pasienId)) + ' · ' : '') + h(akhir ? akhir.teks : '') + '</div></div>' +
+          '<span style="color:var(--ink-4);">' + ic('chevron', 16) + '</span></button>';
+      });
+    } else {
+      body += empty('chat', 'Belum ada konsultasi', 'Ajukan pertanyaan seputar jadwal vaksin, efek samping, atau kondisi pasien sebelum vaksinasi.', '');
+    }
+
+    body += '<div class="card stack g4"><div class="sect-title" style="margin-bottom:6px;">Dokter VaksinKu</div>' +
+      K.dokter.map(function (d) {
+        return '<div class="row mid g12" style="padding:9px 0;border-top:1px solid var(--line);">' +
+          '<div class="avatar" style="width:36px;height:36px;font-size:12px;">' + h(d[2]) + '</div>' +
+          '<div class="grow"><div class="small" style="font-weight:700;">' + h(d[0]) + '</div>' +
+          '<div class="tiny muted">' + h(d[1]) + '</div></div></div>';
+      }).join('') + '</div>';
+
+    body += '<div class="card warn stack g8"><div class="row mid g8">' + ic('bell', 16) + '<span class="small" style="font-weight:700;color:var(--amber);">Bukan layanan gawat darurat</span></div>' +
+      '<div class="tiny" style="color:#8A6A21;line-height:1.65;">Untuk demam tinggi, sesak napas, kejang, atau reaksi berat setelah vaksinasi, segera hubungi klinik atau fasilitas gawat darurat terdekat — jangan menunggu balasan konsultasi.</div></div>';
+
+    body += '</div>';
+    return { body: body, nav: 'chat' };
+  }
+
+  var errK = {};
+  function scChatBaru() {
+    var d = draftKonsul();
+    var body = topbar('Konsultasi Baru', 'Dikirim ke dokter via WhatsApp', 'chat');
+    body += '<div class="pad stack g18">';
+
+    if (errK.profil) body += '<div class="card" style="background:var(--danger-tint);border-color:transparent;">' +
+      '<div class="small" style="color:var(--danger);font-weight:700;">' + h(errK.profil) + '</div>' +
+      '<button class="btn sm outline" style="margin-top:10px;" data-act="go" data-arg="profil">Buka Profil</button></div>';
+
+    body += '<div class="stack g8"><label class="lbl">1. Untuk pasien</label>' +
+      '<div class="hint">Pilih pasien agar dokter melihat usia dan riwayat vaksinnya. Kosongkan untuk pertanyaan umum.</div>' +
+      '<select class="input" data-fieldk="pasienId"><option value="">Pertanyaan umum (tanpa pasien)</option>' +
+      S.pasien.map(function (p) {
+        return '<option value="' + h(p.id) + '"' + (d.pasienId === p.id ? ' selected' : '') + '>' +
+          h(p.nama) + ' — ' + h(umurTeks(umurBulan(p.tglLahir))) + '</option>';
+      }).join('') + '</select></div>';
+
+    body += '<div class="stack g8"><label class="lbl">2. Topik<span class="req">*</span></label>' +
+      '<div class="stack g8">' + TOPIK.map(function (t, i) {
+        return '<button class="topik' + (d.topik === t ? ' on' : '') + '" data-act="set-topik" data-arg="' + i + '">' + h(t) + '</button>';
+      }).join('') + '</div>' +
+      (errK.topik ? '<div class="errmsg">' + h(errK.topik) + '</div>' : '') + '</div>';
+
+    body += '<div class="stack g8"><label class="lbl">3. Dokter yang dituju</label>' +
+      '<div class="hint">Opsional. Bila dikosongkan, tim CS meneruskan ke dokter yang sesuai.</div>' +
+      '<select class="input" data-fieldk="dokterIdx"><option value="">Tidak ditentukan</option>' +
+      K.dokter.map(function (dk, i) {
+        return '<option value="' + i + '"' + (String(d.dokterIdx) === String(i) ? ' selected' : '') + '>' + h(dk[0]) + '</option>';
+      }).join('') + '</select></div>';
+
+    body += '<div class="stack g8"><label class="lbl">4. Pertanyaan Anda<span class="req">*</span></label>' +
+      '<textarea class="input' + (errK.pertanyaan ? ' err' : '') + '" data-fieldk="pertanyaan" style="min-height:120px;" ' +
+      'placeholder="Contoh: Anak saya demam 38°C sejak semalam setelah vaksin DPT kemarin. Apakah perlu dibawa ke klinik?">' + h(d.pertanyaan) + '</textarea>' +
+      (errK.pertanyaan ? '<div class="errmsg">' + h(errK.pertanyaan) + '</div>' : '') + '</div>';
+
+    var konteks = d.pasienId ? konteksPasien(d.pasienId) : [];
+    if (konteks.length) {
+      body += '<div class="stack g8"><button class="checkrow' + (d.lampirkan ? ' on' : '') + '" data-act="toggle-lampiran">' +
+        '<div class="box">' + (d.lampirkan ? ic('check', 14, 3) : '') + '</div>' +
+        '<div class="grow"><div class="small" style="font-weight:700;">Lampirkan data pasien</div>' +
+        '<div class="tiny muted">Usia, kelengkapan vaksin, vaksin tertunda, dan pengukuran terakhir</div></div></button></div>';
+    }
+
+    var pratinjau = pesanKonsultasi({
+      kode: 'KS-XXXXXX', pendaftar: S.profil, pasienId: d.pasienId,
+      dokter: d.dokterIdx === '' ? '' : (K.dokter[d.dokterIdx] || [''])[0],
+      topik: d.topik || '(belum dipilih)', pertanyaan: d.pertanyaan || '(belum diisi)',
+      konteks: d.lampirkan ? konteks : []
+    });
+    body += '<div class="stack g8"><label class="lbl">Pratinjau pesan</label>' +
+      '<div class="hint">Inilah teks yang akan terbuka di WhatsApp. Anda masih bisa menyuntingnya sebelum mengirim.</div>' +
+      '<div class="pratinjau">' + h(pratinjau) + '</div></div>';
+
+    body += '</div>';
+    var foot = '<div class="sticky-foot"><button class="btn teal grow" data-act="kirim-konsul">' +
+      ic('wa', 17) + ' Kirim ke WhatsApp dokter</button></div>';
+    return { body: body, foot: foot };
+  }
+
+  function scChatDetail(id) {
+    var k = S.konsultasi.filter(function (x) { return x.id === id; })[0];
+    if (!k) return { body: topbar('Konsultasi', '', 'chat') + empty('chat', 'Konsultasi tidak ditemukan', 'Data mungkin sudah dihapus.') };
+    var st = { terkirim: ['mag', 'Menunggu jawaban'], dijawab: ['green', 'Sudah dijawab'], selesai: ['grey', 'Selesai'] }[k.status];
+    var body = topbar(k.topik, k.kode, 'chat');
+    body += '<div class="pad stack g14">';
+    body += '<div class="row mid g8"><span class="chip ' + st[0] + '">' + st[1] + '</span>' +
+      (k.pasienId ? '<span class="chip grey">' + h(namaPasien(k.pasienId)) + '</span>' : '') +
+      (k.dokter ? '<span class="chip teal">' + h(k.dokter) + '</span>' : '') + '</div>';
+
+    body += '<div class="thread">' + k.pesan.map(function (m) {
+      return '<div class="bubble ' + m.dari + '">' + h(m.teks) +
+        '<span class="waktu">' + (m.dari === 'saya' ? 'Anda' : 'Dokter') + ' · ' + tgl(m.waktu.slice(0, 10)) + '</span></div>';
+    }).join('') + '</div>';
+
+    if (k.konteks && k.konteks.length) {
+      body += '<div class="card flat stack g6" style="border-style:dashed;">' +
+        '<div class="tiny" style="font-weight:700;color:var(--ink-3);">Data pasien yang ikut terkirim</div>' +
+        k.konteks.map(function (b) { return '<div class="tiny muted">• ' + h(b) + '</div>'; }).join('') + '</div>';
+    }
+
+    body += '<div class="card stack g10"><div class="row mid g8">' + ic('info', 16) +
+      '<span class="small" style="font-weight:700;">Sudah dapat jawaban dokter?</span></div>' +
+      '<div class="tiny muted" style="line-height:1.6;">Salin jawaban dari WhatsApp ke sini supaya tersimpan bersama rekam medis keluarga.</div>' +
+      '<form id="form-jawaban" class="stack g10">' +
+      '<textarea class="input" name="jawaban" placeholder="Tulis atau tempel jawaban dokter..."></textarea>' +
+      (formErr.jawaban ? '<div class="errmsg">' + h(formErr.jawaban) + '</div>' : '') +
+      '<button type="submit" class="btn outline sm">' + ic('check', 15, 2.2) + ' Catat jawaban dokter</button></form></div>';
+
+    body += '<button class="btn teal" data-act="wa-konsul" data-arg="' + k.id + '">' + ic('wa', 17) + ' Kirim ulang ke WhatsApp</button>';
+    if (k.pasienId) body += '<button class="btn outline" data-act="lanjut-tanya" data-arg="' + k.id + '">' + ic('chat', 16) + ' Ajukan pertanyaan lanjutan</button>';
+    if (k.status !== 'selesai') body += '<button class="btn ghost" data-act="selesai-konsul" data-arg="' + k.id + '">Tandai konsultasi selesai</button>';
+    body += '<button class="btn ghost" data-act="hapus-konsul" data-arg="' + k.id + '" style="color:var(--danger);">Hapus konsultasi</button>';
+    body += '</div>';
+    return { body: body };
+  }
+
   /* ============================ shell ============================ */
   var route = { name: 'beranda', param: '' };
   var app = document.getElementById('app');
@@ -292,7 +501,7 @@
       (aksi || '') + '</div>';
   }
   function navbar(aktif) {
-    var items = [['beranda', 'home', 'Beranda'], ['jadwal', 'calendar', 'Jadwal'], null,
+    var items = [['beranda', 'home', 'Beranda'], ['chat', 'chat', 'Konsultasi'], null,
       ['rekam', 'doc', 'Rekam Medis'], ['profil', 'user', 'Profil']];
     return '<nav class="navbar">' + items.map(function (it) {
       if (!it) return '<button class="navfab" data-act="go" data-arg="booking" aria-label="Booking vaksinasi">' + ic('plus', 24, 2.4) + '</button>';
@@ -771,7 +980,11 @@
       '<button class="linkbtn" data-act="go" data-arg="pasien-form/' + p.id + '">' + ic('edit', 17) + '</button></div>' +
       (r ? '<div class="divider"></div><div class="row between mid"><span class="small muted">Kelengkapan sesuai usia</span>' +
         '<span class="chip teal">' + r.selesai + '/' + r.total + ' · ' + r.persen + '%</span></div>' : '') +
-      '</div>';
+      '<div class="divider"></div>' +
+      '<div class="row g8">' +
+      '<button class="btn outline sm grow" data-act="go" data-arg="jadwal">' + ic('calendar', 15) + ' Jadwal vaksin</button>' +
+      '<button class="btn outline sm grow" data-act="tanya-dokter" data-arg="' + p.id + '">' + ic('chat', 15) + ' Tanya dokter</button>' +
+      '</div></div>';
 
     body += '<div class="card stack g10"><div class="row mid"><div class="sect-title">Riwayat vaksinasi</div>' +
       '<div class="grow"></div><span class="chip grey">' + riw.length + '</span></div>';
@@ -1003,6 +1216,10 @@
       '<div class="divider"></div>' +
       menuRow('doc', 'Riwayat Reservasi', S.booking.length + ' reservasi', 'riwayat-booking') +
       '<div class="divider"></div>' +
+      menuRow('calendar', 'Jadwal Vaksin', 'IDAI 2024 & PAPDI 2025', 'jadwal') +
+      '<div class="divider"></div>' +
+      menuRow('chat', 'Konsultasi Dokter', S.konsultasi.length + ' konsultasi', 'chat') +
+      '<div class="divider"></div>' +
       menuRow('tag', 'Daftar Harga', 'Price list lengkap', 'harga') +
       '<div class="divider"></div>' +
       menuRow('info', 'Tentang & Lokasi', 'Klinik, dokter, kontak', 'tentang') +
@@ -1154,6 +1371,9 @@
       case 'booking-detail': r = scBookingDetail(route.param); break;
       case 'jadwal': r = scJadwal(); break;
       case 'jadwal-info': r = scJadwalInfo(route.param); break;
+      case 'chat': r = scChat(); break;
+      case 'chat-baru': r = scChatBaru(); break;
+      case 'chat-detail': r = scChatDetail(route.param); break;
       case 'rekam': r = scRekam(); break;
       case 'harga': r = scHarga(); break;
       case 'internasional': r = scInternasional(); break;
@@ -1231,6 +1451,67 @@
       case 'wa-booking': {
         var b1 = S.booking.filter(function (x) { return x.id === arg; })[0];
         if (b1) kirimWA(b1);
+        return;
+      }
+      case 'set-topik': draftKonsul().topik = TOPIK[parseInt(arg, 10)] || ''; simpan(); render(); return;
+      case 'toggle-lampiran': draftKonsul().lampirkan = !draftKonsul().lampirkan; simpan(); render(); return;
+      case 'tanya-dokter': {
+        var dk = draftKonsul();
+        dk.pasienId = arg; dk.topik = ''; dk.pertanyaan = ''; dk.lampirkan = true;
+        simpan(); location.hash = '#/chat-baru';
+        return;
+      }
+      case 'kirim-konsul': {
+        var dkon = draftKonsul();
+        errK = validasiKonsul(dkon);
+        if (Object.keys(errK).length) {
+          render();
+          var buruk = document.querySelector('.errmsg');
+          if (buruk) buruk.scrollIntoView({ block: 'center', behavior: 'smooth' });
+          toast('Lengkapi bagian yang ditandai merah.');
+          return;
+        }
+        var kons = {
+          id: uid(), kode: 'KS-' + String(Date.now()).slice(-6), status: 'terkirim',
+          dibuat: new Date().toISOString(), pasienId: dkon.pasienId, topik: dkon.topik,
+          dokter: dkon.dokterIdx === '' ? '' : (K.dokter[dkon.dokterIdx] || [''])[0],
+          pertanyaan: dkon.pertanyaan,
+          konteks: dkon.lampirkan && dkon.pasienId ? konteksPasien(dkon.pasienId) : [],
+          pendaftar: { nama: S.profil.nama, hp: S.profil.hp },
+          pesan: [{ id: uid(), dari: 'saya', teks: dkon.pertanyaan, waktu: new Date().toISOString() }]
+        };
+        S.konsultasi.unshift(kons);
+        S.draftKonsul = null;
+        errK = {};
+        simpan();
+        kirimKonsultasiWA(kons);
+        location.hash = '#/chat-detail/' + kons.id;
+        setTimeout(function () { toast('Konsultasi ' + kons.kode + ' tersimpan dan dibuka di WhatsApp.'); }, 60);
+        return;
+      }
+      case 'wa-konsul': {
+        var k1 = S.konsultasi.filter(function (x) { return x.id === arg; })[0];
+        if (k1) kirimKonsultasiWA(k1);
+        return;
+      }
+      case 'lanjut-tanya': {
+        var k2 = S.konsultasi.filter(function (x) { return x.id === arg; })[0];
+        if (!k2) return;
+        var dk2 = draftKonsul();
+        dk2.pasienId = k2.pasienId; dk2.topik = k2.topik; dk2.pertanyaan = ''; dk2.lampirkan = true;
+        simpan(); location.hash = '#/chat-baru';
+        return;
+      }
+      case 'selesai-konsul': {
+        var k3 = S.konsultasi.filter(function (x) { return x.id === arg; })[0];
+        if (!k3) return;
+        k3.status = 'selesai'; simpan(); render(); toast('Konsultasi ditandai selesai.');
+        return;
+      }
+      case 'hapus-konsul': {
+        if (!konfirmasi('Hapus konsultasi ini beserta catatan jawabannya?')) return;
+        S.konsultasi = S.konsultasi.filter(function (x) { return x.id !== arg; });
+        simpan(); location.hash = '#/chat'; toast('Konsultasi dihapus.');
         return;
       }
       case 'wa-umum':
@@ -1326,6 +1607,25 @@
       if (n) { n.focus(); n.setSelectionRange(pos, pos); }
       return;
     }
+    var fk = el.getAttribute('data-fieldk');
+    if (fk) {
+      var dk = draftKonsul();
+      dk[fk] = el.value;
+      simpan();
+      if (fk === 'pertanyaan') {
+        // perbarui pratinjau di tempat supaya kursor mengetik tidak hilang
+        var pv = document.querySelector('.pratinjau');
+        if (pv) {
+          pv.textContent = pesanKonsultasi({
+            kode: 'KS-XXXXXX', pendaftar: S.profil, pasienId: dk.pasienId,
+            dokter: dk.dokterIdx === '' ? '' : (K.dokter[dk.dokterIdx] || [''])[0],
+            topik: dk.topik || '(belum dipilih)', pertanyaan: dk.pertanyaan || '(belum diisi)',
+            konteks: dk.lampirkan && dk.pasienId ? konteksPasien(dk.pasienId) : []
+          });
+        }
+      } else { render(); }
+      return;
+    }
     var f = el.getAttribute('data-field');
     if (!f) return;
     if (f.indexOf('profil.') === 0) S.profil[f.split('.')[1]] = el.value;
@@ -1386,6 +1686,18 @@
       simpan(); location.hash = '#/alamat'; toast('Alamat ditambahkan.');
       return;
     }
+    if (formId === 'form-jawaban') {
+      var jwb = get('jawaban');
+      if (jwb.length < 2) { formErr.jawaban = 'Tulis jawaban dokter terlebih dahulu.'; render(); return; }
+      var kid = route.param;
+      S.konsultasi.forEach(function (k) {
+        if (k.id !== kid) return;
+        k.pesan.push({ id: uid(), dari: 'dokter', teks: jwb, waktu: new Date().toISOString() });
+        if (k.status === 'terkirim') k.status = 'dijawab';
+      });
+      simpan(); render(); toast('Jawaban dokter tercatat.');
+      return;
+    }
     if (formId === 'form-tumbuh') {
       if (!get('berat') && !get('tinggi') && !get('kepala')) {
         formErr.tumbuh = 'Isi minimal salah satu: berat, tinggi, atau lingkar kepala.';
@@ -1427,6 +1739,7 @@
   window.addEventListener('hashchange', function () {
     bacaRoute(); sheetHTML = ''; formErr = {};
     if (route.name !== 'booking') errB = {};
+    if (route.name !== 'chat-baru') errK = {};
     render();
     var sc = document.getElementById('scroll');
     if (sc) sc.scrollTop = 0;
