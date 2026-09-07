@@ -196,6 +196,46 @@ TEST_JS = r"""
     klik('[data-act="selesai-konsul"]');
     ok('konsultasi bisa diselesaikan', st().konsultasi[0].status === 'selesai');
 
+    /* 9c. pengingat & notifikasi */
+    ganti('#/notifikasi');
+    var kartu2 = document.querySelectorAll('.notif');
+    ok('layar pengingat tampil', document.body.textContent.indexOf('Pengingat di kalender ponsel') > 0);
+    ok('pengingat terbentuk dari data', kartu2.length > 0, kartu2.length + ' pengingat');
+
+    var teksNotif = document.querySelector('.notif').textContent;
+    ok('pengingat menyebut vaksin terlambat', document.body.textContent.indexOf('terlambat') > 0,
+       teksNotif.slice(0, 60).replace(/\s+/g, ' '));
+
+    var baruAwal = document.querySelectorAll('.notif.baru').length;
+    klik('[data-act="baca-semua"]');
+    ok('tandai dibaca bekerja', document.querySelectorAll('.notif.baru').length === 0 && baruAwal > 0,
+       baruAwal + ' baru → 0');
+    ok('status baca tersimpan', Object.keys((st().notif || {}).dibaca || {}).length > 0);
+
+    klik('[data-act="toggle-set"][data-arg="vaksin"]');
+    ok('pengingat vaksin bisa dimatikan', st().pengaturan.vaksin === false &&
+       document.querySelectorAll('.notif').length < kartu2.length,
+       kartu2.length + ' → ' + document.querySelectorAll('.notif').length + ' pengingat');
+    klik('[data-act="toggle-set"][data-arg="vaksin"]');
+    klik('[data-act="set-lead"][data-arg="3"]');
+    ok('jarak pengingat reservasi tersimpan', st().pengaturan.leadBooking === 3, 'H-' + st().pengaturan.leadBooking);
+
+    /* ekspor kalender: cek isi berkas .ics yang dihasilkan */
+    var icsTeks = null;
+    var blobAsli = window.Blob;
+    window.Blob = function (bagian, opsi) { icsTeks = String(bagian[0]); return new blobAsli(bagian, opsi); };
+    window.URL.createObjectURL = function () { return 'blob:uji'; };
+    window.URL.revokeObjectURL = function () {};
+    klik('[data-act="unduh-ics"]');
+    window.Blob = blobAsli;
+    ok('berkas kalender dibuat', !!icsTeks && icsTeks.indexOf('BEGIN:VCALENDAR') === 0,
+       icsTeks ? icsTeks.length + ' karakter' : 'kosong');
+    ok('kalender memuat alarm pengingat', !!icsTeks && icsTeks.indexOf('BEGIN:VALARM') > 0 &&
+       icsTeks.indexOf('TRIGGER:-P7D') > 0);
+    ok('kalender memuat jadwal vaksin bertanggal', !!icsTeks && /DTSTART;VALUE=DATE:\d{8}/.test(icsTeks),
+       (icsTeks.match(/BEGIN:VEVENT/g) || []).length + ' acara');
+    ok('kalender ditutup dengan benar', !!icsTeks && /END:VCALENDAR$/.test(icsTeks.trim()));
+
     /* 10. layar informasi */
     [['#/internasional', 'Meningitis'], ['#/tentang', K2.klinik[0][0]], ['#/jadwal-info/pranikah', 'HPV'],
      ['#/jadwal-info/lansia', 'Pneumonia'], ['#/riwayat-booking', 'VK-'], ['#/alamat', 'alamat']].forEach(function (r) {

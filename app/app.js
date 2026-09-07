@@ -93,7 +93,9 @@
   var kosong = {
     versi: 1, profil: { nama: '', hp: '', jenisKelamin: '' },
     pasien: [], alamat: [], booking: [], riwayat: [], pertumbuhan: [], konsultasi: [],
-    poin: 0, draft: null, draftKonsul: null, ui: { pasienAktif: '' }
+    poin: 0, draft: null, draftKonsul: null, ui: { pasienAktif: '' },
+    pengaturan: { vaksin: true, booking: true, konsultasi: true, leadBooking: 7, browser: false },
+    notif: { dibaca: {}, terkirim: {} }
   };
   var S, storageOk = true;
 
@@ -276,6 +278,312 @@
   }
   function kirimWA(b) {
     window.open('https://wa.me/' + WA + '?text=' + encodeURIComponent(pesanWA(b)), '_blank');
+  }
+
+  /* ============================ pengingat & notifikasi ============================ */
+  function isoDari(d) {
+    return new Date(d.getTime() - d.getTimezoneOffset() * 6e4).toISOString().slice(0, 10);
+  }
+  function tambahBulan(iso, n) {
+    var d = new Date(iso + 'T00:00:00');
+    if (isNaN(d)) return '';
+    var hari = d.getDate();
+    d.setDate(1);
+    d.setMonth(d.getMonth() + n);
+    var akhir = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+    d.setDate(Math.min(hari, akhir));
+    return isoDari(d);
+  }
+  /* Tiap langkah jadwal anak punya tanggal jatuh tempo nyata: lahir + usia langkah. */
+  function jadwalBertanggal(p) {
+    if (!p.tglLahir) return [];
+    return K.jadwalAnak.map(function (st) {
+      return {
+        usia: st.usia, tanggal: tambahBulan(p.tglLahir, st.usiaBulan),
+        items: st.items.filter(function (lb) { return !sudah(p.id, lb); })
+      };
+    }).filter(function (st) { return st.items.length; });
+  }
+  function pengaturan() {
+    if (!S.pengaturan) S.pengaturan = JSON.parse(JSON.stringify(kosong.pengaturan));
+    return S.pengaturan;
+  }
+  function notifStore() {
+    if (!S.notif) S.notif = { dibaca: {}, terkirim: {} };
+    if (!S.notif.dibaca) S.notif.dibaca = {};
+    if (!S.notif.terkirim) S.notif.terkirim = {};
+    return S.notif;
+  }
+
+  function daftarPengingat() {
+    var P = pengaturan(), out = [], hari = hariIni();
+
+    if (P.booking) {
+      S.booking.forEach(function (b) {
+        if (b.status !== 'menunggu') return;
+        var sisa = selisihHari(b.tanggal);
+        var nama = b.pasienIds.map(namaPasien).join(', ');
+        if (sisa < 0) {
+          out.push({
+            id: 'booking-lewat:' + b.id, prioritas: 2, ikon: 'calendar', jenis: 'Reservasi',
+            judul: 'Reservasi ' + b.kode + ' sudah lewat tanggal',
+            teks: 'Jadwal ' + tgl(b.tanggal) + ' untuk ' + nama + '. Tandai selesai bila vaksinasi sudah dilakukan.',
+            tanggal: b.tanggal, hash: 'booking-detail/' + b.id, aksi: 'Buka reservasi'
+          });
+        } else if (sisa <= (P.leadBooking || 7)) {
+          out.push({
+            id: 'booking:' + b.id + ':' + sisa, prioritas: sisa <= 1 ? 3 : 2, ikon: 'calendar', jenis: 'Reservasi',
+            judul: sisa === 0 ? 'Vaksinasi hari ini' : (sisa === 1 ? 'Vaksinasi besok' : 'Vaksinasi ' + sisa + ' hari lagi'),
+            teks: nama + ' · ' + tgl(b.tanggal, true) + ' pukul ' + b.jam + ' · ' + LAYANAN_NAMA[b.layanan],
+            tanggal: b.tanggal, hash: 'booking-detail/' + b.id, aksi: 'Buka reservasi'
+          });
+        }
+      });
+    }
+
+    if (P.vaksin) {
+      S.pasien.forEach(function (p) {
+        var bln = umurBulan(p.tglLahir);
+        if (bln == null) return;
+        if (Math.floor(bln / 12) >= 19) {
+          var r = ringkasJadwal(p);
+          if (r && r.belum.length) {
+            out.push({
+              id: 'dewasa:' + p.id + ':' + r.belum.length, prioritas: 1, ikon: 'syringe', jenis: 'Jadwal vaksin',
+              judul: r.belum.length + ' vaksin dewasa dianjurkan untuk ' + p.nama,
+              teks: r.belum.slice(0, 3).map(function (b) { return b.label; }).join(', ') +
+                (r.belum.length > 3 ? ', dan ' + (r.belum.length - 3) + ' lainnya' : '') + '.',
+              tanggal: hari, pasienId: p.id, hash: 'jadwal', aksi: 'Lihat jadwal'
+            });
+          }
+          return;
+        }
+        var langkah = jadwalBertanggal(p);
+        var telat = langkah.filter(function (st) { return st.tanggal && st.tanggal < hari; });
+        var jmlTelat = telat.reduce(function (n, st) { return n + st.items.length; }, 0);
+        if (jmlTelat) {
+          var contoh = telat[0];
+          out.push({
+            id: 'telat:' + p.id + ':' + jmlTelat, prioritas: 3, ikon: 'bell', jenis: 'Terlambat',
+            judul: jmlTelat + ' vaksin ' + p.nama + ' terlambat',
+            teks: 'Sejak usia ' + contoh.usia + ' (' + tgl(contoh.tanggal) + '): ' +
+              contoh.items.join(', ') + '. Segera jadwalkan menyusul.',
+            tanggal: contoh.tanggal, pasienId: p.id, hash: 'jadwal', aksi: 'Lihat jadwal'
+          });
+        }
+        var depan = langkah.filter(function (st) {
+          if (!st.tanggal || st.tanggal < hari) return false;
+          return selisihHari(st.tanggal) <= 60;
+        })[0];
+        if (depan) {
+          var sisaHari = selisihHari(depan.tanggal);
+          out.push({
+            id: 'akan:' + p.id + ':' + depan.tanggal, prioritas: sisaHari <= 14 ? 2 : 1, ikon: 'syringe',
+            jenis: 'Jadwal vaksin',
+            judul: 'Vaksin ' + p.nama + ' ' + (sisaHari === 0 ? 'jatuh tempo hari ini' : sisaHari + ' hari lagi'),
+            teks: depan.items.join(', ') + ' · usia ' + depan.usia + ' · ' + tgl(depan.tanggal),
+            tanggal: depan.tanggal, pasienId: p.id, hash: 'booking', aksi: 'Buat reservasi'
+          });
+        }
+      });
+    }
+
+    if (P.konsultasi) {
+      S.konsultasi.forEach(function (k) {
+        if (k.status !== 'terkirim') return;
+        var umurKonsul = Math.round((Date.now() - new Date(k.dibuat).getTime()) / 864e5);
+        if (umurKonsul < 2) return;
+        out.push({
+          id: 'konsul:' + k.id, prioritas: 1, ikon: 'chat', jenis: 'Konsultasi',
+          judul: 'Konsultasi ' + k.kode + ' belum ada jawaban',
+          teks: 'Dikirim ' + umurKonsul + ' hari lalu · ' + k.topik + '. Kirim ulang ke WhatsApp bila perlu.',
+          tanggal: k.dibuat.slice(0, 10), hash: 'chat-detail/' + k.id, aksi: 'Buka konsultasi'
+        });
+      });
+    }
+
+    out.sort(function (a, b) {
+      if (b.prioritas !== a.prioritas) return b.prioritas - a.prioritas;
+      return String(a.tanggal).localeCompare(String(b.tanggal));
+    });
+    var dibaca = notifStore().dibaca;
+    out.forEach(function (n) { n.baru = !dibaca[n.id]; });
+    return out;
+  }
+  function jumlahBaru() {
+    return daftarPengingat().filter(function (n) { return n.baru; }).length;
+  }
+
+  /* --- notifikasi browser: hanya bisa muncul selagi aplikasi terbuka --- */
+  function statusNotifBrowser() {
+    if (typeof Notification === 'undefined') return 'tidak-didukung';
+    return Notification.permission;
+  }
+  function mintaIzinNotif() {
+    if (typeof Notification === 'undefined') { toast('Browser ini tidak mendukung notifikasi.'); return; }
+    try {
+      var hasil = Notification.requestPermission(function () {});
+      if (hasil && hasil.then) {
+        hasil.then(function (izin) {
+          pengaturan().browser = izin === 'granted';
+          simpan(); render();
+          toast(izin === 'granted' ? 'Notifikasi browser aktif.' :
+            'Izin notifikasi ditolak browser. Gunakan ekspor kalender agar pengingat tetap muncul.');
+        });
+      }
+    } catch (e) { toast('Browser menolak permintaan izin notifikasi.'); }
+  }
+  function tampilkanNotifBrowser() {
+    if (!pengaturan().browser || statusNotifBrowser() !== 'granted') return;
+    var store = notifStore(), hari = hariIni(), n = 0;
+    daftarPengingat().forEach(function (p) {
+      if (!p.baru || p.prioritas < 2 || n >= 3) return;
+      if (store.terkirim[p.id] === hari) return;      // sekali sehari per pengingat
+      try {
+        new Notification('VaksinKu · ' + p.jenis, { body: p.judul + '\n' + p.teks, tag: p.id });
+        store.terkirim[p.id] = hari; n++;
+      } catch (e) { /* diabaikan: browser bisa menolak */ }
+    });
+    if (n) simpan();
+  }
+
+  /* --- ekspor ke kalender: satu-satunya pengingat yang jalan saat aplikasi tertutup --- */
+  function icsEscape(t) {
+    return String(t).replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\n/g, '\\n');
+  }
+  function lipatBaris(b) {
+    if (b.length <= 74) return b;
+    var out = b.slice(0, 74), sisa = b.slice(74);
+    while (sisa.length > 73) { out += '\r\n ' + sisa.slice(0, 73); sisa = sisa.slice(73); }
+    return out + '\r\n ' + sisa;
+  }
+  function buatICS() {
+    var L = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//VaksinKu//' + icsEscape(K.brand.group) + '//ID',
+      'CALSCALE:GREGORIAN', 'METHOD:PUBLISH', 'X-WR-CALNAME:Jadwal Vaksinasi Keluarga'];
+    var stamp = new Date().toISOString().replace(/[-:]/g, '').slice(0, 15) + 'Z';
+    var jml = 0;
+
+    function acara(uid, mulaiISO, jam, judul, isi, alarmHari) {
+      var d = mulaiISO.replace(/-/g, '');
+      L.push('BEGIN:VEVENT');
+      L.push('UID:vaksinku-' + uid + '@alrashaibumas');
+      L.push('DTSTAMP:' + stamp);
+      if (jam) {
+        var t = jam.replace(':', '') + '00';
+        L.push('DTSTART:' + d + 'T' + t);
+        L.push('DURATION:PT45M');
+      } else {
+        L.push('DTSTART;VALUE=DATE:' + d);
+        var akhir = new Date(mulaiISO + 'T00:00:00'); akhir.setDate(akhir.getDate() + 1);
+        L.push('DTEND;VALUE=DATE:' + isoDari(akhir).replace(/-/g, ''));
+      }
+      L.push(lipatBaris('SUMMARY:' + icsEscape(judul)));
+      L.push(lipatBaris('DESCRIPTION:' + icsEscape(isi)));
+      L.push('BEGIN:VALARM', 'TRIGGER:-P' + alarmHari + 'D', 'ACTION:DISPLAY',
+        lipatBaris('DESCRIPTION:' + icsEscape(judul)), 'END:VALARM');
+      L.push('END:VEVENT');
+      jml++;
+    }
+
+    S.booking.forEach(function (b) {
+      if (b.status !== 'menunggu' || selisihHari(b.tanggal) < 0) return;
+      acara('b' + b.id, b.tanggal, b.jam,
+        'Vaksinasi ' + b.pasienIds.map(namaPasien).join(', '),
+        'Reservasi ' + b.kode + '\n' + b.rincian.map(function (r) { return r.nama; }).join(', ') +
+        '\n' + LAYANAN_NAMA[b.layanan] + ' · ' + b.lokasi +
+        '\nKonfirmasi: ' + K.brand.callCenter, 1);
+    });
+
+    var batas = tambahBulan(hariIni(), 24);
+    S.pasien.forEach(function (p) {
+      jadwalBertanggal(p).forEach(function (st) {
+        if (!st.tanggal || st.tanggal < hariIni() || st.tanggal > batas) return;
+        acara('v' + p.id + st.tanggal, st.tanggal, '',
+          'Jadwal vaksin ' + p.nama + ' (' + st.usia + ')',
+          st.items.join(', ') + '\nSesuai jadwal IDAI 2024.\nReservasi: ' + K.brand.callCenter, 7);
+      });
+    });
+
+    L.push('END:VCALENDAR');
+    return { teks: L.join('\r\n'), jumlah: jml };
+  }
+  function unduhICS() {
+    var hasil = buatICS();
+    if (!hasil.jumlah) { toast('Belum ada jadwal mendatang untuk diekspor.'); return; }
+    var blob = new Blob([hasil.teks], { type: 'text/calendar;charset=utf-8' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'jadwal-vaksinasi-vaksinku.ics';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 4000);
+    toast(hasil.jumlah + ' jadwal diunduh. Buka berkasnya untuk menambahkannya ke kalender.');
+  }
+
+  /* ============================ layar: notifikasi ============================ */
+  function scNotifikasi() {
+    var daftar = daftarPengingat(), P = pengaturan();
+    var body = topbar('Pengingat', daftar.length ? daftar.filter(function (n) { return n.baru; }).length + ' pengingat baru' : 'Semua terpantau', 'beranda',
+      daftar.length ? '<button class="linkbtn" style="color:#fff;" data-act="baca-semua">Tandai dibaca</button>' : '');
+    body += '<div class="pad stack g14">';
+
+    if (!daftar.length) {
+      body += empty('bell', 'Tidak ada pengingat', 'Jadwal vaksin keluarga Anda sedang aman. Pengingat muncul otomatis saat ada vaksin jatuh tempo atau reservasi mendekat.', '');
+    } else {
+      body += '<div class="stack g10">' + daftar.map(function (n) {
+        return '<button class="notif' + (n.baru ? ' baru' : '') + '" data-act="buka-notif" data-arg="' + h(n.id) + '|' + h(n.hash) + '">' +
+          '<div class="titik' + (n.baru ? '' : ' kosong') + '"></div>' +
+          '<div class="icon-sq' + (n.prioritas === 3 ? ' mag' : '') + '" style="width:34px;height:34px;border-radius:10px;">' + ic(n.ikon, 17) + '</div>' +
+          '<div class="grow"><div class="row mid g8" style="margin-bottom:2px;">' +
+          '<span class="chip ' + (n.prioritas === 3 ? 'mag' : n.prioritas === 2 ? 'amber' : 'grey') + '" style="padding:2px 8px;font-size:9.5px;">' + h(n.jenis) + '</span></div>' +
+          '<div class="small" style="font-weight:700;line-height:1.4;">' + h(n.judul) + '</div>' +
+          '<div class="tiny muted" style="line-height:1.5;margin-top:3px;">' + h(n.teks) + '</div>' +
+          '<div class="tiny" style="color:var(--magenta-dark);font-weight:700;margin-top:6px;">' + h(n.aksi) + ' ›</div></div></button>';
+      }).join('') + '</div>';
+    }
+
+    body += '<div class="card stack g10"><div class="row mid g10">' +
+      '<div class="icon-sq">' + ic('calendar', 18) + '</div>' +
+      '<div class="grow"><div style="font-weight:700;font-size:13.5px;">Pengingat di kalender ponsel</div>' +
+      '<div class="tiny muted">Tetap berbunyi walau aplikasi tertutup</div></div></div>' +
+      '<div class="tiny muted" style="line-height:1.65;">Unduh jadwal vaksinasi keluarga sebagai berkas kalender, lalu buka berkasnya untuk menambahkannya ke Google Calendar atau kalender bawaan ponsel. Alarm otomatis dipasang H-7 untuk jadwal vaksin dan H-1 untuk reservasi.</div>' +
+      '<button class="btn outline sm" data-act="unduh-ics">' + ic('download', 16) + ' Unduh jadwal ke kalender</button></div>';
+
+    var izin = statusNotifBrowser();
+    body += '<div class="card stack g10"><div class="sect-title">Notifikasi browser</div>' +
+      '<div class="tiny muted" style="line-height:1.65;">Notifikasi ini hanya bisa muncul <b>selagi aplikasi terbuka</b> di browser. Karena aplikasi berjalan tanpa server, notifikasi latar belakang tidak tersedia — gunakan ekspor kalender di atas untuk pengingat yang tetap jalan saat aplikasi ditutup.</div>';
+    if (izin === 'tidak-didukung') {
+      body += '<div class="chip grey">Tidak didukung browser ini</div>';
+    } else if (izin === 'granted') {
+      body += '<div class="setrow"><div class="grow"><div class="small" style="font-weight:700;">Tampilkan notifikasi</div>' +
+        '<div class="tiny muted">Maksimal 3 pengingat penting per hari</div></div>' +
+        '<button class="switch' + (P.browser ? ' on' : '') + '" data-act="toggle-set" data-arg="browser" aria-label="Notifikasi browser"></button></div>';
+    } else if (izin === 'denied') {
+      body += '<div class="chip danger">Izin ditolak di pengaturan browser</div>';
+    } else {
+      body += '<button class="btn outline sm" data-act="izin-notif">' + ic('bell', 16) + ' Aktifkan notifikasi browser</button>';
+    }
+    body += '</div>';
+
+    body += '<div class="card stack g4"><div class="sect-title" style="margin-bottom:4px;">Pengingat yang ditampilkan</div>' +
+      setel('vaksin', 'Jadwal & keterlambatan vaksin', 'Dihitung dari tanggal lahir tiap pasien') +
+      '<div class="divider"></div>' +
+      setel('booking', 'Reservasi mendekat', 'Sesuai jarak hari di bawah') +
+      '<div class="divider"></div>' +
+      setel('konsultasi', 'Konsultasi belum dijawab', 'Setelah 2 hari tanpa jawaban') +
+      '<div class="divider"></div>' +
+      '<div class="stack g8" style="padding:12px 0 4px;"><div class="small" style="font-weight:700;">Ingatkan reservasi sejak</div>' +
+      '<div class="row g8">' + [3, 7, 14].map(function (n) {
+        return '<button class="pill' + (P.leadBooking === n ? ' teal-on' : '') + '" style="flex:1;text-align:center;" data-act="set-lead" data-arg="' + n + '">H-' + n + '</button>';
+      }).join('') + '</div></div></div>';
+
+    body += '</div>';
+    return { body: body };
+  }
+  function setel(kunci, judul, sub) {
+    var P = pengaturan();
+    return '<div class="setrow"><div class="grow"><div class="small" style="font-weight:700;">' + h(judul) + '</div>' +
+      '<div class="tiny muted">' + h(sub) + '</div></div>' +
+      '<button class="switch' + (P[kunci] ? ' on' : '') + '" data-act="toggle-set" data-arg="' + kunci + '" aria-label="' + h(judul) + '"></button></div>';
   }
 
   /* ============================ konsultasi dokter ============================ */
@@ -531,12 +839,16 @@
   function scBeranda() {
     var belumSiap = !S.profil.nama || !S.pasien.length;
     var aktif = S.booking.filter(function (b) { return b.status === 'menunggu'; });
+    var baru = jumlahBaru();
     var body = '';
 
     body += '<div class="hero">' +
       '<div class="row mid g10"><img src="' + K.logoMark + '" alt="VaksinKu" style="height:22px;width:auto;">' +
       '<div class="grow"></div>' +
-      '<span class="chip amber">' + ic('coin', 14) + ' ' + S.poin + ' Poin</span></div>' +
+      '<span class="chip amber">' + ic('coin', 14) + ' ' + S.poin + ' Poin</span>' +
+      '<div class="bellwrap"><button class="iconbtn" data-act="go" data-arg="notifikasi" aria-label="Pengingat">' +
+      ic('bell', 18) + '</button>' +
+      (baru ? '<span class="badge">' + (baru > 9 ? '9+' : baru) + '</span>' : '') + '</div></div>' +
       '<div style="height:14px;"></div>' +
       '<div class="disp" style="font-size:18px;font-weight:800;">Halo' + (S.profil.nama ? ', ' + h(S.profil.nama.split(' ')[0]) : '') + '</div>' +
       '<div class="small" style="color:var(--ink-2);margin-top:2px;">' + h(K.brand.tagline) + '</div>' +
@@ -1218,6 +1530,8 @@
       '<div class="divider"></div>' +
       menuRow('calendar', 'Jadwal Vaksin', 'IDAI 2024 & PAPDI 2025', 'jadwal') +
       '<div class="divider"></div>' +
+      menuRow('bell', 'Pengingat & Notifikasi', jumlahBaru() + ' pengingat baru', 'notifikasi') +
+      '<div class="divider"></div>' +
       menuRow('chat', 'Konsultasi Dokter', S.konsultasi.length + ' konsultasi', 'chat') +
       '<div class="divider"></div>' +
       menuRow('tag', 'Daftar Harga', 'Price list lengkap', 'harga') +
@@ -1371,6 +1685,7 @@
       case 'booking-detail': r = scBookingDetail(route.param); break;
       case 'jadwal': r = scJadwal(); break;
       case 'jadwal-info': r = scJadwalInfo(route.param); break;
+      case 'notifikasi': r = scNotifikasi(); break;
       case 'chat': r = scChat(); break;
       case 'chat-baru': r = scChatBaru(); break;
       case 'chat-detail': r = scChatDetail(route.param); break;
@@ -1453,6 +1768,29 @@
         if (b1) kirimWA(b1);
         return;
       }
+      case 'baca-semua': {
+        var dbc = notifStore().dibaca;
+        daftarPengingat().forEach(function (n) { dbc[n.id] = 1; });
+        simpan(); render(); toast('Semua pengingat ditandai dibaca.');
+        return;
+      }
+      case 'buka-notif': {
+        var bagi = arg.split('|');
+        notifStore().dibaca[bagi[0]] = 1;
+        simpan();
+        location.hash = '#/' + bagi[1];
+        return;
+      }
+      case 'toggle-set': {
+        var P = pengaturan();
+        P[arg] = !P[arg];
+        if (arg === 'browser' && P.browser && statusNotifBrowser() !== 'granted') { P.browser = false; mintaIzinNotif(); return; }
+        simpan(); render();
+        return;
+      }
+      case 'set-lead': pengaturan().leadBooking = parseInt(arg, 10); simpan(); render(); return;
+      case 'izin-notif': mintaIzinNotif(); return;
+      case 'unduh-ics': unduhICS(); return;
       case 'set-topik': draftKonsul().topik = TOPIK[parseInt(arg, 10)] || ''; simpan(); render(); return;
       case 'toggle-lampiran': draftKonsul().lampirkan = !draftKonsul().lampirkan; simpan(); render(); return;
       case 'tanya-dokter': {
@@ -1746,4 +2084,8 @@
   });
   bacaRoute();
   render();
+  // pengingat penting ditampilkan sebagai notifikasi browser saat aplikasi dibuka,
+  // lalu diperiksa ulang tiap 30 menit selama aplikasi tetap terbuka
+  setTimeout(tampilkanNotifBrowser, 1200);
+  setInterval(tampilkanNotifBrowser, 18e5);
 })();

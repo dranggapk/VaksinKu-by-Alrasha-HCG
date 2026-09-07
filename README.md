@@ -25,6 +25,8 @@ tautan, atau ditambahkan ke layar utama ponsel lewat menu "Add to Home screen".
 | **Biaya nyata** | Total dihitung dari price list resmi; ganti dokter umum ↔ spesialis mengubah total seketika |
 | **Kirim ke WhatsApp** | Ringkasan reservasi dikirim ke CS **0811-7744-74** dengan satu ketukan |
 | **Konsultasi dokter** | Pertanyaan disusun bersama konteks medis pasien, dikirim ke WhatsApp dokter; jawaban dicatat kembali sebagai arsip percakapan |
+| **Pengingat otomatis** | Vaksin terlambat, vaksin yang akan jatuh tempo, reservasi mendekat, dan konsultasi tanpa jawaban — dihitung dari tanggal lahir tiap pasien, dengan lencana di beranda |
+| **Ekspor ke kalender** | Unduh `.ics` berisi jadwal vaksin & reservasi lengkap dengan alarm H-7 dan H-1, agar pengingat tetap berbunyi walau aplikasi tertutup |
 | **Rekam medis** | Riwayat vaksinasi per pasien, otomatis terisi saat reservasi ditandai selesai |
 | **Tumbuh kembang** | Catat berat, tinggi, lingkar kepala; grafik berat badan terhadap usia |
 | **Daftar harga** | 17 kategori vaksin, dengan pencarian dan pilihan tarif dokter |
@@ -45,6 +47,12 @@ tautan, atau ditambahkan ke layar utama ponsel lewat menu "Add to Home screen".
   lalu jawaban yang Anda terima dicatat sendiri ke dalam aplikasi supaya
   tersimpan bersama rekam medis. Fitur ini juga bukan untuk keadaan gawat
   darurat — peringatan tersebut ditampilkan di layar konsultasi.
+- **Notifikasi latar belakang tidak tersedia.** Berkas HTML yang dibuka langsung
+  tidak bisa memakai Service Worker, sehingga aplikasi tidak dapat memunculkan
+  notifikasi saat ditutup. Notifikasi browser hanya muncul **selagi aplikasi
+  terbuka**, dan izinnya kerap ditolak browser pada berkas lokal. Karena itu
+  pengingat yang berbunyi saat aplikasi tertutup disediakan lewat **ekspor
+  kalender** — cara ini bekerja di Google Calendar maupun kalender bawaan ponsel.
 - **Slot waktu belum terhubung ketersediaan riil**; jadwal final dikonfirmasi CS.
 - Grafik pertumbuhan menampilkan data pasien sendiri, belum dibandingkan dengan
   kurva WHO (butuh tabel standar WHO yang resmi).
@@ -69,7 +77,7 @@ app/                 Sumber aplikasi
 src/
   data_katalog.py    Isi katalog (harga, jadwal, layanan, dokter, klinik)
   build_bundle.py    Merakit semuanya + font & logo menjadi satu berkas HTML
-  uji_app.py         Uji fungsional otomatis di browser headless (45 uji)
+  uji_app.py         Uji fungsional otomatis di browser headless (56 uji)
   tangkap_layar.py   Tangkap layar aplikasi dengan data contoh
   gen.py             Design system generator mockup statis (versi lama)
   build_app.py       Generator prototipe klik (versi lama)
@@ -83,7 +91,7 @@ katalog/             Halaman katalog hasil koreksi (lihat katalog/README.md)
 cd src
 python3 build_bundle.py       # → VaksinKu-App.html (font tertanam, siap offline)
 python3 build_bundle.py --tanpa-font   # lebih cepat, font dari Google Fonts
-python3 uji_app.py            # jalankan 45 uji fungsional
+python3 uji_app.py            # jalankan 56 uji fungsional
 python3 tangkap_layar.py      # tangkap layar dengan data contoh
 ```
 

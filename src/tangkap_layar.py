@@ -25,6 +25,7 @@ LAYAR = {
     "tentang": "#/tentang", "internasional": "#/internasional",
     "chat": "#/chat", "chat-baru": "#/chat-baru", "chat-detail": "#/chat-detail/k1",
     "booking-detail": "#/booking-detail/b1",
+    "notifikasi": "#/notifikasi",
 }
 
 TANDA_APP = "<script>/*APP-MULAI*/"
