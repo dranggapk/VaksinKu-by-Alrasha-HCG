@@ -6,3 +6,6 @@ __pycache__/
 
 # keluaran build sementara
 app/*.bundle.html
+
+# artboard hasil ekspor Claude Design ikut disimpan
+!design/*.dc.html

@@ -1,0 +1,206 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --teal:#56C3C7; --teal-dark:#2E9BA0; --teal-tint:#E9F9FA; --teal-tint2:#D7F2F3;
+  --magenta:#D11972; --magenta-dark:#A81260; --magenta-tint:#FDECF3; --magenta-tint2:#FBD9E7;
+  --ink:#262626; --ink-2:#4B4B4B; --ink-3:#606060; --ink-4:#9AA0A6;
+  --line:#ECECEC; --bg:#FAFAF9; --card:#FFFFFF;
+  --amber:#E8A23A; --amber-tint:#FFF3DF;
+  --green:#2E9E5B; --green-tint:#E8F7EE;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{background:#EDEDEC;}
+a{color:var(--magenta-dark);text-decoration:none;}
+a:hover{color:var(--magenta);}
+.frame{
+  width:390px;background:var(--bg);
+  font-family:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,sans-serif;
+  color:var(--ink);display:flex;flex-direction:column;position:relative;
+  min-height:844px;
+}
+.disp{font-family:'Baloo 2',ui-rounded,sans-serif;}
+img{display:block;max-width:100%;}
+.row{display:flex;flex-direction:row;}
+.col{display:flex;flex-direction:column;}
+.grow{flex-grow:1;}
+.pill{border-radius:999px;}
+.card{
+  background:var(--card);border:1px solid var(--line);border-radius:20px;padding:18px;
+  box-shadow:0 1px 2px rgba(38,38,38,0.03),0 10px 24px -16px rgba(38,38,38,0.18);
+}
+.btn{
+  font-family:'Baloo 2',ui-rounded,sans-serif;font-weight:700;font-size:15px;
+  border-radius:999px;padding:15px 20px;display:flex;align-items:center;justify-content:center;gap:8px;
+  border:none;cursor:pointer;
+}
+.btn-primary{background:var(--magenta);color:#fff;}
+.btn-outline{background:#fff;border:1.6px solid var(--teal);color:var(--teal-dark);}
+.btn-outline-mag{background:#fff;border:1.6px solid var(--magenta);color:var(--magenta-dark);}
+.chip{
+  border-radius:999px;padding:6px 12px;font-size:12px;font-weight:700;
+  display:inline-flex;align-items:center;gap:5px;white-space:nowrap;
+}
+.chip-teal{background:var(--teal-tint);color:var(--teal-dark);}
+.chip-mag{background:var(--magenta-tint);color:var(--magenta-dark);}
+.chip-amber{background:var(--amber-tint);color:#9C6B0E;}
+.chip-green{background:var(--green-tint);color:var(--green);}
+.chip-gray{background:#F1F1F0;color:var(--ink-3);}
+.input{
+  width:100%;border:1.4px solid var(--line);border-radius:14px;padding:14px 14px;
+  font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;color:var(--ink);background:#fff;
+}
+.label{font-size:13.5px;font-weight:700;color:var(--ink);margin-bottom:8px;display:block;}
+.req{color:var(--magenta);}
+.hint{font-size:12px;color:var(--ink-4);margin:2px 0 10px;line-height:1.5;}
+.section{padding:20px;}
+.hdr-bar{
+  background:var(--teal-dark);color:#fff;padding:18px 20px 20px;display:flex;align-items:center;gap:14px;
+}
+.hdr-bar .disp{font-size:19px;font-weight:700;}
+.iconbtn{
+  width:38px;height:38px;border-radius:50%;background:#fff;border:1px solid var(--line);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.divider{height:1px;background:var(--line);width:100%;}
+.navbar{
+  margin-top:auto;background:#fff;border-top:1px solid var(--line);
+  height:78px;display:flex;align-items:center;justify-content:space-around;padding:0 6px;
+  position:sticky;bottom:0;
+}
+.navitem{display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--ink-4);font-size:10.5px;font-weight:600;width:58px;}
+.navitem.active{color:var(--magenta-dark);}
+.navfab{
+  width:56px;height:56px;border-radius:50%;background:var(--magenta);display:flex;align-items:center;
+  justify-content:center;margin-top:-30px;box-shadow:0 8px 18px -6px rgba(209,25,114,0.55);border:5px solid #fff;
+}
+</style>
+</helmet>
+<div class="frame">
+
+<div class="hdr-bar" style="flex-direction:column;align-items:flex-start;gap:10px;background:var(--ink);">
+  <div class="row" style="align-items:center;gap:14px;width:100%;">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg>
+    <div class="col" style="gap:1px;">
+      <div class="disp" style="font-size:18px;font-weight:700;">Dashboard Vaksinasi Sekolah</div>
+      <div style="font-size:11.5px;opacity:.75;">SDN Melati 02 · Tahun Ajaran 2026/2027</div>
+    </div>
+  </div>
+</div>
+
+
+<div class="row" style="padding:14px 20px 0;gap:22px;border-bottom:1px solid var(--line);">
+  <div style="padding-bottom:12px;border-bottom:2.4px solid var(--magenta);color:var(--magenta-dark);font-weight:700;font-size:13px;">Ringkasan</div>
+  <div style="padding-bottom:12px;color:var(--ink-3);font-weight:600;font-size:13px;">Peserta</div>
+  <div style="padding-bottom:12px;color:var(--ink-3);font-weight:600;font-size:13px;">Laporan</div>
+</div>
+
+
+<div class="row" style="gap:10px;padding:16px 20px 0;">
+  <div class="card" style="flex:1;padding:14px;text-align:center;">
+      <div class="disp" style="font-size:21px;font-weight:800;color:var(--ink);">320</div>
+      <div style="font-size:10.5px;color:var(--ink-3);margin-top:4px;line-height:1.3;">Total Peserta</div>
+    </div>
+  <div class="card" style="flex:1;padding:14px;text-align:center;">
+      <div class="disp" style="font-size:21px;font-weight:800;color:var(--teal-dark);">248</div>
+      <div style="font-size:10.5px;color:var(--ink-3);margin-top:4px;line-height:1.3;">Sudah Divaksin</div>
+    </div>
+  <div class="card" style="flex:1;padding:14px;text-align:center;">
+      <div class="disp" style="font-size:21px;font-weight:800;color:var(--magenta-dark);">77%</div>
+      <div style="font-size:10.5px;color:var(--ink-3);margin-top:4px;line-height:1.3;">Coverage</div>
+    </div>
+</div>
+
+
+<div style="padding:16px 20px 0;">
+  <button class="btn btn-primary" style="width:100%;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg> Booking Massal (Bulk)</button>
+</div>
+
+<div class="col" style="padding:16px 20px 24px;gap:14px;">
+  
+<div class="card">
+  <div style="font-weight:700;font-size:14.5px;margin-bottom:14px;">Cakupan per Kelas</div>
+  <div class="col" style="gap:14px;">
+    <div class="col" style="gap:6px;">
+      <div class="row" style="justify-content:space-between;">
+        <span style="font-size:12.5px;font-weight:700;">Kelas 1A</span>
+        <span style="font-size:12px;font-weight:700;color:var(--teal-dark);">92%</span>
+      </div>
+      <div style="height:7px;border-radius:5px;background:#F1F1F0;overflow:hidden;">
+        <div style="width:92%;height:100%;background:var(--teal-dark);"></div>
+      </div>
+    </div>
+    <div class="col" style="gap:6px;">
+      <div class="row" style="justify-content:space-between;">
+        <span style="font-size:12.5px;font-weight:700;">Kelas 1B</span>
+        <span style="font-size:12px;font-weight:700;color:#C8890F;">65%</span>
+      </div>
+      <div style="height:7px;border-radius:5px;background:#F1F1F0;overflow:hidden;">
+        <div style="width:65%;height:100%;background:#C8890F;"></div>
+      </div>
+    </div>
+    <div class="col" style="gap:6px;">
+      <div class="row" style="justify-content:space-between;">
+        <span style="font-size:12.5px;font-weight:700;">Kelas 2A</span>
+        <span style="font-size:12px;font-weight:700;color:var(--teal-dark);">100%</span>
+      </div>
+      <div style="height:7px;border-radius:5px;background:#F1F1F0;overflow:hidden;">
+        <div style="width:100%;height:100%;background:var(--teal-dark);"></div>
+      </div>
+    </div>
+    <div class="col" style="gap:6px;">
+      <div class="row" style="justify-content:space-between;">
+        <span style="font-size:12.5px;font-weight:700;">Kelas 2B</span>
+        <span style="font-size:12px;font-weight:700;color:#C8890F;">58%</span>
+      </div>
+      <div style="height:7px;border-radius:5px;background:#F1F1F0;overflow:hidden;">
+        <div style="width:58%;height:100%;background:#C8890F;"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+  
+<div class="card">
+  <div class="row" style="align-items:center;gap:12px;">
+    <div style="width:40px;height:40px;border-radius:12px;background:var(--teal-tint);display:flex;align-items:center;justify-content:center;"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="var(--teal-dark)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V5"/><path d="M7.5 9.5 12 5l4.5 4.5"/><path d="M5 19.5h14"/></svg></div>
+    <div class="col grow" style="gap:1px;">
+      <div style="font-weight:700;font-size:13.5px;">Laporan &amp; Kepatuhan</div>
+      <div style="font-size:11.5px;color:var(--ink-3);">Format sesuai standar BIAS</div>
+    </div>
+  </div>
+  <button class="btn btn-outline" style="width:100%;margin-top:14px;padding:12px;font-size:13px;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--teal-dark)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11"/><path d="M7.5 11.5 12 16l4.5-4.5"/><path d="M5 19.5h14"/></svg> Unduh Laporan untuk Dinas Kesehatan</button>
+</div>
+
+  
+<div class="card">
+  <div class="row" style="align-items:center;">
+    <div style="font-weight:700;font-size:14.5px;">Invoice &amp; Termin</div>
+    <div class="grow"></div>
+    <span class="chip chip-amber">Jatuh Tempo 15 Sep</span>
+  </div>
+  <div class="row" style="align-items:center;margin-top:12px;">
+    <div class="col" style="gap:2px;">
+      <div style="font-size:12px;color:var(--ink-3);">INV-2026-0142</div>
+      <div class="disp" style="font-weight:800;font-size:17px;">Rp48.000.000</div>
+    </div>
+    <div class="grow"></div>
+    <button class="btn btn-outline-mag" style="padding:10px 16px;font-size:12.5px;">Lihat Invoice</button>
+  </div>
+</div>
+
+</div>
+</div>
+</x-dc>
+</body>
+</html>

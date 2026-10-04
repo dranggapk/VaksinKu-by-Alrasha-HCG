@@ -6,6 +6,17 @@ berjalan langsung di browser.
 
 ## Cara memakai
 
+Repositori ini berisi dua berkas siap pakai:
+
+| Berkas | Isi |
+|---|---|
+| **`index.html`** | Halaman muka: 9 layar rancangan antarmuka, diambil dari kanvas Claude Design |
+| **`VaksinKu-App.html`** | Aplikasi yang benar-benar berjalan |
+
+Keduanya berdiri sendiri — klik dua kali untuk membuka di browser, atau unggah
+seluruh folder ke hosting (GitHub Pages dan sejenisnya langsung menyajikan
+`index.html`).
+
 Unduh **`VaksinKu-App.html`**, lalu klik dua kali — aplikasi langsung terbuka di
 browser (Chrome, Edge, Safari, Firefox), di ponsel maupun komputer. Tidak butuh
 instalasi, server, atau koneksi internet: logo, ikon, dan font sudah tertanam.
@@ -69,7 +80,9 @@ vaksin haji & umrah sesuai regulasi Arab Saudi dengan tambahan rekomendasi WHO.
 ## Struktur repositori
 
 ```
+index.html           Halaman muka: galeri 9 layar rancangan (satu berkas)
 VaksinKu-App.html    Aplikasi siap pakai (satu berkas, self-contained)
+design/              Artboard hasil ekspor kanvas Claude Design (sumber index.html)
 app/                 Sumber aplikasi
   index.html         Kerangka halaman
   styles.css         Design system: token warna, komponen, tata letak
@@ -79,6 +92,8 @@ src/
   build_bundle.py    Merakit semuanya + font & logo menjadi satu berkas HTML
   uji_app.py         Uji fungsional otomatis di browser headless (56 uji)
   tangkap_layar.py   Tangkap layar aplikasi dengan data contoh
+  ambil_desain.py    Ekspor isi kanvas Claude Design ke folder design/
+  build_index.py     Merakit index.html dari design/
   gen.py             Design system generator mockup statis (versi lama)
   build_app.py       Generator prototipe klik (versi lama)
 mockup/              Artboard statis (.dc.html) untuk kanvas desain
@@ -93,10 +108,34 @@ python3 build_bundle.py       # → VaksinKu-App.html (font tertanam, siap offli
 python3 build_bundle.py --tanpa-font   # lebih cepat, font dari Google Fonts
 python3 uji_app.py            # jalankan 56 uji fungsional
 python3 tangkap_layar.py      # tangkap layar dengan data contoh
+python3 build_index.py        # → index.html dari folder design/
+```
+
+Bila rancangan di Claude Design diubah, ekspor ulang lalu rakit ulang:
+
+```bash
+python3 ambil_desain.py <berkas-halaman-kanvas.html>   # → design/
+python3 build_index.py
 ```
 
 `build_bundle.py` mengunduh font dari Google Fonts saat dijalankan, jadi langkah
 ini butuh internet — hasil akhirnya tidak.
+
+## Catatan rancangan
+
+Rancangan di kanvas Claude Design dibuat sebelum katalog resmi tersedia,
+sehingga masih memuat data contoh yang terbawa dari screenshot aplikasi
+pembanding. Karena `index.html` terbuka untuk umum, data itu diluruskan saat
+perakitan — daftar penggantinya ada di `KOREKSI` pada `src/build_index.py`:
+
+- nama dan alamat email pribadi pada layar Profil diganti contoh netral;
+- nama dokter diganti dokter asli Alrasha Ibumas (dr. Dwi Fachri JH Sp.A,
+  dr. Leo Andreas Sp.PD);
+- klinik dan alamat diarahkan ke Tanjungpinang, bukan kota pada screenshot;
+- jam konsultasi yang tidak pernah disebut katalog diganti nomor call center.
+
+Agar konsisten, sebaiknya perubahan yang sama juga diterapkan di kanvas
+Claude Design-nya.
 
 ## Catatan katalog
 

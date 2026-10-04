@@ -1,0 +1,216 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --teal:#56C3C7; --teal-dark:#2E9BA0; --teal-tint:#E9F9FA; --teal-tint2:#D7F2F3;
+  --magenta:#D11972; --magenta-dark:#A81260; --magenta-tint:#FDECF3; --magenta-tint2:#FBD9E7;
+  --ink:#262626; --ink-2:#4B4B4B; --ink-3:#606060; --ink-4:#9AA0A6;
+  --line:#ECECEC; --bg:#FAFAF9; --card:#FFFFFF;
+  --amber:#E8A23A; --amber-tint:#FFF3DF;
+  --green:#2E9E5B; --green-tint:#E8F7EE;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{background:#EDEDEC;}
+a{color:var(--magenta-dark);text-decoration:none;}
+a:hover{color:var(--magenta);}
+.frame{
+  width:390px;background:var(--bg);
+  font-family:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,sans-serif;
+  color:var(--ink);display:flex;flex-direction:column;position:relative;
+  min-height:844px;
+}
+.disp{font-family:'Baloo 2',ui-rounded,sans-serif;}
+img{display:block;max-width:100%;}
+.row{display:flex;flex-direction:row;}
+.col{display:flex;flex-direction:column;}
+.grow{flex-grow:1;}
+.pill{border-radius:999px;}
+.card{
+  background:var(--card);border:1px solid var(--line);border-radius:20px;padding:18px;
+  box-shadow:0 1px 2px rgba(38,38,38,0.03),0 10px 24px -16px rgba(38,38,38,0.18);
+}
+.btn{
+  font-family:'Baloo 2',ui-rounded,sans-serif;font-weight:700;font-size:15px;
+  border-radius:999px;padding:15px 20px;display:flex;align-items:center;justify-content:center;gap:8px;
+  border:none;cursor:pointer;
+}
+.btn-primary{background:var(--magenta);color:#fff;}
+.btn-outline{background:#fff;border:1.6px solid var(--teal);color:var(--teal-dark);}
+.btn-outline-mag{background:#fff;border:1.6px solid var(--magenta);color:var(--magenta-dark);}
+.chip{
+  border-radius:999px;padding:6px 12px;font-size:12px;font-weight:700;
+  display:inline-flex;align-items:center;gap:5px;white-space:nowrap;
+}
+.chip-teal{background:var(--teal-tint);color:var(--teal-dark);}
+.chip-mag{background:var(--magenta-tint);color:var(--magenta-dark);}
+.chip-amber{background:var(--amber-tint);color:#9C6B0E;}
+.chip-green{background:var(--green-tint);color:var(--green);}
+.chip-gray{background:#F1F1F0;color:var(--ink-3);}
+.input{
+  width:100%;border:1.4px solid var(--line);border-radius:14px;padding:14px 14px;
+  font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;color:var(--ink);background:#fff;
+}
+.label{font-size:13.5px;font-weight:700;color:var(--ink);margin-bottom:8px;display:block;}
+.req{color:var(--magenta);}
+.hint{font-size:12px;color:var(--ink-4);margin:2px 0 10px;line-height:1.5;}
+.section{padding:20px;}
+.hdr-bar{
+  background:var(--teal-dark);color:#fff;padding:18px 20px 20px;display:flex;align-items:center;gap:14px;
+}
+.hdr-bar .disp{font-size:19px;font-weight:700;}
+.iconbtn{
+  width:38px;height:38px;border-radius:50%;background:#fff;border:1px solid var(--line);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.divider{height:1px;background:var(--line);width:100%;}
+.navbar{
+  margin-top:auto;background:#fff;border-top:1px solid var(--line);
+  height:78px;display:flex;align-items:center;justify-content:space-around;padding:0 6px;
+  position:sticky;bottom:0;
+}
+.navitem{display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--ink-4);font-size:10.5px;font-weight:600;width:58px;}
+.navitem.active{color:var(--magenta-dark);}
+.navfab{
+  width:56px;height:56px;border-radius:50%;background:var(--magenta);display:flex;align-items:center;
+  justify-content:center;margin-top:-30px;box-shadow:0 8px 18px -6px rgba(209,25,114,0.55);border:5px solid #fff;
+}
+</style>
+</helmet>
+<div class="frame">
+
+<div style="background:linear-gradient(120deg,var(--teal-tint) 0%,var(--magenta-tint) 100%);border-radius:0 0 28px 28px;padding:20px 20px 26px;">
+  <div class="row" style="align-items:center;gap:10px;">
+    <img src="vaksinku-logo-mark.png" alt="VaksinKu" style="height:22px;width:auto;">
+    <div class="grow"></div>
+    <div class="chip chip-amber"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9C6B0E" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.4"/><path d="M12 8v8M9.4 10.2c0-1.1 1.1-2 2.6-2s2.6.7 2.6 1.8-1 1.6-2.6 2-2.6.9-2.6 2 1.1 1.8 2.6 1.8 2.6-.7 2.6-1.6"/></svg> 128 Poin</div>
+    <div class="iconbtn"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--ink-2)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 10a6 6 0 0 1 12 0c0 4 1.4 5.4 2 6H4c.6-.6 2-2 2-6Z"/><path d="M10 19a2 2 0 0 0 4 0"/></svg></div>
+    <div class="iconbtn"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--ink-2)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h7l4 4v14a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z"/><path d="M14 3v4h4"/><path d="M9 12h6M9 16h6M9 8h2"/></svg></div>
+  </div>
+  <div style="height:18px;"></div>
+  <div class="disp" style="font-size:19px;font-weight:800;">Halo, Keluarga Perdana</div>
+  <div style="font-size:12.5px;color:var(--ink-2);margin-top:4px;">Yuk pastikan imunisasi keluarga selalu tepat waktu.</div>
+</div>
+
+<div class="col" style="padding:18px 20px 12px;gap:14px;">
+  
+<div class="card">
+  <div class="row" style="align-items:center;gap:8px;">
+    <span class="chip chip-mag">Booking Aktif</span>
+    <div class="grow"></div>
+    <span style="font-size:11.5px;color:var(--ink-4);">#VK-88213</span>
+  </div>
+  <div style="height:12px;"></div>
+  <div class="row" style="gap:12px;align-items:center;">
+    <div style="width:44px;height:44px;border-radius:50%;background:var(--teal-tint);display:flex;align-items:center;justify-content:center;font-weight:800;color:var(--teal-dark);font-family:'Baloo 2';">AP</div>
+    <div class="col" style="gap:2px;">
+      <div style="font-weight:700;font-size:14.5px;">Vaksin Influenza — Nadia</div>
+      <div style="font-size:12px;color:var(--ink-3);">dr. Melati Anggraini, Sp.A</div>
+    </div>
+  </div>
+  <div style="height:14px;"></div>
+  <div class="row" style="gap:16px;">
+    <div class="row" style="gap:6px;align-items:center;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--teal-dark)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5.5" width="16" height="15" rx="2.2"/><path d="M8 3.5v4M16 3.5v4M4 10h16"/></svg><span style="font-size:12px;color:var(--ink-2);">Sab, 12 Sep • 10.00</span></div>
+    <div class="row" style="gap:6px;align-items:center;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--teal-dark)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11.5 12 4l8 7.5"/><path d="M6 10v9a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1v-9"/><path d="M10 20v-5h4v5"/></svg><span style="font-size:12px;color:var(--ink-2);">Di Rumah</span></div>
+  </div>
+  <div class="divider" style="margin:14px 0;"></div>
+  <div class="row" style="gap:10px;">
+    <button class="btn btn-outline" style="flex:1;padding:11px;font-size:13px;">Lihat Detail</button>
+    <button style="flex:1;background:transparent;border:none;color:var(--magenta-dark);font-weight:700;font-size:13px;font-family:'Baloo 2';">Reschedule</button>
+  </div>
+</div>
+
+  
+<div class="card row" style="gap:14px;align-items:flex-start;">
+  <div style="width:42px;height:42px;border-radius:14px;background:var(--magenta-tint);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--magenta-dark)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5.5" width="16" height="15" rx="2.2"/><path d="M8 3.5v4M16 3.5v4M4 10h16"/></svg>
+  </div>
+  <div class="col" style="gap:4px;">
+    <div style="font-weight:700;font-size:14px;">Reminder jadwal berikutnya</div>
+    <div style="font-size:12.5px;color:var(--ink-2);">Varicella (dosis ke-2) — 3 minggu lagi</div>
+    <div style="font-size:11px;color:var(--ink-4);margin-top:2px;">Reminder otomatis H-7, H-1, dan H-1 jam.</div>
+  </div>
+</div>
+
+  
+<div class="card">
+  <div class="row" style="align-items:center;">
+    <div style="font-weight:700;font-size:14.5px;">Tumbuh Kembang &amp; Kelengkapan Vaksinasi</div>
+    <div class="grow"></div>
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--ink-4)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg>
+  </div>
+  <div style="height:12px;"></div>
+  <div class="row" style="gap:8px;">
+    <div class="chip chip-teal" style="flex:1;justify-content:center;">Berat 8.5kg · Normal</div>
+    <div class="chip chip-teal" style="flex:1;justify-content:center;">Tinggi 68cm · Normal</div>
+  </div>
+</div>
+
+  
+<div style="border-radius:20px;padding:20px;background:linear-gradient(135deg,var(--teal-dark) 0%,var(--magenta-dark) 130%);color:#fff;position:relative;overflow:hidden;">
+  <div style="position:absolute;right:-30px;top:-30px;width:130px;height:130px;border-radius:50%;background:rgba(255,255,255,.08);"></div>
+  <div style="position:absolute;right:20px;bottom:-40px;width:90px;height:90px;border-radius:50%;background:rgba(255,255,255,.08);"></div>
+  <div style="position:relative;">
+    <div class="disp" style="font-size:17px;font-weight:800;">Musim Umroh &amp; Haji</div>
+    <div style="font-size:12.5px;opacity:.9;margin-top:4px;line-height:1.5;">Vaksin Meningitis wajib jamaah, siap sebelum berangkat.</div>
+    <div class="row" style="gap:8px;margin-top:12px;flex-wrap:wrap;">
+      <span style="background:rgba(255,255,255,.18);border-radius:999px;padding:5px 11px;font-size:11px;font-weight:700;">Meningitis</span>
+      <span style="background:rgba(255,255,255,.18);border-radius:999px;padding:5px 11px;font-size:11px;font-weight:700;">Influenza</span>
+      <span style="background:rgba(255,255,255,.18);border-radius:999px;padding:5px 11px;font-size:11px;font-weight:700;">Tifoid</span>
+    </div>
+  </div>
+</div>
+
+  
+<div class="card row" style="gap:8px;">
+  
+    <div class="col" style="align-items:center;gap:8px;flex:1;">
+      <div style="width:46px;height:46px;border-radius:14px;background:var(--teal-tint);display:flex;align-items:center;justify-content:center;">
+        <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="var(--teal-dark)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h7l4 4v14a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z"/><path d="M14 3v4h4"/><path d="M9 12h6M9 16h6M9 8h2"/></svg>
+      </div>
+      <div style="font-size:11.5px;font-weight:700;text-align:center;line-height:1.3;">Price List</div>
+    </div>
+  
+    <div class="col" style="align-items:center;gap:8px;flex:1;">
+      <div style="width:46px;height:46px;border-radius:14px;background:var(--teal-tint);display:flex;align-items:center;justify-content:center;">
+        <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="var(--teal-dark)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="9.5" width="16" height="11" rx="1.4"/><path d="M4 13.5h16"/><path d="M12 9.5V21"/><path d="M8.3 9.5C6 9.5 5.5 5.5 8 5c2 0 3.5 2.6 4 4.5 0.5-1.9 2-4.5 4-4.5 2.5.5 2 4.5-.3 4.5"/></svg>
+      </div>
+      <div style="font-size:11.5px;font-weight:700;text-align:center;line-height:1.3;">Paket Vaksinasi</div>
+    </div>
+  
+    <div class="col" style="align-items:center;gap:8px;flex:1;">
+      <div style="width:46px;height:46px;border-radius:14px;background:var(--teal-tint);display:flex;align-items:center;justify-content:center;">
+        <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="var(--teal-dark)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.3-4.3"/></svg>
+      </div>
+      <div style="font-size:11.5px;font-weight:700;text-align:center;line-height:1.3;">Artikel Edukasi</div>
+    </div>
+</div>
+
+  
+<div class="card row" style="align-items:center;gap:14px;background:var(--teal-tint);border-color:transparent;">
+  <div style="width:42px;height:42px;border-radius:12px;background:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--teal-dark)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4" width="14" height="17" rx="1.4"/><path d="M9 8h1.6M13.4 8H15M9 12h1.6M13.4 12h1.6M9 16h1.6M13.4 16h1.6"/></svg>
+  </div>
+  <div class="col grow" style="gap:2px;">
+    <div style="font-weight:700;font-size:13.5px;">Mitra Institusi?</div>
+    <div style="font-size:11.5px;color:var(--ink-2);">Booking massal vaksinasi sekolah &amp; kantor</div>
+  </div>
+  <div class="chip chip-mag">Pelajari</div>
+</div>
+
+</div>
+<div class="grow"></div>
+<div class="navbar"><div class="navitem active"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--magenta-dark)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11.5 12 4l8 7.5"/><path d="M6 10v9a1 1 0 0 0 1 1h4v-6h2v6h4a1 1 0 0 0 1-1v-9"/></svg><span>Beranda</span></div><div class="navitem"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--ink-4)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H9l-5 4V6a1 1 0 0 1 1-1Z"/><path d="M8 10h8M8 13h5"/></svg><span>Chat</span></div><div class="navfab"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></div><div class="navitem"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--ink-4)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h7l4 4v14a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z"/><path d="M14 3v4h4"/><path d="M9 12h6M9 16h6M9 8h2"/></svg><span>Rekam Medis</span></div><div class="navitem"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--ink-4)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.6"/><path d="M5 20c1.2-4 4-6 7-6s5.8 2 7 6"/></svg><span>Profil</span></div></div>
+</div>
+</x-dc>
+</body>
+</html>
