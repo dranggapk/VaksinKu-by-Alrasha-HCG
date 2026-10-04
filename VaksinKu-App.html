@@ -275,6 +275,65 @@ table.price td.p{text-align:right;font-family:var(--disp);font-weight:800;color:
 .switch.on{background:var(--teal-dark);}
 .switch.on::after{transform:translateX(18px);}
 .setrow{display:flex;align-items:center;gap:12px;padding:11px 0;}
+
+/* ---------- splash, onboarding, masuk ---------- */
+.scroll.penuh{display:flex;flex-direction:column;}
+.splash{
+  flex:1;position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  overflow:hidden;padding:0 34px;cursor:pointer;
+}
+.splash .blob{position:absolute;border-radius:50%;display:block;}
+.splash .blob.a{top:-90px;left:-110px;width:320px;height:320px;background:var(--teal-tint2);}
+.splash .blob.b{bottom:-120px;right:-100px;width:360px;height:360px;background:var(--magenta-tint2);}
+.splash-isi{position:relative;display:flex;flex-direction:column;align-items:center;gap:24px;text-align:center;}
+.dots{display:flex;gap:7px;justify-content:center;}
+.dots i{width:7px;height:7px;border-radius:50%;background:var(--line-2);display:block;transition:width .2s;}
+.dots i.on{width:18px;border-radius:4px;background:var(--magenta);}
+.splash .dots{position:absolute;bottom:34px;}
+.splash .dots i{background:var(--teal);opacity:.4;}
+.splash .dots i.on{width:7px;border-radius:50%;opacity:1;}
+
+.onb{flex:1;display:flex;flex-direction:column;padding:18px 18px 4px;}
+.onb-isi{margin-top:16px;padding-bottom:18px;}
+.onb-teks{margin-top:18px;}
+.onb-art{
+  height:210px;border-radius:22px;position:relative;overflow:hidden;
+  display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(160deg,var(--teal-tint) 0%,var(--magenta-tint) 100%);
+}
+.onb-art .bulat{position:absolute;border-radius:50%;background:#fff;display:block;}
+.onb-art .bulat.a{top:18px;left:18px;width:34px;height:34px;opacity:.6;}
+.onb-art .bulat.b{bottom:22px;right:26px;width:20px;height:20px;opacity:.5;}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;}
+.pick{
+  position:relative;border:1.4px solid var(--line-2);background:#fff;border-radius:18px;
+  padding:16px 14px;display:flex;flex-direction:column;gap:10px;align-items:flex-start;
+  text-align:left;cursor:pointer;width:100%;
+}
+.pick.on{border:1.6px solid var(--magenta);background:var(--magenta-tint);}
+.pick-ic{
+  width:42px;height:42px;border-radius:50%;background:var(--teal-tint);color:var(--teal-dark);
+  display:flex;align-items:center;justify-content:center;
+}
+.pick.on .pick-ic{background:var(--magenta);color:#fff;}
+.pick-ck{position:absolute;top:10px;right:10px;color:var(--magenta);display:flex;}
+.pick-j{display:block;font-weight:700;font-size:14px;color:var(--ink);}
+.pick-s{display:block;font-size:11.5px;color:var(--ink-3);margin-top:2px;line-height:1.4;}
+
+.masuk{flex:1;display:flex;flex-direction:column;justify-content:center;padding:28px 26px;}
+
+/* ---------- korporat / sekolah ---------- */
+.topbar.kor{background:var(--ink);}
+.kortabs{
+  display:flex;gap:22px;padding:14px 18px 0;background:#fff;border-bottom:1px solid var(--line);
+  flex-shrink:0;overflow-x:auto;
+}
+.kortabs::-webkit-scrollbar{height:0;}
+.kortab{
+  background:none;border:0;padding:0 0 11px;cursor:pointer;white-space:nowrap;
+  font-size:13px;font-weight:600;color:var(--ink-3);border-bottom:2.4px solid transparent;
+}
+.kortab.on{color:var(--magenta-dark);font-weight:700;border-bottom-color:var(--magenta);}
 </style>
 </head>
 <body>
@@ -382,18 +441,29 @@ table.price td.p{text-align:right;font-family:var(--disp);font-weight:800;color:
     pasien: [], alamat: [], booking: [], riwayat: [], pertumbuhan: [], konsultasi: [],
     poin: 0, draft: null, draftKonsul: null, ui: { pasienAktif: '' },
     pengaturan: { vaksin: true, booking: true, konsultasi: true, leadBooking: 7, browser: false },
-    notif: { dibaca: {}, terkirim: {} }
+    notif: { dibaca: {}, terkirim: {} },
+    onboarding: { selesai: false, langkah: 0, fokus: [], layanan: '' },
+    akun: { masuk: false, metode: '' },
+    korporat: { aktif: false, nama: '', jenis: '', periode: '', peserta: [], tab: 'ringkasan', vaksinId: '', tanggal: '' }
   };
   var S, storageOk = true;
+  function salin(v) { return JSON.parse(JSON.stringify(v)); }
 
   function baca() {
     try {
       var raw = localStorage.getItem(KEY);
-      if (!raw) return JSON.parse(JSON.stringify(kosong));
+      if (!raw) return salin(kosong);
       var d = JSON.parse(raw);
-      for (var k in kosong) if (!(k in d)) d[k] = JSON.parse(JSON.stringify(kosong[k]));
+      for (var k in kosong) {
+        if (!(k in d) || d[k] == null) { d[k] = salin(kosong[k]); continue; }
+        // isi sub-kunci yang belum ada, agar data lama tetap terbaca versi baru
+        var bawaan = kosong[k];
+        if (bawaan && typeof bawaan === 'object' && !(bawaan instanceof Array) && typeof d[k] === 'object') {
+          for (var sk in bawaan) if (!(sk in d[k])) d[k][sk] = salin(bawaan[sk]);
+        }
+      }
       return d;
-    } catch (e) { storageOk = false; return JSON.parse(JSON.stringify(kosong)); }
+    } catch (e) { storageOk = false; return salin(kosong); }
   }
   function simpan() {
     try { localStorage.setItem(KEY, JSON.stringify(S)); }
@@ -1122,6 +1192,176 @@ table.price td.p{text-align:right;font-family:var(--disp);font-weight:800;color:
       (tombol ? '<div style="margin-top:16px;">' + tombol + '</div>' : '') + '</div>';
   }
 
+  /* ============================ layar: splash, onboarding, masuk ============================ */
+  /* Kebutuhan vaksinasi yang bisa dipilih saat onboarding. Daftar kategori di
+     bawah diturunkan dari jadwal pada katalog resmi — bukan karangan: anak dari
+     IDAI 2024, dewasa dari PAPDI 2025, umroh/haji dari regulasi Arab Saudi +
+     rekomendasi WHO, lansia dari halaman "Vaksinasi Lansia" katalog. Tiap entri
+     dicocokkan sebagai potongan nama kategori pada price list. */
+  var FOKUS = [
+    { id: 'anak', label: 'Vaksin Anak', sub: 'Imunisasi dasar & lanjutan', icon: 'family', sumber: 'Jadwal IDAI 2024',
+      kat: ['BCG', 'Polio', 'DPT', 'Rotavirus', 'Pneumococcus', 'Campak', 'Varicella', 'Hepatitis B', 'Hepatitis A', 'Influenza', 'Typhoid', 'Japanese Encephalitis', 'Flu Singapura'] },
+    { id: 'dewasa', label: 'Vaksin Dewasa', sub: 'HPV, flu, tifoid, dll', icon: 'user', sumber: 'Jadwal PAPDI 2025',
+      kat: ['Influenza', 'Pneumococcus', 'Demam Berdarah', 'HPV', 'Typhoid', 'Hepatitis A', 'Hepatitis B', 'Varicella', 'Campak', 'Tetanus'] },
+    { id: 'haji', label: 'Umroh & Haji', sub: 'Meningitis wajib jamaah', icon: 'globe', sumber: 'Regulasi Arab Saudi + WHO',
+      kat: ['Meningitis', 'Polio', 'Influenza', 'Pneumococcus'] },
+    { id: 'lansia', label: 'Lansia', sub: 'Influenza, pneumonia', icon: 'shield', sumber: 'Halaman lansia katalog',
+      kat: ['Influenza', 'Pneumococcus'] }
+  ];
+  function fokusById(id) {
+    for (var i = 0; i < FOKUS.length; i++) if (FOKUS[i].id === id) return FOKUS[i];
+    return null;
+  }
+  function vaksinFokus() {
+    var dipilih = S.onboarding.fokus || [];
+    if (!dipilih.length) return [];
+    var kat = [];
+    dipilih.forEach(function (id) {
+      var f = fokusById(id);
+      if (f) f.kat.forEach(function (k) { if (kat.indexOf(k) < 0) kat.push(k); });
+    });
+    return K.harga.filter(function (v) {
+      return kat.some(function (k) { return v.kategori.indexOf(k) >= 0; });
+    });
+  }
+  function perluOnboarding() {
+    return !S.onboarding.selesai && !S.profil.nama && !S.pasien.length;
+  }
+  function selesaikanOnboarding(metode) {
+    S.onboarding.selesai = true;
+    S.akun.masuk = metode === 'hp';
+    S.akun.metode = metode;
+    if (S.onboarding.layanan && S.onboarding.layanan !== 'korporat') draft().layanan = S.onboarding.layanan;
+    simpan();
+  }
+
+  function scSplash() {
+    var body = '<div class="splash" data-act="go" data-arg="onboarding">' +
+      '<i class="blob a"></i><i class="blob b"></i>' +
+      '<div class="splash-isi">' +
+      '<img src="' + K.logoFull + '" alt="VaksinKu" style="width:240px;margin:0 auto;">' +
+      '<div class="disp" style="font-size:25px;font-weight:800;line-height:1.25;">#VaksinKeluargaJadiMudah</div>' +
+      '<div class="small muted" style="max-width:270px;margin:0 auto;line-height:1.6;">' +
+      'Booking, rekam medis, dan konsultasi vaksinasi keluarga dalam satu aplikasi.</div></div>' +
+      '<div class="dots"><i class="on"></i><i></i><i></i></div></div>';
+    return { body: body, penuh: true };
+  }
+
+  var ONB = [
+    { judul: 'Satu aplikasi untuk vaksinasi keluarga',
+      teks: 'Semua yang dibutuhkan untuk menjaga imunisasi keluarga tetap lengkap dan tepat waktu.' },
+    { judul: 'Pilih kebutuhan vaksinasi Anda',
+      teks: 'Rekomendasi vaksin dan harga di beranda akan disesuaikan dengan pilihan ini. Boleh pilih lebih dari satu.' },
+    { judul: 'Bagaimana Anda ingin dilayani?',
+      teks: 'Pilihan ini dipakai sebagai layanan bawaan saat Anda membuat reservasi — masih bisa diubah kapan saja.' }
+  ];
+  function ilustrasiOnb() {
+    return '<div class="onb-art">' +
+      '<i class="bulat a"></i><i class="bulat b"></i>' +
+      '<svg width="180" height="150" viewBox="0 0 180 150" fill="none" aria-hidden="true">' +
+      '<circle cx="60" cy="46" r="22" fill="#56C3C7"/>' +
+      '<circle cx="120" cy="46" r="22" fill="#D11972" opacity=".85"/>' +
+      '<circle cx="90" cy="60" r="17" fill="#2E9BA0"/>' +
+      '<path d="M20 140c8-34 30-52 55-52s45 16 52 52" stroke="#56C3C7" stroke-width="6" fill="none" stroke-linecap="round"/>' +
+      '<path d="M95 140c6-24 20-36 40-36s32 12 38 36" stroke="#D11972" stroke-width="6" fill="none" stroke-linecap="round" opacity=".85"/>' +
+      '</svg></div>';
+  }
+  function scOnboarding() {
+    var n = Math.min(2, Math.max(0, S.onboarding.langkah || 0)), t = ONB[n];
+    var isi = '';
+    if (n === 0) {
+      isi = '<div class="stack g10">' +
+        [['calendar', 'Jadwal otomatis sesuai usia', 'Mengikuti jadwal IDAI 2024 untuk anak dan PAPDI 2025 untuk dewasa.'],
+          ['tag', 'Biaya terlihat sejak awal', 'Total dihitung dari price list resmi, termasuk selisih dokter umum dan spesialis.'],
+          ['bell', 'Rekam medis & pengingat', 'Riwayat vaksin tersimpan, pengingat bisa diekspor ke kalender ponsel.']
+        ].map(function (b) {
+          return '<div class="row mid g12"><div class="icon-sq">' + ic(b[0], 18) + '</div>' +
+            '<div class="grow"><div class="small" style="font-weight:700;">' + h(b[1]) + '</div>' +
+            '<div class="tiny muted" style="margin-top:2px;">' + h(b[2]) + '</div></div></div>';
+        }).join('') + '</div>';
+    } else if (n === 1) {
+      var dipilih = S.onboarding.fokus || [];
+      isi = '<div class="grid2">' + FOKUS.map(function (f) {
+        var on = dipilih.indexOf(f.id) >= 0;
+        return '<button class="pick' + (on ? ' on' : '') + '" data-act="toggle-fokus" data-arg="' + f.id + '">' +
+          (on ? '<span class="pick-ck">' + ic('checkc', 16) + '</span>' : '') +
+          '<span class="pick-ic">' + ic(f.icon, 21) + '</span>' +
+          '<span><span class="pick-j">' + h(f.label) + '</span>' +
+          '<span class="pick-s">' + h(f.sub) + '</span></span></button>';
+      }).join('') + '</div>';
+      var cocok = vaksinFokus();
+      if (cocok.length) {
+        isi += '<div class="card tint" style="margin-top:14px;">' +
+          '<div class="small" style="font-weight:700;color:var(--teal-dark);">' + cocok.length + ' jenis vaksin cocok dengan pilihan Anda</div>' +
+          '<div class="tiny muted" style="margin-top:4px;line-height:1.6;">Daftarnya muncul di beranda dan bisa difilter di menu Daftar Harga. Dasar: ' +
+          h((S.onboarding.fokus || []).map(function (id) { var f = fokusById(id); return f ? f.sumber : ''; })
+            .filter(Boolean).join(' · ')) + '.</div></div>';
+      }
+    } else {
+      var pilihan = [
+        ['homecare', 'house', 'Home Care', 'Petugas datang ke rumah'],
+        ['klinik', 'building', 'Datang ke Klinik', 'Kunjungan ke klinik Alrasha Ibumas'],
+        ['korporat', 'chart', 'Korporat / Sekolah', 'Vaksinasi massal karyawan atau siswa']
+      ];
+      isi = '<div class="stack g10">' + pilihan.map(function (p) {
+        var on = S.onboarding.layanan === p[0];
+        return '<button class="checkrow' + (on ? ' on' : '') + '" data-act="set-fokus-layanan" data-arg="' + p[0] + '">' +
+          '<span class="icon-sq">' + ic(p[1], 18) + '</span>' +
+          '<span class="grow"><span class="small" style="font-weight:700;display:block;">' + h(p[2]) + '</span>' +
+          '<span class="tiny muted">' + h(p[3]) + '</span></span>' +
+          '<span class="box">' + (on ? ic('check', 14, 2.6) : '') + '</span></button>';
+      }).join('') + '</div>';
+    }
+
+    var body = '<div class="onb">' +
+      '<div class="row" style="justify-content:flex-end;"><button class="linkbtn" data-act="lewati-onb" style="color:var(--ink-3);">Lewati</button></div>' +
+      (n === 0 ? ilustrasiOnb() : '') +
+      '<div class="onb-teks"><div class="disp" style="font-size:21px;font-weight:800;">' + h(t.judul) + '</div>' +
+      '<div class="small muted" style="margin-top:6px;line-height:1.55;">' + h(t.teks) + '</div></div>' +
+      '<div class="onb-isi">' + isi + '</div>' +
+      '</div>';
+    var foot = '<div class="sticky-foot stack g12">' +
+      '<div class="dots">' + [0, 1, 2].map(function (i) { return '<i class="' + (i === n ? 'on' : '') + '"></i>'; }).join('') + '</div>' +
+      '<button class="btn primary block" data-act="onb-lanjut">' +
+      (n === 2 ? 'Selesai' : 'Lanjutkan') + ic('chevron', 16) + '</button></div>';
+    return { body: body, foot: foot, penuh: true };
+  }
+
+  function scMasuk() {
+    var body = '<div class="masuk">' +
+      '<div class="stack g8" style="align-items:center;">' +
+      '<img src="' + K.logoMark + '" alt="VaksinKu" style="height:46px;width:auto;">' +
+      '<div class="disp center" style="font-size:21px;font-weight:800;margin-top:26px;">Masuk untuk mulai vaksinasi</div>' +
+      '<div class="small muted center" style="line-height:1.6;">Kelola jadwal, rekam medis, dan keluarga Anda dalam satu akun VaksinKu.</div>' +
+      '</div>' +
+      '<form id="form-masuk" class="stack g12" style="margin-top:30px;">' +
+      '<div><label class="lbl">Nama lengkap<span class="req">*</span></label>' +
+      '<input class="input' + (formErr.nama ? ' err' : '') + '" name="nama" value="' + h(S.profil.nama) + '" placeholder="Nama sesuai identitas" autocomplete="name">' +
+      (formErr.nama ? '<div class="errmsg">' + h(formErr.nama) + '</div>' : '') + '</div>' +
+      '<div><label class="lbl">Nomor HP / WhatsApp<span class="req">*</span></label>' +
+      '<input class="input' + (formErr.hp ? ' err' : '') + '" type="tel" inputmode="tel" name="hp" value="' + h(S.profil.hp) + '" placeholder="08xxxxxxxxxx" autocomplete="tel">' +
+      (formErr.hp ? '<div class="errmsg">' + h(formErr.hp) + '</div>' : '') + '</div>' +
+      '<button type="submit" class="btn primary block">' + ic('wa', 17) + ' Lanjutkan dengan Nomor HP</button>' +
+      '</form>' +
+      '<button class="btn block" style="background:#fff;border:1.4px solid var(--line-2);color:var(--ink-4);margin-top:12px;" disabled>' +
+      '<svg width="19" height="19" viewBox="0 0 48 48" aria-hidden="true"><path fill="#BDBDBD" d="M24 9.5c3.4 0 6.4 1.2 8.8 3.5l6.5-6.5C35.3 2.6 30 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.6 5.9C12.1 13 17.5 9.5 24 9.5z"/>' +
+      '<path fill="#D6D6D6" d="M46.5 24.5c0-1.6-.1-3.2-.4-4.7H24v9h12.7c-.5 3-2.2 5.5-4.7 7.2l7.3 5.7c4.3-4 6.8-9.9 6.8-17.2z"/>' +
+      '<path fill="#CFCFCF" d="M10.2 19.1a14.5 14.5 0 0 0 0 9.8l-7.6 5.9a24 24 0 0 1 0-21.6l7.6 5.9z"/>' +
+      '<path fill="#C9C9C9" d="M24 48c6 0 11.3-2 15-5.4l-7.3-5.7c-2 1.4-4.7 2.2-7.7 2.2-6.5 0-12-4.4-13.8-10.3l-7.6 5.9C6.5 42.6 14.6 48 24 48z"/></svg>' +
+      ' Lanjutkan dengan Google</button>' +
+      '<div class="tiny muted center" style="margin-top:8px;line-height:1.6;">Masuk dengan Google belum tersedia: perlu server untuk memverifikasi akun, ' +
+      'sedangkan aplikasi ini berjalan sebagai satu berkas di perangkat Anda.</div>' +
+      '<div class="card flat" style="margin-top:16px;background:#F6F6F5;border-color:transparent;">' +
+      '<div class="tiny" style="line-height:1.65;color:var(--ink-2);">Tidak ada kode OTP dan tidak ada data yang dikirim ke server. ' +
+      'Nama dan nomor di atas disimpan di perangkat ini saja, lalu dipakai sebagai kontak pada reservasi dan konsultasi.</div></div>' +
+      '<button class="btn ghost block" style="margin-top:4px;" data-act="masuk-tamu">Lihat-lihat dulu tanpa mengisi</button>' +
+      '<div class="stack g6" style="align-items:center;margin-top:18px;">' +
+      '<div class="tiny muted">Butuh bantuan? WhatsApp ' +
+      '<a href="https://wa.me/' + WA + '" target="_blank" rel="noopener" style="font-weight:700;">' + h(K.brand.callCenter) + '</a></div>' +
+      '<div class="tiny" style="color:var(--ink-4);">Versi 1.0</div></div></div>';
+    return { body: body, penuh: true };
+  }
+
   /* ============================ layar: beranda ============================ */
   function scBeranda() {
     var belumSiap = !S.profil.nama || !S.pasien.length;
@@ -1192,6 +1432,27 @@ table.price td.p{text-align:right;font-family:var(--disp);font-weight:800;color:
             '<div class="tiny muted">' + x.jml + ' vaksin tertunda · ' + h(x.contoh) + '</div></div>' +
             '<span style="color:var(--ink-4);">' + ic('chevron', 15) + '</span></button>';
         }).join('') + '</div>';
+    }
+
+    var rek = vaksinFokus();
+    if (rek.length) {
+      var namaFokus = (S.onboarding.fokus || []).map(function (id) {
+        var f = fokusById(id); return f ? f.label : '';
+      }).filter(Boolean);
+      var termurah = rek.slice().sort(function (a, b) {
+        return angka(a.umum || a.spesialis) - angka(b.umum || b.spesialis);
+      });
+      body += '<div class="card stack g10">' +
+        '<div class="row mid"><div class="sect-title">Sesuai kebutuhan Anda</div><div class="grow"></div>' +
+        '<button class="linkbtn" data-act="go" data-arg="harga-fokus">Lihat semua</button></div>' +
+        '<div class="tiny muted" style="margin-top:-4px;">' + h(namaFokus.join(' · ')) + ' — ' + rek.length + ' jenis vaksin</div>' +
+        '<table class="price">' + termurah.slice(0, 4).map(function (v) {
+          var hrg = tarif === 'spesialis' ? v.spesialis : v.umum;
+          return '<tr><td><div style="font-weight:600;">' + h(v.kategori) + '</div>' +
+            '<div class="tiny muted">' + h(v.merk) + '</div></td>' +
+            '<td class="p">' + (hrg ? rp(angka(hrg)) : '<span class="muted" style="font-weight:600;">Hubungi CS</span>') + '</td></tr>';
+        }).join('') + '</table>' +
+        '<button class="btn outline sm" data-act="ubah-fokus">Ubah kebutuhan vaksinasi</button></div>';
     }
 
     body += '<div class="card row g8">' +
@@ -1657,7 +1918,7 @@ table.price td.p{text-align:right;font-family:var(--disp);font-weight:800;color:
   }
 
   /* ============================ layar: harga ============================ */
-  var tarif = 'umum', cariHarga = '';
+  var tarif = 'umum', cariHarga = '', fokusHarga = false;
   function scHarga() {
     var body = topbar('Daftar Harga Vaksinasi', 'Price list terbuka', 'beranda');
     body += '<div class="pad stack g12">' +
@@ -1668,9 +1929,17 @@ table.price td.p{text-align:right;font-family:var(--disp);font-weight:800;color:
       '<button class="pill' + (tarif === 'spesialis' ? ' teal-on' : '') + '" style="flex:1;text-align:center;" data-act="set-tarif" data-arg="spesialis">Dokter Spesialis</button></div>' +
       '<input class="input" id="cari-harga" placeholder="Cari vaksin..." value="' + h(cariHarga) + '">';
 
+    var punyaFokus = vaksinFokus().length > 0;
+    if (punyaFokus) {
+      body += '<div class="row g8">' +
+        '<button class="pill' + (!fokusHarga ? ' on' : '') + '" style="flex:1;text-align:center;" data-act="filter-fokus" data-arg="0">Semua vaksin</button>' +
+        '<button class="pill' + (fokusHarga ? ' on' : '') + '" style="flex:1;text-align:center;" data-act="filter-fokus" data-arg="1">Sesuai kebutuhan</button></div>';
+    }
+
     var q = cariHarga.toLowerCase();
+    var terpilih = fokusHarga && punyaFokus ? vaksinFokus() : K.harga;
     var grup = {}, urut = [];
-    K.harga.forEach(function (v) {
+    terpilih.forEach(function (v) {
       if (q && (v.kategori + ' ' + v.sediaan + ' ' + v.merk).toLowerCase().indexOf(q) < 0) return;
       if (!grup[v.kategori]) { grup[v.kategori] = []; urut.push(v.kategori); }
       grup[v.kategori].push(v);
@@ -1821,6 +2090,10 @@ table.price td.p{text-align:right;font-family:var(--disp);font-weight:800;color:
       '<div class="divider"></div>' +
       menuRow('chat', 'Konsultasi Dokter', S.konsultasi.length + ' konsultasi', 'chat') +
       '<div class="divider"></div>' +
+      menuRow('chart', 'Korporat / Sekolah',
+        S.korporat.nama ? S.korporat.nama + ' · ' + korPeserta().length + ' peserta' : 'Vaksinasi massal karyawan atau siswa',
+        S.korporat.nama ? 'korporat' : 'korporat-setup') +
+      '<div class="divider"></div>' +
       menuRow('tag', 'Daftar Harga', 'Price list lengkap', 'harga') +
       '<div class="divider"></div>' +
       menuRow('info', 'Tentang & Lokasi', 'Klinik, dokter, kontak', 'tentang') +
@@ -1849,6 +2122,321 @@ table.price td.p{text-align:right;font-family:var(--disp);font-weight:800;color:
       '<div class="grow"><div class="small" style="font-weight:700;">' + h(judul) + '</div>' +
       '<div class="tiny muted">' + h(sub) + '</div></div>' +
       '<span style="color:var(--ink-4);">' + ic('chevron', 15) + '</span></button>';
+  }
+
+  /* ============================ layar: korporat / sekolah ============================ */
+  /* Modul vaksinasi massal untuk sekolah dan perusahaan. Semua angka di layar ini
+     dihitung dari daftar peserta yang dimasukkan pengguna — tidak ada data contoh
+     yang ditanam. Biaya memakai price list resmi; invoice resmi tetap terbit dari
+     klinik, jadi yang ditampilkan di sini disebut estimasi. */
+  function kor() { return S.korporat; }
+  function korPeserta() { return kor().peserta || []; }
+  function korSudah() {
+    return korPeserta().filter(function (x) { return x.status === 'sudah'; });
+  }
+  function korPersen() {
+    var n = korPeserta().length;
+    return n ? Math.round(korSudah().length / n * 100) : 0;
+  }
+  function korUnitLabel() { return kor().jenis === 'perusahaan' ? 'Divisi' : 'Kelas'; }
+  function korPerUnit() {
+    var peta = {}, urut = [];
+    korPeserta().forEach(function (x) {
+      var u = x.unit || '(tanpa ' + korUnitLabel().toLowerCase() + ')';
+      if (!peta[u]) { peta[u] = { unit: u, total: 0, sudah: 0 }; urut.push(u); }
+      peta[u].total++;
+      if (x.status === 'sudah') peta[u].sudah++;
+    });
+    urut.sort();
+    return urut.map(function (u) {
+      var g = peta[u];
+      g.persen = g.total ? Math.round(g.sudah / g.total * 100) : 0;
+      return g;
+    });
+  }
+  function korVaksin() { return kor().vaksinId ? vaksinById(kor().vaksinId) : null; }
+  function korEstimasi() {
+    var v = korVaksin();
+    if (!v) return null;
+    var satuan = hargaVaksin(v, 'umum');
+    var belum = korPeserta().length - korSudah().length;
+    return { satuan: satuan, jumlah: belum, total: satuan * belum };
+  }
+
+  function scKorporat() {
+    var k = kor();
+    if (!k.nama) return scKorporatSetup();
+    var tab = k.tab || 'ringkasan';
+    var body = '<div class="topbar kor">' +
+      '<button class="backbtn" data-act="go" data-arg="profil" aria-label="Kembali">' + ic('back', 20, 2.2) + '</button>' +
+      '<div class="grow"><h1>' + h(k.jenis === 'perusahaan' ? 'Dashboard Vaksinasi Korporat' : 'Dashboard Vaksinasi Sekolah') + '</h1>' +
+      '<div class="sub">' + h(k.nama) + (k.periode ? ' · ' + h(k.periode) : '') + '</div></div>' +
+      '<button class="backbtn" data-act="go" data-arg="korporat-setup" aria-label="Ubah data institusi">' + ic('edit', 18) + '</button></div>';
+
+    body += '<div class="kortabs">' + [['ringkasan', 'Ringkasan'], ['peserta', 'Peserta'], ['laporan', 'Laporan']]
+      .map(function (t) {
+        return '<button class="kortab' + (tab === t[0] ? ' on' : '') + '" data-act="kor-tab" data-arg="' + t[0] + '">' + t[1] + '</button>';
+      }).join('') + '</div>';
+
+    if (tab === 'peserta') body += korTabPeserta();
+    else if (tab === 'laporan') body += korTabLaporan();
+    else body += korTabRingkasan();
+    return { body: body };
+  }
+
+  function korTabRingkasan() {
+    var total = korPeserta().length, sudah = korSudah().length;
+    var body = '<div class="pad stack g14">';
+    body += '<div class="row g10">' +
+      korAngka(total, 'Total Peserta', 'var(--ink)') +
+      korAngka(sudah, 'Sudah Divaksin', 'var(--teal-dark)') +
+      korAngka(korPersen() + '%', 'Coverage', 'var(--magenta-dark)') + '</div>';
+
+    if (!total) {
+      body += empty('family', 'Belum ada peserta', 'Tambahkan daftar siswa atau karyawan terlebih dahulu. Semua angka di dashboard dihitung dari daftar itu.',
+        '<button class="btn primary" data-act="kor-tab" data-arg="peserta">' + ic('plus', 16, 2.2) + ' Tambah peserta</button>') + '</div>';
+      return body;
+    }
+
+    body += '<button class="btn primary block" data-act="kor-tab" data-arg="laporan">' +
+      ic('syringe', 16) + ' Ajukan Booking Massal</button>';
+
+    var unit = korPerUnit();
+    body += '<div class="card stack g14"><div class="sect-title">Cakupan per ' + h(korUnitLabel()) + '</div>' +
+      unit.map(function (g) {
+        var w = g.persen >= 90 ? 'var(--teal-dark)' : (g.persen >= 70 ? 'var(--green)' : 'var(--amber)');
+        return '<div class="stack g6"><div class="row between mid">' +
+          '<span class="small" style="font-weight:700;">' + h(g.unit) + '</span>' +
+          '<span class="tiny" style="font-weight:700;color:' + w + ';">' + g.persen + '% · ' + g.sudah + '/' + g.total + '</span></div>' +
+          '<div class="bar"><i style="width:' + g.persen + '%;background:' + w + ';"></i></div></div>';
+      }).join('') + '</div>';
+
+    var belum = korPeserta().filter(function (x) { return x.status !== 'sudah'; });
+    if (belum.length) {
+      body += '<div class="card warn stack g10">' +
+        '<div class="row mid g10"><div class="icon-sq amber" style="background:#fff;">' + ic('bell', 19) + '</div>' +
+        '<div class="grow"><div style="font-weight:700;">' + belum.length + ' peserta belum divaksin</div>' +
+        '<div class="tiny" style="color:var(--amber);">Tandai selesai di tab Peserta setelah pelaksanaan</div></div></div></div>';
+    }
+    body += '</div>';
+    return body;
+  }
+  function korAngka(nilai, label, warna) {
+    return '<div class="card center" style="flex:1;padding:14px 8px;">' +
+      '<div class="disp" style="font-size:21px;font-weight:800;color:' + warna + ';">' + h(String(nilai)) + '</div>' +
+      '<div class="tiny muted" style="margin-top:4px;line-height:1.3;">' + h(label) + '</div></div>';
+  }
+
+  function korTabPeserta() {
+    var daftar = korPeserta();
+    var body = '<div class="pad stack g12">';
+    body += '<div class="row g8">' +
+      '<button class="btn outline sm grow" data-act="go" data-arg="korporat-peserta">' + ic('plus', 15, 2.2) + ' Satu per satu</button>' +
+      '<button class="btn outline sm grow" data-act="go" data-arg="korporat-massal">' + ic('upload', 15) + ' Tempel daftar</button></div>';
+    if (!daftar.length) {
+      body += empty('family', 'Daftar peserta masih kosong',
+        'Tambahkan satu per satu, atau tempel daftar nama sekaligus dari spreadsheet sekolah/HRD.', '') + '</div>';
+      return body;
+    }
+    var unit = korPerUnit();
+    unit.forEach(function (g) {
+      body += '<div class="card stack g8" style="padding:14px;">' +
+        '<div class="row mid"><span style="font-weight:700;font-size:13.5px;">' + h(g.unit) + '</span>' +
+        '<div class="grow"></div><span class="chip ' + (g.persen === 100 ? 'green' : 'grey') + '">' + g.sudah + '/' + g.total + '</span></div>';
+      daftar.filter(function (x) { return (x.unit || '(tanpa ' + korUnitLabel().toLowerCase() + ')') === g.unit; })
+        .forEach(function (x) {
+          var on = x.status === 'sudah';
+          body += '<button class="checkrow' + (on ? ' done' : '') + '" style="padding:10px;" data-act="kor-toggle" data-arg="' + x.id + '">' +
+            '<span class="box">' + (on ? ic('check', 14, 2.6) : '') + '</span>' +
+            '<span class="grow"><span class="small" style="font-weight:700;display:block;">' + h(x.nama) + '</span>' +
+            '<span class="tiny muted">' + (on ? 'Divaksin ' + tgl(x.tanggal) + (x.vaksin ? ' · ' + h(x.vaksin) : '') : 'Belum divaksin') + '</span></span>' +
+            '</button>';
+        });
+      body += '</div>';
+    });
+    body += '<div class="tiny muted" style="padding:0 4px;line-height:1.6;">Ketuk nama untuk menandai sudah atau belum divaksin. ' +
+      'Tanggal diisi otomatis dengan hari ini; ubah lewat tombol di bawah bila pelaksanaannya di hari lain.</div>';
+    body += '<button class="btn outline sm" data-act="go" data-arg="korporat-peserta">' + ic('family', 15) + ' Tambah atau hapus peserta</button>';
+    body += '</div>';
+    return body;
+  }
+
+  function korTabLaporan() {
+    var total = korPeserta().length, belum = total - korSudah().length;
+    var v = korVaksin(), est = korEstimasi();
+    var body = '<div class="pad stack g14">';
+
+    body += '<div class="card stack g12"><div class="sect-title">Booking massal</div>' +
+      '<div class="hint">Permintaan dikirim sebagai ringkasan ke CS ' + h(K.brand.callCenter) +
+      '. Jadwal dan jumlah petugas dikonfirmasi balik oleh klinik.</div>' +
+      '<div><label class="lbl">Jenis vaksin</label>' +
+      '<select class="input" data-field="kor.vaksinId"><option value="">Pilih vaksin...</option>' +
+      K.harga.map(function (x) {
+        return '<option value="' + x.id + '"' + (kor().vaksinId === x.id ? ' selected' : '') + '>' +
+          h(x.kategori + ' — ' + x.merk) + '</option>';
+      }).join('') + '</select></div>' +
+      '<div><label class="lbl">Rencana tanggal pelaksanaan</label>' +
+      '<input class="input" type="date" min="' + hariIni() + '" data-field="kor.tanggal" value="' + h(kor().tanggal) + '"></div>';
+
+    if (est && est.jumlah) {
+      body += '<div class="card flat" style="background:var(--teal-tint);border-color:transparent;">' +
+        '<div class="row between mid"><span class="small" style="font-weight:700;color:var(--teal-dark);">Estimasi biaya</span>' +
+        '<span class="disp" style="font-size:18px;font-weight:800;color:var(--teal-dark);">' +
+        (est.satuan ? rp(est.total) : 'Hubungi CS') + '</span></div>' +
+        '<div class="tiny" style="color:var(--teal-dark);margin-top:4px;line-height:1.6;">' +
+        (est.satuan ? est.jumlah + ' peserta belum divaksin × ' + rp(est.satuan) + ' (tarif dokter umum)' :
+          'Harga vaksin ini tidak tercantum di price list — CS akan mengonfirmasi.') +
+        '. Invoice resmi tetap diterbitkan klinik setelah pelaksanaan.</div></div>';
+    } else if (v && !belum) {
+      body += '<div class="hint">Semua peserta sudah divaksin — tidak ada yang perlu dibookingkan.</div>';
+    }
+    body += '<button class="btn primary block" data-act="kor-kirim">' + ic('wa', 17) + ' Kirim permintaan ke CS</button></div>';
+
+    body += '<div class="card stack g12">' +
+      '<div class="row mid g12"><div class="icon-sq">' + ic('download', 19) + '</div>' +
+      '<div class="grow"><div style="font-weight:700;font-size:13.5px;">Rekap peserta</div>' +
+      '<div class="tiny muted">Berkas .csv, bisa dibuka di Excel atau Google Sheets</div></div></div>' +
+      '<div class="hint">Berisi nama, ' + h(korUnitLabel().toLowerCase()) + ', status, tanggal, dan jenis vaksin tiap peserta. ' +
+      'Formatnya rekap umum — sesuaikan kolomnya bila Dinas Kesehatan meminta templat tertentu.</div>' +
+      '<button class="btn outline block"' + (total ? '' : ' disabled') + ' data-act="kor-csv">' +
+      ic('download', 15) + ' Unduh rekap (.csv)</button></div>';
+
+    body += '<div class="card stack g10"><div class="sect-title">Catatan</div>' +
+      '<div class="tiny muted" style="line-height:1.7;">Dashboard ini menghitung cakupan dari daftar peserta yang Anda masukkan sendiri, ' +
+      'dan tersimpan di perangkat ini saja. Belum ada sinkronisasi dengan sistem sekolah, HRD, maupun pencatatan imunisasi pemerintah.</div></div>';
+    body += '</div>';
+    return body;
+  }
+
+  function scKorporatSetup() {
+    var k = kor(), ada = !!k.nama;
+    var body = topbar(ada ? 'Ubah Data Institusi' : 'Modul Korporat / Sekolah', '', ada ? 'korporat' : 'profil');
+    body += '<div class="pad stack g14">';
+    if (!ada) {
+      body += '<div class="card tint stack g6"><div class="small" style="font-weight:700;color:var(--teal-dark);">Untuk vaksinasi massal</div>' +
+        '<div class="tiny" style="color:var(--teal-dark);line-height:1.6;">Catat peserta per ' +
+        'kelas atau divisi, pantau cakupannya, ajukan booking massal, dan unduh rekapnya.</div></div>';
+    }
+    body += '<form id="form-korporat" class="stack g14">' +
+      '<div><label class="lbl">Jenis institusi<span class="req">*</span></label>' +
+      '<div class="row g8">' +
+      '<button type="button" class="opt' + (k.jenis === 'sekolah' ? ' on' : '') + '" data-act="kor-jenis" data-arg="sekolah">' +
+      ic('doc', 19) + 'Sekolah</button>' +
+      '<button type="button" class="opt' + (k.jenis === 'perusahaan' ? ' on' : '') + '" data-act="kor-jenis" data-arg="perusahaan">' +
+      ic('building', 19) + 'Perusahaan</button>' +
+      '</div>' + (formErr.jenis ? '<div class="errmsg">' + h(formErr.jenis) + '</div>' : '') + '</div>' +
+      '<div><label class="lbl">Nama institusi<span class="req">*</span></label>' +
+      '<input class="input' + (formErr.nama ? ' err' : '') + '" name="nama" value="' + h(k.nama) + '" placeholder="Contoh: SDN 001 Tanjungpinang">' +
+      (formErr.nama ? '<div class="errmsg">' + h(formErr.nama) + '</div>' : '') + '</div>' +
+      '<div><label class="lbl">Periode</label>' +
+      '<input class="input" name="periode" value="' + h(k.periode) + '" placeholder="Tahun ajaran / periode program">' +
+      '<div class="hint" style="margin-top:6px;">Ditampilkan sebagai keterangan di dashboard dan ikut tercetak pada rekap.</div></div>' +
+      '<button type="submit" class="btn primary">' + (ada ? 'Simpan perubahan' : 'Buat dashboard') + '</button></form>';
+    if (ada) {
+      body += '<button class="btn danger" data-act="kor-hapus">Hapus modul &amp; seluruh data peserta</button>';
+    }
+    body += '</div>';
+    return { body: body };
+  }
+
+  function scKorporatPeserta() {
+    var daftar = korPeserta();
+    var body = topbar('Kelola Peserta', daftar.length + ' orang', 'korporat');
+    body += '<div class="pad stack g12">' +
+      '<form id="form-peserta-kor" class="card stack g12">' +
+      '<div class="sect-title">Tambah peserta</div>' +
+      '<div><label class="lbl">Nama<span class="req">*</span></label>' +
+      '<input class="input' + (formErr.knama ? ' err' : '') + '" name="nama" placeholder="Nama lengkap peserta">' +
+      (formErr.knama ? '<div class="errmsg">' + h(formErr.knama) + '</div>' : '') + '</div>' +
+      '<div><label class="lbl">' + h(korUnitLabel()) + '</label>' +
+      '<input class="input" name="unit" value="' + h(kor().unitTerakhir || '') + '" placeholder="' +
+      (kor().jenis === 'perusahaan' ? 'Contoh: Produksi' : 'Contoh: 1A') + '"></div>' +
+      '<button type="submit" class="btn primary sm">' + ic('plus', 15, 2.2) + ' Tambah</button></form>';
+
+    if (daftar.length) {
+      body += '<div class="card stack g4"><div class="sect-title">Daftar peserta</div>';
+      daftar.forEach(function (x, i) {
+        body += (i ? '<div class="divider"></div>' : '') +
+          '<div class="row mid g10" style="padding:10px 0;">' +
+          '<div class="avatar" style="width:32px;height:32px;font-size:12px;">' + h(inisial(x.nama)) + '</div>' +
+          '<div class="grow"><div class="small" style="font-weight:700;">' + h(x.nama) + '</div>' +
+          '<div class="tiny muted">' + h(x.unit || '—') + ' · ' + (x.status === 'sudah' ? 'sudah divaksin' : 'belum divaksin') + '</div></div>' +
+          '<button class="linkbtn" data-act="kor-hapus-peserta" data-arg="' + x.id + '" style="color:var(--danger);" aria-label="Hapus ' + h(x.nama) + '">' +
+          ic('trash', 17) + '</button></div>';
+      });
+      body += '</div>';
+    }
+    body += '</div>';
+    return { body: body };
+  }
+
+  function scKorporatMassal() {
+    var body = topbar('Tempel Daftar Peserta', '', 'korporat');
+    body += '<div class="pad stack g14"><form id="form-massal-kor" class="stack g14">' +
+      '<div><label class="lbl">' + h(korUnitLabel()) + '<span class="req">*</span></label>' +
+      '<input class="input' + (formErr.unit ? ' err' : '') + '" name="unit" placeholder="' +
+      (kor().jenis === 'perusahaan' ? 'Contoh: Produksi' : 'Contoh: 1A') + '">' +
+      (formErr.unit ? '<div class="errmsg">' + h(formErr.unit) + '</div>' : '') + '</div>' +
+      '<div><label class="lbl">Daftar nama<span class="req">*</span></label>' +
+      '<textarea class="input' + (formErr.nama ? ' err' : '') + '" name="nama" rows="10" style="min-height:200px;" ' +
+      'placeholder="Satu nama per baris:&#10;Ahmad Fauzi&#10;Bunga Lestari&#10;Citra Ramadhani"></textarea>' +
+      '<div class="hint" style="margin-top:6px;">Salin satu kolom nama dari spreadsheet lalu tempel di sini. ' +
+      'Baris kosong diabaikan; nama yang sudah ada di ' + h(korUnitLabel().toLowerCase()) + ' yang sama tidak diduplikasi.</div>' +
+      (formErr.nama ? '<div class="errmsg">' + h(formErr.nama) + '</div>' : '') + '</div>' +
+      '<button type="submit" class="btn primary">Tambahkan ke daftar</button></form></div>';
+    return { body: body };
+  }
+
+  function korCSV() {
+    var k = kor(), sep = ';';
+    function sel(v) {
+      var t = String(v == null ? '' : v);
+      return /[";\n]/.test(t) ? '"' + t.replace(/"/g, '""') + '"' : t;
+    }
+    var baris = [['Institusi', k.nama], ['Jenis', k.jenis === 'perusahaan' ? 'Perusahaan' : 'Sekolah'],
+      ['Periode', k.periode || '-'], ['Diekspor', tgl(hariIni(), true)],
+      ['Total peserta', korPeserta().length], ['Sudah divaksin', korSudah().length],
+      ['Coverage', korPersen() + '%'], []];
+    baris.push(['No', korUnitLabel(), 'Nama', 'Status', 'Tanggal vaksin', 'Jenis vaksin']);
+    korPeserta().forEach(function (x, i) {
+      baris.push([i + 1, x.unit || '-', x.nama, x.status === 'sudah' ? 'Sudah' : 'Belum',
+        x.tanggal || '-', x.vaksin || '-']);
+    });
+    return '﻿' + baris.map(function (r) { return r.map(sel).join(sep); }).join('\r\n');
+  }
+  function unduhCSV() {
+    var nama = 'rekap-vaksinasi-' + (kor().nama || 'institusi').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') + '.csv';
+    var blob = new Blob([korCSV()], { type: 'text/csv;charset=utf-8' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = nama;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 4000);
+  }
+  function pesanKorporat() {
+    var k = kor(), v = korVaksin(), est = korEstimasi();
+    var belum = korPeserta().filter(function (x) { return x.status !== 'sudah'; });
+    var L = ['*Permintaan Booking Massal — VaksinKu*', ''];
+    L.push('Institusi: ' + k.nama);
+    L.push('Jenis: ' + (k.jenis === 'perusahaan' ? 'Perusahaan' : 'Sekolah'));
+    if (k.periode) L.push('Periode: ' + k.periode);
+    L.push('');
+    L.push('Jumlah peserta belum divaksin: ' + belum.length + ' orang');
+    korPerUnit().forEach(function (g) {
+      if (g.total - g.sudah > 0) L.push('  - ' + g.unit + ': ' + (g.total - g.sudah) + ' orang');
+    });
+    L.push('');
+    L.push('Vaksin diminta: ' + (v ? v.kategori + ' — ' + v.merk : '(belum dipilih)'));
+    L.push('Rencana tanggal: ' + (k.tanggal ? tgl(k.tanggal, true) : '(belum ditentukan)'));
+    if (est && est.satuan) {
+      L.push('Estimasi biaya: ' + rp(est.total) + ' (' + est.jumlah + ' × ' + rp(est.satuan) + ', tarif dokter umum)');
+      L.push('Mohon dikonfirmasi harga final dan ketersediaan petugas.');
+    } else {
+      L.push('Mohon dikonfirmasi harga dan ketersediaan petugas.');
+    }
+    L.push('');
+    L.push('PIC: ' + (S.profil.nama || '-') + (S.profil.hp ? ' (' + S.profil.hp + ')' : ''));
+    return L.join('\n');
   }
 
   /* ============================ layar: daftar pasien / alamat / riwayat ============================ */
@@ -1967,7 +2555,17 @@ table.price td.p{text-align:right;font-family:var(--disp);font-weight:800;color:
   var sheetHTML = '';
   function render() {
     var r;
+    // layar awal hanya dipaksa saat benar-benar pemakaian pertama; pengguna lama
+    // yang datanya sudah terisi langsung masuk ke beranda seperti biasa
+    if (perluOnboarding() && ['splash', 'onboarding', 'masuk'].indexOf(route.name) < 0) {
+      route = { name: 'splash', param: '' };
+      // hash diluruskan tanpa menunda gambar layar — hashchange menyusul
+      if (location.hash !== '#/splash') location.hash = '#/splash';
+    }
     switch (route.name) {
+      case 'splash': r = scSplash(); break;
+      case 'onboarding': r = scOnboarding(); break;
+      case 'masuk': r = scMasuk(); break;
       case 'booking': r = scBooking(); break;
       case 'booking-detail': r = scBookingDetail(route.param); break;
       case 'jadwal': r = scJadwal(); break;
@@ -1978,9 +2576,14 @@ table.price td.p{text-align:right;font-family:var(--disp);font-weight:800;color:
       case 'chat-detail': r = scChatDetail(route.param); break;
       case 'rekam': r = scRekam(); break;
       case 'harga': r = scHarga(); break;
+      case 'harga-fokus': fokusHarga = true; route.name = 'harga'; r = scHarga(); break;
       case 'internasional': r = scInternasional(); break;
       case 'tentang': r = scTentang(); break;
       case 'profil': r = scProfil(); break;
+      case 'korporat': r = scKorporat(); break;
+      case 'korporat-setup': r = scKorporatSetup(); break;
+      case 'korporat-peserta': r = scKorporatPeserta(); break;
+      case 'korporat-massal': r = scKorporatMassal(); break;
       case 'pasien': r = scPasien(); break;
       case 'pasien-form': r = scPasienForm(route.param); break;
       case 'alamat': r = scAlamat(); break;
@@ -1990,11 +2593,19 @@ table.price td.p{text-align:right;font-family:var(--disp);font-weight:800;color:
       default: r = scBeranda();
     }
     app.innerHTML = '<div class="device">' +
-      '<div class="scroll" id="scroll">' + r.body + '</div>' +
+      '<div class="scroll' + (r.penuh ? ' penuh' : '') + '" id="scroll">' + r.body + '</div>' +
       (r.foot || '') + (r.nav ? navbar(r.nav) : '') + sheetHTML + '</div>';
     var s = document.getElementById('cari-vaksin');
     if (s) { s.focus(); s.setSelectionRange(s.value.length, s.value.length); }
+    if (route.name === 'splash') {
+      // splash berpindah sendiri; ketuk di mana saja untuk langsung lanjut
+      clearTimeout(jedaSplash);
+      jedaSplash = setTimeout(function () {
+        if (route.name === 'splash') location.hash = '#/onboarding';
+      }, 1800);
+    }
   }
+  var jedaSplash = 0;
 
   /* ============================ aksi ============================ */
   function konfirmasi(pesan) { return window.confirm(pesan); }
@@ -2008,6 +2619,72 @@ table.price td.p{text-align:right;font-family:var(--disp);font-weight:800;color:
 
     switch (act) {
       case 'go': location.hash = '#/' + arg; return;
+      case 'toggle-fokus': {
+        var fk = S.onboarding.fokus, fi = fk.indexOf(arg);
+        if (fi >= 0) fk.splice(fi, 1); else fk.push(arg);
+        simpan(); render(); return;
+      }
+      case 'set-fokus-layanan': S.onboarding.layanan = arg; simpan(); render(); return;
+      case 'onb-lanjut': {
+        var ln = S.onboarding.langkah || 0;
+        if (ln === 1 && !S.onboarding.fokus.length) { toast('Pilih minimal satu kebutuhan vaksinasi.'); return; }
+        if (ln === 2 && !S.onboarding.layanan) { toast('Pilih salah satu cara layanan.'); return; }
+        if (ln >= 2) {
+          if (S.onboarding.layanan === 'korporat') S.korporat.aktif = true;
+          if (S.onboarding.layanan !== 'korporat') draft().layanan = S.onboarding.layanan;
+          simpan();
+          // pengguna lama yang hanya mengubah pilihannya tidak perlu lewat layar masuk
+          location.hash = S.onboarding.selesai ? '#/beranda' : '#/masuk';
+          return;
+        }
+        S.onboarding.langkah = ln + 1; simpan(); render();
+        var sc0 = document.getElementById('scroll'); if (sc0) sc0.scrollTop = 0;
+        return;
+      }
+      case 'lewati-onb':
+        if (!S.onboarding.selesai) selesaikanOnboarding('lewati');
+        location.hash = '#/beranda'; return;
+      case 'ubah-fokus': S.onboarding.langkah = 1; simpan(); location.hash = '#/onboarding'; return;
+      case 'kor-tab': S.korporat.tab = arg; simpan(); render();
+        var scK = document.getElementById('scroll'); if (scK) scK.scrollTop = 0; return;
+      case 'kor-jenis': S.korporat.jenis = arg; simpan(); render(); return;
+      case 'kor-toggle': {
+        S.korporat.peserta.forEach(function (x) {
+          if (x.id !== arg) return;
+          if (x.status === 'sudah') { x.status = 'belum'; x.tanggal = ''; x.vaksin = ''; }
+          else {
+            x.status = 'sudah';
+            x.tanggal = S.korporat.tanggal && S.korporat.tanggal <= hariIni() ? S.korporat.tanggal : hariIni();
+            var vk = korVaksin();
+            x.vaksin = vk ? vk.kategori : '';
+          }
+        });
+        simpan(); render(); return;
+      }
+      case 'kor-hapus-peserta': {
+        var pk = S.korporat.peserta.filter(function (x) { return x.id === arg; })[0];
+        if (!pk || !konfirmasi('Hapus ' + pk.nama + ' dari daftar peserta?')) return;
+        S.korporat.peserta = S.korporat.peserta.filter(function (x) { return x.id !== arg; });
+        simpan(); render(); toast('Peserta dihapus.'); return;
+      }
+      case 'kor-hapus': {
+        if (!konfirmasi('Hapus modul korporat/sekolah beserta ' + korPeserta().length + ' peserta? Tindakan ini tidak bisa dibatalkan.')) return;
+        S.korporat = salin(kosong.korporat);
+        simpan(); location.hash = '#/profil'; toast('Modul korporat dihapus.'); return;
+      }
+      case 'kor-csv': {
+        if (!korPeserta().length) { toast('Belum ada peserta untuk direkap.'); return; }
+        unduhCSV(); toast('Rekap .csv diunduh.'); return;
+      }
+      case 'kor-kirim': {
+        if (!korPeserta().length) { toast('Tambahkan peserta terlebih dahulu.'); return; }
+        if (!S.korporat.vaksinId) { toast('Pilih jenis vaksin terlebih dahulu.'); return; }
+        if (!S.korporat.tanggal) { toast('Isi rencana tanggal pelaksanaan.'); return; }
+        window.open('https://wa.me/' + WA + '?text=' + encodeURIComponent(pesanKorporat()), '_blank');
+        return;
+      }
+      case 'masuk-tamu': selesaikanOnboarding('tamu'); location.hash = '#/beranda';
+        toast('Nama dan nomor bisa diisi kapan saja lewat Profil.'); return;
       case 'mulai-booking': d.layanan = arg; simpan(); location.hash = '#/booking'; return;
       case 'pilih-pasien': S.ui.pasienAktif = arg; simpan(); render(); return;
       case 'pasien-jadwal': S.ui.pasienAktif = arg; simpan(); location.hash = '#/jadwal'; return;
@@ -2018,6 +2695,7 @@ table.price td.p{text-align:right;font-family:var(--disp);font-weight:800;color:
       case 'set-jam': d.jam = arg; simpan(); render(); return;
       case 'set-jk': S.profil.jenisKelamin = arg; simpan(); render(); return;
       case 'set-tarif': tarif = arg; render(); return;
+      case 'filter-fokus': fokusHarga = arg === '1'; render(); return;
       case 'toggle-pasien': {
         var i = d.pasienIds.indexOf(arg);
         if (i >= 0) d.pasienIds.splice(i, 1); else d.pasienIds.push(arg);
@@ -2254,6 +2932,13 @@ table.price td.p{text-align:right;font-family:var(--disp);font-weight:800;color:
     var f = el.getAttribute('data-field');
     if (!f) return;
     if (f.indexOf('profil.') === 0) S.profil[f.split('.')[1]] = el.value;
+    else if (f.indexOf('kor.') === 0) {
+      S.korporat[f.split('.')[1]] = el.value; simpan();
+      // hanya pilihan vaksin yang mengubah estimasi; isian tanggal jangan
+      // digambar ulang agar fokus tidak lepas saat tanggal diketik manual
+      if (f === 'kor.vaksinId') render();
+      return;
+    }
     else draft()[f] = el.value;
     simpan();
     if (f === 'tanggal') render();
@@ -2300,6 +2985,60 @@ table.price td.p{text-align:right;font-family:var(--disp);font-weight:800;color:
       simpan(); location.hash = '#/pasien'; toast(id ? 'Data pasien diperbarui.' : 'Pasien ditambahkan.');
       return;
     }
+    if (formId === 'form-masuk') {
+      var nm = get('nama'), hp = get('hp'), digit = hp.replace(/\D/g, '');
+      if (!nm) formErr.nama = 'Nama wajib diisi.';
+      if (!hp) formErr.hp = 'Nomor HP wajib diisi.';
+      else if (digit.length < 9 || digit.length > 15) formErr.hp = 'Nomor HP tidak valid — isi 9–15 digit, contoh 081234567890.';
+      if (Object.keys(formErr).length) { render(); return; }
+      S.profil.nama = nm; S.profil.hp = hp;
+      selesaikanOnboarding('hp');
+      location.hash = '#/beranda';
+      toast('Selamat datang, ' + nm.split(' ')[0] + '.');
+      return;
+    }
+    if (formId === 'form-korporat') {
+      if (!S.korporat.jenis) formErr.jenis = 'Pilih sekolah atau perusahaan.';
+      if (!get('nama')) formErr.nama = 'Nama institusi wajib diisi.';
+      if (Object.keys(formErr).length) { render(); return; }
+      var baruKor = !S.korporat.nama;
+      S.korporat.nama = get('nama');
+      S.korporat.periode = get('periode');
+      S.korporat.aktif = true;
+      simpan(); location.hash = '#/korporat';
+      toast(baruKor ? 'Dashboard dibuat.' : 'Data institusi diperbarui.');
+      return;
+    }
+    if (formId === 'form-peserta-kor') {
+      if (!get('nama')) { formErr.knama = 'Nama peserta wajib diisi.'; render(); return; }
+      S.korporat.unitTerakhir = get('unit');
+      S.korporat.peserta.push({ id: uid(), nama: get('nama'), unit: get('unit'), status: 'belum', tanggal: '', vaksin: '' });
+      simpan(); render(); toast(get('nama') + ' ditambahkan.');
+      return;
+    }
+    if (formId === 'form-massal-kor') {
+      var unitM = get('unit');
+      if (!unitM) formErr.unit = korUnitLabel() + ' wajib diisi.';
+      var namaM = (f.elements.nama ? f.elements.nama.value : '').split('\n')
+        .map(function (x) { return x.replace(/^\s*[\d.)-]+\s*/, '').trim(); })
+        .filter(function (x) { return x.length > 1; });
+      if (!namaM.length) formErr.nama = 'Tempelkan minimal satu nama.';
+      if (Object.keys(formErr).length) { render(); return; }
+      var adaM = 0, tambahM = 0;
+      namaM.forEach(function (n) {
+        var kembar = S.korporat.peserta.some(function (x) {
+          return x.unit === unitM && x.nama.toLowerCase() === n.toLowerCase();
+        });
+        if (kembar) { adaM++; return; }
+        S.korporat.peserta.push({ id: uid(), nama: n, unit: unitM, status: 'belum', tanggal: '', vaksin: '' });
+        tambahM++;
+      });
+      S.korporat.unitTerakhir = unitM;
+      S.korporat.tab = 'peserta';
+      simpan(); location.hash = '#/korporat';
+      toast(tambahM + ' peserta ditambahkan' + (adaM ? ', ' + adaM + ' nama sudah ada' : '') + '.');
+      return;
+    }
     if (formId === 'form-alamat') {
       if (!get('label')) formErr.label = 'Label wajib diisi.';
       if (!get('kecamatan')) formErr.kecamatan = 'Kecamatan/kota wajib diisi.';
@@ -2343,6 +3082,8 @@ table.price td.p{text-align:right;font-family:var(--disp);font-weight:800;color:
     var thn = new Date().getFullYear();
     S = JSON.parse(JSON.stringify(kosong));
     S.profil = { nama: 'Contoh Pengguna', hp: '0812xxxxxxx', jenisKelamin: 'Perempuan' };
+    S.onboarding = { selesai: true, langkah: 2, fokus: ['anak'], layanan: 'homecare' };
+    S.akun = { masuk: true, metode: 'hp' };
     var anak = { id: uid(), nama: 'Nadia Contoh', tglLahir: (thn - 5) + '-05-12', jenisKelamin: 'Perempuan', hubungan: 'Anak' };
     var ayah = { id: uid(), nama: 'Bayu Contoh', tglLahir: (thn - 34) + '-02-08', jenisKelamin: 'Laki-laki', hubungan: 'Ayah' };
     S.pasien = [anak, ayah];

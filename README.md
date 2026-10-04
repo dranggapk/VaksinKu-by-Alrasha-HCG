@@ -28,6 +28,8 @@ tautan, atau ditambahkan ke layar utama ponsel lewat menu "Add to Home screen".
 
 | Fitur | Keterangan |
 |---|---|
+| **Layar pembuka** | Splash, onboarding 3 langkah, dan layar masuk — sesuai rancangan di Claude Design |
+| **Pilihan kebutuhan** | Anak / dewasa / umroh & haji / lansia; pilihan ini menyaring rekomendasi vaksin di beranda dan daftar harga |
 | **Profil pendaftar** | Nama & nomor HP, dipakai sebagai kontak reservasi |
 | **Data pasien** | Tambah/ubah/hapus anggota keluarga; usia dihitung dari tanggal lahir |
 | **Jadwal vaksin personal** | Ceklis otomatis menyesuaikan usia: anak mengikuti **IDAI 2024**, dewasa mengikuti **PAPDI 2025** (rentang usia dipilih otomatis) |
@@ -42,6 +44,7 @@ tautan, atau ditambahkan ke layar utama ponsel lewat menu "Add to Home screen".
 | **Tumbuh kembang** | Catat berat, tinggi, lingkar kepala; grafik berat badan terhadap usia |
 | **Daftar harga** | 17 kategori vaksin, dengan pencarian dan pilihan tarif dokter |
 | **Vaksin internasional** | Vaksin wajib haji/umrah, rekomendasi WHO, harga & paket promo, e-ICV |
+| **Korporat / Sekolah** | Dashboard vaksinasi massal: daftar peserta per kelas/divisi, cakupan terhitung, booking massal ke WhatsApp, estimasi biaya, dan rekap `.csv` |
 | **Poin Sehat** | +10 poin setiap vaksinasi selesai |
 | **Cadangkan & pulihkan** | Ekspor/impor seluruh data sebagai berkas `.json` |
 | **Data contoh** | Sekali klik untuk mencoba aplikasi atau presentasi |
@@ -64,6 +67,17 @@ tautan, atau ditambahkan ke layar utama ponsel lewat menu "Add to Home screen".
   terbuka**, dan izinnya kerap ditolak browser pada berkas lokal. Karena itu
   pengingat yang berbunyi saat aplikasi tertutup disediakan lewat **ekspor
   kalender** — cara ini bekerja di Google Calendar maupun kalender bawaan ponsel.
+- **Masuk hanya bersifat lokal.** Tidak ada server, jadi tidak ada OTP dan tidak
+  ada akun yang bisa dipakai lintas perangkat. Nama dan nomor yang diisi di layar
+  masuk tersimpan di perangkat itu saja. Tombol *Lanjutkan dengan Google* sengaja
+  ditampilkan nonaktif beserta alasannya — bukan tombol pura-pura — karena OAuth
+  membutuhkan server dan alamat situs yang terdaftar.
+- **Modul korporat/sekolah menghitung dari data yang Anda masukkan sendiri.**
+  Cakupan, estimasi biaya, dan rekap semuanya diturunkan dari daftar peserta di
+  perangkat ini; belum ada sinkronisasi dengan sistem sekolah, HRD, maupun
+  pencatatan imunisasi pemerintah. Rekap `.csv` berformat umum — kolomnya perlu
+  disesuaikan bila Dinas Kesehatan meminta templat tertentu. Yang ditampilkan
+  adalah *estimasi* biaya dari price list; invoice resmi tetap terbit dari klinik.
 - **Slot waktu belum terhubung ketersediaan riil**; jadwal final dikonfirmasi CS.
 - Grafik pertumbuhan menampilkan data pasien sendiri, belum dibandingkan dengan
   kurva WHO (butuh tabel standar WHO yang resmi).
@@ -90,7 +104,7 @@ app/                 Sumber aplikasi
 src/
   data_katalog.py    Isi katalog (harga, jadwal, layanan, dokter, klinik)
   build_bundle.py    Merakit semuanya + font & logo menjadi satu berkas HTML
-  uji_app.py         Uji fungsional otomatis di browser headless (56 uji)
+  uji_app.py         Uji fungsional otomatis di browser headless (89 uji)
   tangkap_layar.py   Tangkap layar aplikasi dengan data contoh
   ambil_desain.py    Ekspor isi kanvas Claude Design ke folder design/
   build_index.py     Merakit index.html dari design/
@@ -106,7 +120,7 @@ katalog/             Halaman katalog hasil koreksi (lihat katalog/README.md)
 cd src
 python3 build_bundle.py       # → VaksinKu-App.html (font tertanam, siap offline)
 python3 build_bundle.py --tanpa-font   # lebih cepat, font dari Google Fonts
-python3 uji_app.py            # jalankan 56 uji fungsional
+python3 uji_app.py            # jalankan 89 uji fungsional
 python3 tangkap_layar.py      # tangkap layar dengan data contoh
 python3 build_index.py        # → index.html dari folder design/
 ```
@@ -120,6 +134,27 @@ python3 build_index.py
 
 `build_bundle.py` mengunduh font dari Google Fonts saat dijalankan, jadi langkah
 ini butuh internet — hasil akhirnya tidak.
+
+## Dari rancangan ke aplikasi
+
+Sembilan layar pada kanvas Claude Design kini punya padanan yang benar-benar
+berjalan di `VaksinKu-App.html`:
+
+| Layar rancangan | Wujud fungsionalnya |
+|---|---|
+| 1. Splash | Layar pembuka saat aplikasi pertama kali dibuka; berpindah sendiri atau saat diketuk |
+| 2. Onboarding | Tiga langkah: pengenalan, pilih kebutuhan vaksinasi, pilih cara layanan — pilihannya tersimpan dan dipakai |
+| 3. Login | Akun lokal: nama & nomor HP tervalidasi, mengisi profil pendaftar (lihat batasan di atas) |
+| 4. Beranda | Reservasi aktif, vaksin yang belum lengkap, rekomendasi sesuai kebutuhan, pintasan layanan |
+| 5. Booking Vaksinasi | Form tervalidasi dengan biaya nyata dan kirim ke WhatsApp |
+| 6. Rekam Medis | Riwayat vaksinasi per pasien dan catatan tumbuh kembang |
+| 7. Chat & Konsultasi | Pertanyaan berkonteks medis, dikirim ke WhatsApp, jawaban diarsipkan |
+| 8. Profil | Data pendaftar, pasien, alamat, pengaturan, cadangan data |
+| 9. Modul Korporat/Sekolah | Dashboard cakupan, daftar peserta, booking massal, rekap `.csv` |
+
+Angka pada rancangan (320 peserta, coverage 77%, invoice Rp48 juta, dan
+sejenisnya) adalah angka contoh untuk mockup. Di aplikasi, semua angka dihitung
+dari data yang dimasukkan pengguna — tidak ada yang ditanam sebagai hiasan.
 
 ## Catatan rancangan
 

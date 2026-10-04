@@ -26,7 +26,13 @@ LAYAR = {
     "chat": "#/chat", "chat-baru": "#/chat-baru", "chat-detail": "#/chat-detail/k1",
     "booking-detail": "#/booking-detail/b1",
     "notifikasi": "#/notifikasi",
+    "splash": "#/splash", "onboarding": "#/onboarding", "masuk": "#/masuk",
+    "korporat": "#/korporat", "korporat-peserta": "#/korporat",
+    "korporat-laporan": "#/korporat",
 }
+
+# layar pembuka hanya muncul sebelum pengguna mengisi apa pun
+BARU = {"splash", "onboarding", "masuk"}
 
 TANDA_APP = "<script>/*APP-MULAI*/"
 
@@ -84,12 +90,52 @@ def contoh_state():
             ],
         }],
         "poin": 10, "draft": None, "draftKonsul": None, "ui": {"pasienAktif": anak},
+        "onboarding": {"selesai": True, "langkah": 2, "fokus": ["anak"], "layanan": "homecare"},
+        "akun": {"masuk": True, "metode": "hp"},
+        "korporat": contoh_korporat(),
     }
 
 
-def seed_js(tujuan):
+def contoh_korporat(tab="ringkasan"):
+    """Satu sekolah dengan dua kelas, sebagian sudah divaksin."""
+    isi = [
+        ("1A", ["Ahmad Fauzi", "Bunga Lestari", "Citra Ramadhani", "Dimas Prayoga", "Elang Saputra"], 4),
+        ("1B", ["Fitri Handayani", "Galih Ramadhan", "Hana Safira", "Indra Maulana"], 2),
+    ]
+    peserta, n = [], 0
+    for unit, nama_nama, sudah in isi:
+        for i, nama in enumerate(nama_nama):
+            n += 1
+            ok = i < sudah
+            peserta.append({
+                "id": "kp%d" % n, "nama": nama, "unit": unit,
+                "status": "sudah" if ok else "belum",
+                "tanggal": "2026-09-18" if ok else "",
+                "vaksin": "Influenza" if ok else "",
+            })
+    return {
+        "aktif": True, "nama": "SDN 001 Tanjungpinang", "jenis": "sekolah",
+        "periode": "Tahun Ajaran 2026/2027", "peserta": peserta, "tab": tab,
+        "vaksinId": "", "tanggal": "", "unitTerakhir": "1B",
+    }
+
+
+def state_baru():
+    """Perangkat yang belum pernah dipakai — untuk layar splash/onboarding/masuk."""
+    return {"versi": 1, "onboarding": {"selesai": False, "langkah": 1, "fokus": ["anak"], "layanan": ""}}
+
+
+def seed_js(nama, tujuan):
+    if nama in BARU:
+        data = state_baru()
+    else:
+        data = contoh_state()
+        if nama == "korporat-peserta":
+            data["korporat"] = contoh_korporat("peserta")
+        elif nama == "korporat-laporan":
+            data["korporat"] = contoh_korporat("laporan")
     return ("<script>try{localStorage.setItem('vaksinku.v1'," +
-            json.dumps(json.dumps(contoh_state(), ensure_ascii=False)) +
+            json.dumps(json.dumps(data, ensure_ascii=False)) +
             ");}catch(e){}location.hash=" + json.dumps(tujuan) + ";</script>\n")
 
 
@@ -105,16 +151,18 @@ def main():
         if nama not in LAYAR:
             print("layar tidak dikenal:", nama)
             continue
-        doc = html.replace(TANDA_APP, seed_js(LAYAR[nama]) + TANDA_APP)
+        doc = html.replace(TANDA_APP, seed_js(nama, LAYAR[nama]) + TANDA_APP)
         tmp = os.path.join(tempfile.gettempdir(), "_layar_%s.html" % nama)
         with open(tmp, "w", encoding="utf-8") as f:
             f.write(doc)
         png = os.path.join(KELUAR, nama + ".png")
         if os.path.exists(png):
             os.remove(png)
+        # splash berpindah sendiri setelah 1,8 detik — potret sebelum itu
+        budget = "1200" if nama == "splash" else "4000"
         subprocess.run(
             [CHROME, "--headless=new", "--disable-gpu", "--no-sandbox", "--allow-file-access-from-files",
-             "--hide-scrollbars", "--window-size=470,930", "--virtual-time-budget=4000",
+             "--hide-scrollbars", "--window-size=470,930", "--virtual-time-budget=" + budget,
              "--screenshot=" + png, "file://" + tmp],
             capture_output=True, timeout=90)
         print(("  ok " if os.path.exists(png) else "  XX ") + png)
