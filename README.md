@@ -11,11 +11,14 @@ Repositori ini berisi dua berkas siap pakai:
 | Berkas | Isi |
 |---|---|
 | **`index.html`** | Halaman muka: 9 layar rancangan antarmuka, diambil dari kanvas Claude Design |
-| **`VaksinKu-App.html`** | Aplikasi yang benar-benar berjalan |
+| **`VaksinKu-App.html`** | Aplikasi pasien — untuk keluarga yang divaksin |
+| **`VaksinKu-Dashboard.html`** | Dashboard manajemen — untuk petugas klinik |
 
-Keduanya berdiri sendiri — klik dua kali untuk membuka di browser, atau unggah
+Ketiganya berdiri sendiri — klik dua kali untuk membuka di browser, atau unggah
 seluruh folder ke hosting (GitHub Pages dan sejenisnya langsung menyajikan
-`index.html`).
+`index.html`). Aplikasi pasien dipakai keluarga di ponsel; dashboard dipakai
+petugas klinik di komputer. Keduanya menyimpan data terpisah di perangkat
+masing-masing.
 
 Unduh **`VaksinKu-App.html`**, lalu klik dua kali — aplikasi langsung terbuka di
 browser (Chrome, Edge, Safari, Firefox), di ponsel maupun komputer. Tidak butuh
@@ -48,6 +51,43 @@ tautan, atau ditambahkan ke layar utama ponsel lewat menu "Add to Home screen".
 | **Poin Sehat** | +10 poin setiap vaksinasi selesai |
 | **Cadangkan & pulihkan** | Ekspor/impor seluruh data sebagai berkas `.json` |
 | **Data contoh** | Sekali klik untuk mencoba aplikasi atau presentasi |
+
+## Dashboard manajemen (`VaksinKu-Dashboard.html`)
+
+Sisi klinik dari sistem yang sama: satu berkas HTML untuk dibuka di komputer
+petugas. Memakai price list, daftar dokter, dan data klinik dari katalog yang
+sama dengan aplikasi pasien.
+
+| Modul | Yang dikerjakan |
+|---|---|
+| **Ringkasan** | KPI harian, grafik pendapatan 7/14/30 hari (plus tampilan tabel), antrean hari ini, peringatan persediaan |
+| **Pendaftaran** | Data induk pasien, nomor rekam medis otomatis berurutan, pencarian, riwayat vaksinasi per pasien |
+| **Booking** | Daftar tersaring per status, pembuatan booking yang dicek terhadap kapasitas slot, konfirmasi, batal, tidak hadir |
+| **Penjadwalan** | Jam buka–tutup, durasi slot, kapasitas, hari libur; tampilan slot per hari dan grafik beban 14 hari ke depan |
+| **Pelayanan** | Antrean hari ini, check-in, pemilihan batch otomatis **FEFO**, pencatatan KIPI; penyelesaian memotong stok dan menerbitkan tagihan |
+| **Persediaan** | Stok per batch dengan kedaluwarsa dan stok minimum, penerimaan, penyesuaian/pembuangan, buku mutasi, peringatan habis & mendekati tempo |
+| **Transaksi** | Tagihan terbit otomatis dari pelayanan, pencatatan pembayaran per metode, rekap harian, ekspor `.csv` |
+
+Alurnya saling terkait: pelayanan yang ditandai selesai **sekaligus** mengurangi
+stok batch yang dipakai, menulis mutasi keluar, mencatat rekam medis, dan
+menerbitkan tagihan dengan harga dari price list resmi. Tidak ada angka yang
+ditanam — semua dihitung dari data yang dimasukkan petugas.
+
+### Batasan dashboard
+
+- **Booking dari aplikasi pasien tidak masuk otomatis.** Tanpa server tidak ada
+  jalur sinkronisasi; reservasi tiba lewat WhatsApp lalu dicatat petugas. Satu
+  jembatan yang memang bekerja: berkas cadangan `.json` dari aplikasi pasien bisa
+  **diimpor** di menu Pengaturan — pasien dan reservasinya ditambahkan tanpa
+  menimpa data yang ada.
+- **Satu perangkat, satu pengguna.** Data ada di browser komputer itu saja; belum
+  ada akun petugas, hak akses, atau jejak audit per pengguna. Beberapa kasir atau
+  beberapa cabang belum bisa berbagi satu data.
+- **Tidak terhubung mesin EDC atau payment gateway**; pembayaran dicatat manual.
+- **Bukan rekam medis elektronik resmi.** Belum ada integrasi SATUSEHAT maupun
+  pelaporan ke Dinas Kesehatan; ekspor `.csv` disediakan untuk diolah lebih lanjut.
+- Harga tagihan diambil saat vaksinasi dicatat, jadi perubahan price list
+  setelahnya tidak mengubah tagihan yang sudah terbit.
 
 ## Batasan yang perlu diketahui
 
@@ -94,22 +134,30 @@ vaksin haji & umrah sesuai regulasi Arab Saudi dengan tambahan rekomendasi WHO.
 ## Struktur repositori
 
 ```
-index.html           Halaman muka: galeri 9 layar rancangan (satu berkas)
-VaksinKu-App.html    Aplikasi siap pakai (satu berkas, self-contained)
-design/              Artboard hasil ekspor kanvas Claude Design (sumber index.html)
-app/                 Sumber aplikasi
-  index.html         Kerangka halaman
-  styles.css         Design system: token warna, komponen, tata letak
-  app.js             Logika: penyimpanan, rute, layar, perhitungan biaya
+index.html                 Halaman muka: galeri 9 layar rancangan (satu berkas)
+VaksinKu-App.html          Aplikasi pasien (satu berkas, self-contained)
+VaksinKu-Dashboard.html    Dashboard manajemen klinik (satu berkas)
+design/                    Artboard hasil ekspor kanvas Claude Design
+app/                       Sumber aplikasi pasien
+  index.html               Kerangka halaman
+  styles.css               Design system: token warna, komponen, tata letak
+  app.js                   Logika: penyimpanan, rute, layar, perhitungan biaya
+admin/                     Sumber dashboard manajemen
+  index.html               Kerangka halaman
+  styles.css               Design system dashboard (sidebar, tabel, grafik)
+  app.js                   Modul booking s.d. transaksi, grafik, dan panel
 src/
-  data_katalog.py    Isi katalog (harga, jadwal, layanan, dokter, klinik)
-  build_bundle.py    Merakit semuanya + font & logo menjadi satu berkas HTML
-  uji_app.py         Uji fungsional otomatis di browser headless (89 uji)
-  tangkap_layar.py   Tangkap layar aplikasi dengan data contoh
-  ambil_desain.py    Ekspor isi kanvas Claude Design ke folder design/
-  build_index.py     Merakit index.html dari design/
-  gen.py             Design system generator mockup statis (versi lama)
-  build_app.py       Generator prototipe klik (versi lama)
+  data_katalog.py          Isi katalog (harga, jadwal, layanan, dokter, klinik)
+  build_bundle.py          Merakit aplikasi pasien + font & logo jadi satu berkas
+  build_admin.py           Merakit dashboard manajemen jadi satu berkas
+  uji_app.py               Uji fungsional aplikasi pasien (89 uji)
+  uji_admin.py             Uji fungsional dashboard (64 uji)
+  tangkap_layar.py         Tangkap layar aplikasi pasien
+  tangkap_dashboard.py     Tangkap layar dashboard
+  ambil_desain.py          Ekspor isi kanvas Claude Design ke folder design/
+  build_index.py           Merakit index.html dari design/
+  gen.py                   Design system generator mockup statis (versi lama)
+  build_app.py             Generator prototipe klik (versi lama)
 mockup/              Artboard statis (.dc.html) untuk kanvas desain
 katalog/             Halaman katalog hasil koreksi (lihat katalog/README.md)
 ```
@@ -119,9 +167,12 @@ katalog/             Halaman katalog hasil koreksi (lihat katalog/README.md)
 ```bash
 cd src
 python3 build_bundle.py       # → VaksinKu-App.html (font tertanam, siap offline)
+python3 build_admin.py        # → VaksinKu-Dashboard.html
 python3 build_bundle.py --tanpa-font   # lebih cepat, font dari Google Fonts
-python3 uji_app.py            # jalankan 89 uji fungsional
-python3 tangkap_layar.py      # tangkap layar dengan data contoh
+python3 uji_app.py            # 89 uji fungsional aplikasi pasien
+python3 uji_admin.py          # 64 uji fungsional dashboard
+python3 tangkap_layar.py      # tangkap layar aplikasi pasien
+python3 tangkap_dashboard.py  # tangkap layar dashboard
 python3 build_index.py        # → index.html dari folder design/
 ```
 
