@@ -137,6 +137,23 @@ def font_css():
     return "\n".join(rules)
 
 
+# --------------------------------------------------------------- banner
+def tanam_banner(js):
+    """Ganti gambar: 'banner/x.webp' di daftar BANNER dengan data URI,
+    supaya berkas hasil rakitan tetap menampilkan banner tanpa internet."""
+    tipe = {".webp": "image/webp", ".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg"}
+
+    def ganti(m):
+        path = os.path.join(APP, m.group(2))
+        with open(path, "rb") as f:
+            raw = f.read()
+        mime = tipe[os.path.splitext(path)[1].lower()]
+        print("  banner %s: %.0f KB" % (m.group(2), len(raw) / 1024))
+        return "%sdata:%s;base64,%s'" % (m.group(1), mime, base64.b64encode(raw).decode("ascii"))
+
+    return re.sub(r"(gambar:\s*')(banner/[^']+)'", ganti, js)
+
+
 # --------------------------------------------------------------- rakit
 def main():
     tanpa_font = "--tanpa-font" in sys.argv
@@ -157,7 +174,7 @@ def main():
     html = html.replace("<!--FONTS-->", fonts)
     html = html.replace("/*STYLES*/", css)
     html = html.replace("/*KATALOG*/", katalog_js())
-    html = html.replace("/*APP*/", js)
+    html = html.replace("/*APP*/", tanam_banner(js))
 
     out = os.path.join(ROOT, "VaksinKu-App.html")
     with open(out, "w", encoding="utf-8") as f:

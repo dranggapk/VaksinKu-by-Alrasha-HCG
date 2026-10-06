@@ -2294,8 +2294,13 @@
        teks   satu baris penjelas (boleh dikosongkan)
        ajak   tulisan pada tautan kecil di bawahnya
        warna  dua warna gradasi, dipakai bila 'gambar' kosong
-       gambar alamat gambar banner, perbandingan sisi 20:9 (mis. 800x360).
-              Boleh alamat https, boleh berkas di folder yang sama.
+       gambar alamat gambar banner, perbandingan sisi 20:9 (ideal 1200x540).
+              Berkas di folder app/banner/ ditanam ke VaksinKu-App.html saat
+              build_bundle.py dijalankan, jadi tetap tampil tanpa internet.
+              Boleh juga alamat https.
+       alt    isi gambar dalam satu kalimat, dibacakan pembaca layar.
+              Banner bergambar yang sudah memuat tulisan sendiri cukup
+              diisi gambar + alt; mata/judul/teks/ajak dikosongkan.
        act    'go' pindah layar, atau 'wa-umum' membuka WhatsApp klinik
        arg    tujuan untuk 'go' — mis. 'harga', 'internasional', 'booking'
 
@@ -2303,31 +2308,29 @@
      seluruh daftar dan bagian ini hilang dari Beranda dengan sendirinya. */
   var BANNER = [
     {
-      mata: 'Promo Oktober',
-      judul: 'Paket Vaksin Keluarga',
-      teks: 'Hemat untuk dua orang atau lebih dalam satu kunjungan.',
-      ajak: 'Lihat daftar harga',
-      warna: ['#D11972', '#7A0E42'],
-      gambar: '',
-      act: 'go', arg: 'harga'
+      gambar: 'banner/bundling-hpv.webp',
+      alt: 'Bundling HPV 3 dosis: HPV 4 Rp1,7 juta, HPV 9 Rp6,8 juta. Konsultasi sekarang.',
+      act: 'go', arg: 'chat-baru'
     },
     {
-      mata: 'Layanan baru',
-      judul: 'Vaksinasi Internasional',
-      teks: 'Haji, umroh, dan perjalanan luar negeri — berikut e-ICV.',
-      ajak: 'Pelajari syaratnya',
-      warna: ['#2E9BA0', '#14565A'],
-      gambar: '',
-      act: 'go', arg: 'internasional'
+      gambar: 'banner/hpv4-diperpanjang.webp',
+      alt: 'Promo diperpanjang: vaksin HPV 4 Rp650 ribu per dosis, diskon 50%.',
+      act: 'go', arg: 'booking'
     },
     {
-      mata: 'Vaksinasi di tempat',
-      judul: 'Layanan Korporat',
-      teks: 'Untuk kantor, sekolah, dan komunitas.',
-      ajak: 'Ajukan kerja sama',
-      warna: ['#C8890F', '#6E4A00'],
-      gambar: '',
-      act: 'go', arg: 'korporat'
+      gambar: 'banner/little-protection.webp',
+      alt: 'Little Protection Package: PCV, Rotavirus, dan Infanrix Hexa Rp2.825.000.',
+      act: 'go', arg: 'booking'
+    },
+    {
+      gambar: 'banner/influenza-bareng.webp',
+      alt: 'Vaksin influenza bareng: 1 vaksin Rp345.000, duo Rp670.000, triple Rp1.000.000.',
+      act: 'go', arg: 'booking'
+    },
+    {
+      gambar: 'banner/vaksin-dewasa.webp',
+      alt: 'Vaksin dewasa: Hepatitis B Rp900.000, HPV 9 Rp6.800.000, HPV 4 Rp1.800.000 untuk 3 dosis.',
+      act: 'go', arg: 'booking'
     }
   ];
 
@@ -2340,9 +2343,11 @@
           ? ''
           : 'background:linear-gradient(115deg,' + b.warna[0] + ' 0%,' + b.warna[1] + ' 100%);';
         return '<button class="promo-kartu" style="' + latar + '"' +
-          ' data-act="' + h(b.act) + '" data-arg="' + h(b.arg || '') + '">' +
+          ' data-act="' + h(b.act) + '" data-arg="' + h(b.arg || '') + '"' +
+          (b.alt ? ' aria-label="' + h(b.alt) + '"' : '') + '>' +
           (b.gambar ? '<img src="' + h(b.gambar) + '" alt="" loading="lazy">' : '') +
-          '<span class="tirai"></span>' +
+          // tirai gelap hanya perlu bila aplikasi menulis teks di atas gambar
+          (b.judul || b.teks || b.mata ? '<span class="tirai"></span>' : '') +
           (b.mata ? '<span class="promo-mata">' + h(b.mata) + '</span>' : '') +
           '<span class="promo-judul">' + h(b.judul) + '</span>' +
           (b.teks ? '<span class="promo-teks">' + h(b.teks) + '</span>' : '') +

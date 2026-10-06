@@ -110,9 +110,19 @@ TEST_JS = r"""
     ok('banner tepat di bawah kartu tombol Booking Vaksinasi',
        !!sebelumBanner && sebelumBanner.textContent.indexOf('Booking Vaksinasi') > 0,
        sebelumBanner ? sebelumBanner.textContent.trim().slice(0, 34).replace(/\s+/g, ' ') : '-');
-    ok('tiap banner punya judul dan tujuan',
+    ok('tiap banner punya judul atau teks alternatif, dan tujuan',
        [].every.call(slide, function (b) {
-         return b.querySelector('.promo-judul').textContent.length > 3 && !!b.getAttribute('data-act');
+         var judul = b.querySelector('.promo-judul');
+         return ((judul && judul.textContent.length > 3) || (b.getAttribute('aria-label') || '').length > 10) &&
+           !!b.getAttribute('data-act');
+       }));
+    var gbr = document.querySelectorAll('.promo-kartu img');
+    ok('gambar banner tertanam di berkas (jalan tanpa internet)', gbr.length > 0 &&
+       [].every.call(gbr, function (g) { return g.getAttribute('src').indexOf('data:image/') === 0; }),
+       gbr.length + ' gambar');
+    ok('banner bergambar tanpa teks tidak digelapkan',
+       [].every.call(slide, function (b) {
+         return !b.querySelector('img') || b.querySelector('.promo-judul') || !b.querySelector('.tirai');
        }));
 
     /* indikator mengikuti posisi geseran */
