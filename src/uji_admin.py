@@ -60,12 +60,13 @@ TEST_JS = r"""
   function bukaStok() { ganti('#/persediaan'); klik('[data-act="form-stok"]'); }
   function aturLibur(aktif) {
     ganti('#/pengaturan');
-    [].forEach.call(document.querySelectorAll('[data-act="toggle-libur"]'), function (b) {
-      var hidup = b.classList.contains('on');
-      var hari = +b.getAttribute('data-arg');
-      var mau = aktif.indexOf(hari) >= 0;
-      if (hidup !== mau) b.click();
-    });
+    // tiap klik menggambar ulang layar, jadi tombolnya dicari lagi tiap putaran —
+    // kalau tidak, tombol sisa sudah lepas dari DOM dan kliknya tidak berefek
+    for (var hari = 0; hari < 7; hari++) {
+      var b = document.querySelector('[data-act="toggle-libur"][data-arg="' + hari + '"]');
+      if (!b) continue;
+      if (b.classList.contains('on') !== (aktif.indexOf(hari) >= 0)) b.click();
+    }
   }
   function hariIni() { var d = new Date(); return new Date(d.getTime() - d.getTimezoneOffset() * 6e4).toISOString().slice(0, 10); }
   function geser(n) {
@@ -132,7 +133,8 @@ TEST_JS = r"""
     klik('[data-act="form-booking"]');
     isi('[data-pd="tanggal"]', hariIni());
     ok('tanggal hari libur ditolak di booking', teks().indexOf('ditandai hari libur') > 0 &&
-       document.querySelectorAll('[data-act="pd-jam"]').length === 0);
+       document.querySelectorAll('[data-act="pd-jam"]').length === 0,
+       'libur=' + JSON.stringify(st().jadwal.libur) + ' hari ini=' + hariIniWd);
     aturLibur([]);
 
     ganti('#/booking');

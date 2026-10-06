@@ -162,7 +162,9 @@ def main():
         budget = "1200" if nama == "splash" else "4000"
         subprocess.run(
             [CHROME, "--headless=new", "--disable-gpu", "--no-sandbox", "--allow-file-access-from-files",
-             "--hide-scrollbars", "--window-size=470,930", "--virtual-time-budget=" + budget,
+             # Chrome headless menata halaman pada lebar minimum 500px; memakai angka
+             # yang sama membuat hasil potret tidak terpotong di tepi kanan
+             "--hide-scrollbars", "--window-size=500,930", "--virtual-time-budget=" + budget,
              "--screenshot=" + png, "file://" + tmp],
             capture_output=True, timeout=90)
         print(("  ok " if os.path.exists(png) else "  XX ") + png)

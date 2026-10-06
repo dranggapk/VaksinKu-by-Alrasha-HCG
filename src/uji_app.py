@@ -101,6 +101,48 @@ TEST_JS = r"""
     ok('bottom nav tampil', document.querySelectorAll('.navitem').length === 4);
     ok('rekomendasi sesuai kebutuhan tampil', document.body.textContent.indexOf('Sesuai kebutuhan Anda') > 0);
 
+    /* 1e. slider banner promo di bawah tombol booking */
+    var pita = document.getElementById('banner');
+    var slide = document.querySelectorAll('.banner-slide');
+    var promoKatalog = K2.hargaInternasional.filter(function (x) { return x.coret; }).length +
+      (K2.paketTriple && K2.paketTriple.coret ? 1 : 0);
+    ok('slider banner tampil di beranda', !!pita && slide.length > 1, slide.length + ' banner');
+    ok('jumlah banner = promo berkoret + 2 layanan', slide.length === promoKatalog + 2,
+       promoKatalog + ' promo + 2 layanan');
+    ok('titik indikator sejumlah banner', document.querySelectorAll('.banner-titik button').length === slide.length);
+    var sebelumBanner = document.querySelector('.banner-bungkus').previousElementSibling;
+    ok('banner tepat di bawah kartu tombol Booking Vaksinasi',
+       sebelumBanner.textContent.indexOf('Booking Vaksinasi') > 0,
+       sebelumBanner.textContent.trim().slice(0, 34).replace(/\s+/g, ' '));
+
+    var teksBanner = pita.textContent;
+    ok('banner memakai harga promo dari katalog',
+       teksBanner.indexOf('Rp' + parseInt(K2.paketTriple.harga.replace(/\D/g, ''), 10).toLocaleString('id-ID')) > 0 &&
+       teksBanner.indexOf('Rp' + parseInt(K2.paketTriple.coret.replace(/\D/g, ''), 10).toLocaleString('id-ID')) > 0,
+       K2.paketTriple.nama + ' ' + K2.paketTriple.harga);
+    ok('banner layanan memperkenalkan fitur yang ada',
+       teksBanner.indexOf('Home Care') > 0 && teksBanner.indexOf('Korporat') > 0);
+    ok('tiap banner punya label aksesibilitas',
+       [].every.call(slide, function (b) { return (b.getAttribute('aria-label') || '').length > 5; }));
+
+    /* indikator mengikuti posisi geseran */
+    var lebarSlide = slide[0].offsetWidth + 10;
+    pita.scrollLeft = lebarSlide * 2;
+    pita.dispatchEvent(new Event('scroll'));
+    ok('titik aktif mengikuti geseran', document.querySelectorAll('.banner-titik button')[2].classList.contains('on'),
+       'titik aktif ke-' + ([].findIndex.call(document.querySelectorAll('.banner-titik button'),
+         function (t) { return t.classList.contains('on'); }) + 1));
+    pita.scrollLeft = 0;
+    pita.dispatchEvent(new Event('scroll'));
+
+    ok('banner tidak membuat beranda meluber ke samping',
+       document.querySelector('.scroll').scrollWidth === document.querySelector('.scroll').clientWidth,
+       document.querySelector('.scroll').scrollWidth + ' vs ' + document.querySelector('.scroll').clientWidth);
+
+    klik('.banner-slide', 0);
+    ok('ketukan banner promo membuka layar terkait', location.hash === '#/internasional', location.hash);
+    ganti('#/beranda');
+
     /* 2. profil bisa diubah */
     ganti('#/profil');
     isi('[data-field="profil.nama"]', 'Ibu Sari Dewi');

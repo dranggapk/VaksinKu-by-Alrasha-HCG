@@ -1016,6 +1016,71 @@
     return { body: body, penuh: true };
   }
 
+  /* ============================ banner promo ============================ */
+  /* Isi banner diturunkan dari katalog resmi: promo adalah paket yang memang
+     punya harga coret di price list, bukan diskon karangan. Dua banner terakhir
+     memperkenalkan layanan yang sudah ada di aplikasi. */
+  function daftarBanner() {
+    var out = [];
+    var pt = K.paketTriple;
+    if (pt && pt.coret) {
+      out.push({
+        tag: 'PROMO', judul: pt.nama, teks: pt.isi.join(' · '),
+        harga: angka(pt.harga), coret: angka(pt.coret), icon: 'globe',
+        warna: 'linear-gradient(135deg,var(--teal-deep) 0%,var(--magenta-dark) 100%)',
+        tujuan: 'internasional'
+      });
+    }
+    K.hargaInternasional.forEach(function (x) {
+      if (!x.coret) return;
+      out.push({
+        tag: 'PROMO', judul: x.nama, teks: 'Vaksin wajib jemaah haji & umrah',
+        harga: angka(x.harga), coret: angka(x.coret), icon: 'syringe',
+        warna: 'linear-gradient(135deg,var(--magenta-dark) 0%,var(--magenta) 100%)',
+        tujuan: 'internasional'
+      });
+    });
+    out.push({
+      tag: 'LAYANAN', judul: 'Home Care', teks: 'Petugas datang ke rumah — ' + K.termasuk.join(', ').toLowerCase() + ' sudah termasuk',
+      icon: 'house', warna: 'linear-gradient(135deg,var(--teal-deep) 0%,var(--teal) 100%)',
+      aksi: 'mulai-booking', arg: 'homecare'
+    });
+    out.push({
+      tag: 'FITUR BARU', judul: 'Korporat & Sekolah', teks: 'Vaksinasi massal karyawan atau siswa, pantau cakupannya',
+      icon: 'chart', warna: 'linear-gradient(135deg,var(--ink) 0%,var(--teal-deep) 100%)',
+      aksi: 'go', arg: S.korporat.nama ? 'korporat' : 'korporat-setup'
+    });
+    return out;
+  }
+  function sliderBanner() {
+    var daftar = daftarBanner();
+    if (!daftar.length) return '';
+    return '<div class="banner-bungkus">' +
+      '<div class="banner" id="banner" role="group" aria-label="Promo dan layanan">' +
+      daftar.map(function (b, i) {
+        return '<button class="banner-slide" style="background:' + b.warna + ';" ' +
+          'data-act="' + (b.aksi || 'go') + '" data-arg="' + h(b.arg || b.tujuan) + '" ' +
+          'aria-label="' + h(b.tag + ': ' + b.judul) + '" aria-roledescription="slide" ' +
+          'aria-posinset="' + (i + 1) + '" aria-setsize="' + daftar.length + '">' +
+          '<span class="banner-ikon">' + ic(b.icon, 44, 1.4) + '</span>' +
+          '<span class="banner-isi">' +
+          '<span class="banner-tag">' + h(b.tag) + '</span>' +
+          '<span class="banner-judul disp">' + h(b.judul) + '</span>' +
+          '<span class="banner-teks">' + h(b.teks) + '</span>' +
+          (b.harga
+            ? '<span class="banner-harga"><span class="disp">' + h(rp(b.harga)) + '</span>' +
+              (b.coret ? '<s>' + h(rp(b.coret)) + '</s>' : '') + '</span>'
+            : '') +
+          '</span></button>';
+      }).join('') + '</div>' +
+      (daftar.length > 1
+        ? '<div class="banner-titik" id="banner-titik">' + daftar.map(function (b, i) {
+          return '<button class="' + (i ? '' : 'on') + '" data-slide="' + i + '" aria-label="Banner ' + (i + 1) + '"></button>';
+        }).join('') + '</div>'
+        : '') +
+      '</div>';
+  }
+
   /* ============================ layar: beranda ============================ */
   function scBeranda() {
     var belumSiap = !S.profil.nama || !S.pasien.length;
@@ -1067,6 +1132,8 @@
         '<div class="small muted" style="margin-top:4px;">Atur jadwal vaksinasi keluarga Anda sekarang.</div></div>' +
         '<button class="btn primary" data-act="go" data-arg="booking">' + ic('plus', 17, 2.2) + ' Booking Vaksinasi</button></div>';
     }
+
+    body += sliderBanner();
 
     // pengingat dari jadwal pasien
     var pengingat = [];
@@ -1126,16 +1193,6 @@
       '<div class="row wrap g6 mid"><span class="tiny muted" style="font-weight:600;">Sudah termasuk:</span>' +
       K.termasuk.map(function (t) { return '<span class="chip teal" style="padding:4px 9px;font-size:10.5px;">' + h(t) + '</span>'; }).join('') +
       '</div></div>';
-
-    var promo = K.hargaInternasional.filter(function (x) { return x.coret; })[0];
-    if (promo) {
-      body += '<div class="card tap stack g6" style="background:linear-gradient(135deg,var(--teal-dark),var(--magenta-dark));border-color:transparent;color:#fff;" data-act="go" data-arg="internasional">' +
-        '<div class="row mid g8"><span class="chip" style="background:#fff;color:var(--magenta-dark);padding:3px 10px;font-size:10px;">PROMO</span>' +
-        '<span class="tiny" style="opacity:.85;">Haji &amp; Umrah</span></div>' +
-        '<div class="disp" style="font-size:16px;font-weight:800;">Paket ' + h(promo.nama) + '</div>' +
-        '<div class="row mid g10" style="align-items:baseline;"><span class="disp" style="font-size:21px;font-weight:800;">' + rp(angka(promo.harga)) + '</span>' +
-        '<span class="small" style="opacity:.75;text-decoration:line-through;">' + rp(angka(promo.coret)) + '</span></div></div>';
-    }
 
     body += '<button class="card rowlink" data-act="go" data-arg="tentang" style="padding:16px;">' +
       '<div class="icon-sq">' + ic('pin', 19) + '</div>' +
@@ -2207,6 +2264,54 @@
 
   /* ============================ render ============================ */
   var sheetHTML = '';
+  /* Geser banner memakai scroll-snap bawaan browser; JS hanya menyinkronkan
+     titik indikator, menangani ketukan titik, dan menjalankan putar otomatis. */
+  var jedaBanner = 0;
+  function pasangBanner() {
+    clearInterval(jedaBanner);
+    var pita = document.getElementById('banner');
+    if (!pita) return;
+    var titik = document.getElementById('banner-titik');
+    var slide = pita.querySelectorAll('.banner-slide');
+    if (!slide.length) return;
+    var manual = false;
+
+    function indeksSekarang() {
+      var lebar = slide[0].offsetWidth + 10;
+      return Math.min(slide.length - 1, Math.round(pita.scrollLeft / lebar));
+    }
+    function sorot() {
+      if (!titik) return;
+      var n = indeksSekarang();
+      [].forEach.call(titik.children, function (t, i) { t.classList.toggle('on', i === n); });
+    }
+    function keSlide(n, halus) {
+      var lebar = slide[0].offsetWidth + 10;
+      pita.scrollTo({ left: n * lebar, behavior: halus === false ? 'auto' : 'smooth' });
+    }
+    pita.addEventListener('scroll', sorot, { passive: true });
+    // sentuhan pengguna menghentikan putar otomatis supaya tidak saling rebut
+    ['pointerdown', 'touchstart', 'wheel'].forEach(function (ev) {
+      pita.addEventListener(ev, function () { manual = true; clearInterval(jedaBanner); }, { passive: true });
+    });
+    if (titik) {
+      titik.addEventListener('click', function (ev) {
+        var b = ev.target.closest('[data-slide]');
+        if (!b) return;
+        manual = true; clearInterval(jedaBanner);
+        keSlide(+b.getAttribute('data-slide'));
+      });
+    }
+    var diam = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (slide.length > 1 && !diam) {
+      jedaBanner = setInterval(function () {
+        if (manual || !document.getElementById('banner')) { clearInterval(jedaBanner); return; }
+        keSlide((indeksSekarang() + 1) % slide.length);
+      }, 5000);
+    }
+    sorot();
+  }
+
   function render() {
     var r;
     // layar awal hanya dipaksa saat benar-benar pemakaian pertama; pengguna lama
@@ -2251,6 +2356,7 @@
       (r.foot || '') + (r.nav ? navbar(r.nav) : '') + sheetHTML + '</div>';
     var s = document.getElementById('cari-vaksin');
     if (s) { s.focus(); s.setSelectionRange(s.value.length, s.value.length); }
+    pasangBanner();
     if (route.name === 'splash') {
       // splash berpindah sendiri; ketuk di mana saja untuk langsung lanjut
       clearTimeout(jedaSplash);
