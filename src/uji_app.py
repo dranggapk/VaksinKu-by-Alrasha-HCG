@@ -205,6 +205,25 @@ TEST_JS = r"""
     ok('pindah ke detail reservasi', location.hash.indexOf('booking-detail') > 0, location.hash);
     ok('draft dibersihkan', st().draft == null);
 
+    /* 5b. pesan WhatsApp membawa kode data untuk dashboard klinik */
+    var bukaAsli = window.open;
+    window.open = function (u) { window.__waBooking = u; return null; };
+    klik('[data-act="wa-booking"]');
+    window.open = bukaAsli;
+    var pesanBk = decodeURIComponent((window.__waBooking || '').split('text=')[1] || '');
+    var kd = pesanBk.match(/VKD1\.([A-Za-z0-9_-]+)/), isiKd = null;
+    try {
+      var b64 = kd[1].replace(/-/g, '+').replace(/_/g, '/');
+      while (b64.length % 4) b64 += '=';
+      isiKd = JSON.parse(decodeURIComponent(escape(atob(b64))));
+    } catch (e) {}
+    ok('pesan reservasi memuat kode data', !!kd, kd ? kd[0].length + ' karakter' : pesanBk.slice(-60));
+    ok('kode data sesuai reservasi', !!isiKd && isiKd.k === b.kode && isiKd.t === b.tanggal && isiKd.j === b.jam &&
+       JSON.stringify(isiKd.v) === JSON.stringify(b.vaksinIds), isiKd ? isiKd.k + ' · ' + isiKd.v.length + ' vaksin' : '-');
+    var pk = st().pasien.filter(function (x) { return x.id === b.pasienIds[0]; })[0] || {};
+    ok('kode data membawa nama & tanggal lahir pasien', !!isiKd && isiKd.p[0][0] === pk.nama && isiKd.p[0][1] === pk.tglLahir,
+       isiKd ? isiKd.p[0].join(' / ') : '-');
+
     /* 6. tandai selesai */
     window.confirm = function () { return true; };
     klik('[data-act="selesai-booking"]');

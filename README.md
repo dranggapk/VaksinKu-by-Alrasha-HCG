@@ -40,7 +40,7 @@ tautan, atau ditambahkan ke layar utama ponsel lewat menu "Add to Home screen".
 | **Kelengkapan vaksinasi** | Persentase dihitung dari vaksin yang sudah jatuh tempo vs yang sudah dicatat |
 | **Reservasi** | Form tervalidasi: layanan, lokasi, pasien, dokter, vaksin, tanggal & jam |
 | **Biaya nyata** | Total dihitung dari price list resmi; ganti dokter umum ↔ spesialis mengubah total seketika |
-| **Kirim ke WhatsApp** | Ringkasan reservasi dikirim ke CS **0811-7744-74** dengan satu ketukan |
+| **Kirim ke WhatsApp** | Ringkasan reservasi dikirim ke CS **0811-7744-74** dengan satu ketukan, disertai kode data yang dibaca dashboard klinik |
 | **Konsultasi dokter** | Pertanyaan disusun bersama konteks medis pasien, dikirim ke WhatsApp dokter; jawaban dicatat kembali sebagai arsip percakapan |
 | **Pengingat otomatis** | Vaksin terlambat, vaksin yang akan jatuh tempo, reservasi mendekat, dan konsultasi tanpa jawaban — dihitung dari tanggal lahir tiap pasien, dengan lencana di beranda |
 | **Ekspor ke kalender** | Unduh `.ics` berisi jadwal vaksin & reservasi lengkap dengan alarm H-7 dan H-1, agar pengingat tetap berbunyi walau aplikasi tertutup |
@@ -64,6 +64,7 @@ sama dengan aplikasi pasien.
 | **Ringkasan** | KPI harian, grafik pendapatan 7/14/30 hari (plus tampilan tabel), antrean hari ini, peringatan persediaan |
 | **Pendaftaran** | Data induk pasien, nomor rekam medis otomatis berurutan, pencarian, riwayat vaksinasi per pasien |
 | **Booking** | Daftar tersaring per status, pembuatan booking yang dicek terhadap kapasitas slot, konfirmasi, batal, tidak hadir |
+| **Tempel dari WhatsApp** | Pesan reservasi dari aplikasi pasien ditempel apa adanya: pasien baru didaftarkan, pasien lama dikenali, satu booking dibuat per pasien di slot yang masih muat |
 | **Penjadwalan** | Jam buka–tutup, durasi slot, kapasitas, hari libur; tampilan slot per hari dan grafik beban 14 hari ke depan |
 | **Pelayanan** | Antrean hari ini, check-in, pemilihan batch otomatis **FEFO**, pencatatan KIPI; penyelesaian memotong stok dan menerbitkan tagihan |
 | **Persediaan** | Stok per batch dengan kedaluwarsa dan stok minimum, penerimaan, penyesuaian/pembuangan, buku mutasi, peringatan habis & mendekati tempo |
@@ -77,10 +78,17 @@ ditanam — semua dihitung dari data yang dimasukkan petugas.
 ### Batasan dashboard
 
 - **Booking dari aplikasi pasien tidak masuk otomatis.** Tanpa server tidak ada
-  jalur sinkronisasi; reservasi tiba lewat WhatsApp lalu dicatat petugas. Satu
-  jembatan yang memang bekerja: berkas cadangan `.json` dari aplikasi pasien bisa
+  jalur sinkronisasi; reservasi tiba lewat WhatsApp. Pesan dari aplikasi membawa
+  baris **kode data** (`VKD1.…`) di bagian akhir — petugas menyalin pesannya lalu
+  memilih **Booking → Tempel dari WhatsApp**, dan pasien serta booking terbentuk
+  tanpa mengetik ulang. Jadwal yang diminta pasien menjadi nilai awal; petugas
+  boleh menggesernya bila slot penuh. Pesan yang sama tidak tercatat dua kali.
+  Pesan yang diketik pasien sendiri (bukan dari aplikasi) tetap dicatat lewat
+  *Booking baru*. Jalur lainnya: berkas cadangan `.json` dari aplikasi pasien bisa
   **diimpor** di menu Pengaturan — pasien dan reservasinya ditambahkan tanpa
   menimpa data yang ada.
+- Pasien lama dikenali dari **nama dan tanggal lahir yang sama persis**; beda
+  ejaan nama akan terdaftar sebagai pasien baru dan perlu digabung manual.
 - **Satu perangkat, satu pengguna.** Data ada di browser komputer itu saja; belum
   ada akun petugas, hak akses, atau jejak audit per pengguna. Beberapa kasir atau
   beberapa cabang belum bisa berbagi satu data.
@@ -151,8 +159,8 @@ src/
   data_katalog.py          Isi katalog (harga, jadwal, layanan, dokter, klinik)
   build_bundle.py          Merakit aplikasi pasien + font & logo jadi satu berkas
   build_admin.py           Merakit dashboard manajemen jadi satu berkas
-  uji_app.py               Uji fungsional aplikasi pasien (99 uji)
-  uji_admin.py             Uji fungsional dashboard (64 uji)
+  uji_app.py               Uji fungsional aplikasi pasien (102 uji)
+  uji_admin.py             Uji fungsional dashboard (78 uji)
   tangkap_layar.py         Tangkap layar aplikasi pasien
   tangkap_dashboard.py     Tangkap layar dashboard
   ambil_desain.py          Ekspor isi kanvas Claude Design ke folder design/
@@ -170,8 +178,8 @@ cd src
 python3 build_bundle.py       # → VaksinKu-App.html (font tertanam, siap offline)
 python3 build_admin.py        # → VaksinKu-Dashboard.html
 python3 build_bundle.py --tanpa-font   # lebih cepat, font dari Google Fonts
-python3 uji_app.py            # 99 uji fungsional aplikasi pasien
-python3 uji_admin.py          # 64 uji fungsional dashboard
+python3 uji_app.py            # 102 uji fungsional aplikasi pasien
+python3 uji_admin.py          # 78 uji fungsional dashboard
 python3 tangkap_layar.py      # tangkap layar aplikasi pasien
 python3 tangkap_dashboard.py  # tangkap layar dashboard
 python3 build_index.py        # → index.html dari folder design/

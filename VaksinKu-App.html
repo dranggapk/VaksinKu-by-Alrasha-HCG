@@ -669,7 +669,25 @@ table.price td.p{text-align:right;font-family:var(--disp);font-weight:800;color:
     L.push('');
     L.push('Estimasi total: ' + rp(b.total) + ' (' + rp(b.perPasien) + ' x ' + b.pasienIds.length + ' pasien)');
     if (b.catatan) { L.push(''); L.push('Catatan: ' + b.catatan); }
+    L.push('');
+    L.push('Kode data untuk petugas klinik (mohon tidak diubah):');
+    L.push(kodeData(b));
     return L.join('\n');
+  }
+  // Salinan reservasi yang bisa dibaca mesin, ikut terkirim di pesan WhatsApp.
+  // Petugas menempelkan pesan itu di dashboard klinik, yang membaca baris ini
+  // untuk mendaftarkan pasien dan membuat booking tanpa mengetik ulang.
+  function kodeData(b) {
+    var d = {
+      k: b.kode, n: b.pendaftar.nama, h: b.pendaftar.hp, l: b.layanan, lo: b.lokasi,
+      t: b.tanggal, j: b.jam, d: b.dokter, c: b.catatan || '', v: b.vaksinIds,
+      p: b.pasienIds.map(function (id) {
+        var p = S.pasien.filter(function (x) { return x.id === id; })[0] || {};
+        return [p.nama || namaPasien(id), p.tglLahir || '', p.jenisKelamin || ''];
+      })
+    };
+    var b64 = btoa(unescape(encodeURIComponent(JSON.stringify(d))));
+    return 'VKD1.' + b64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
   }
   function kirimWA(b) {
     window.open('https://wa.me/' + WA + '?text=' + encodeURIComponent(pesanWA(b)), '_blank');
