@@ -33,7 +33,8 @@ tautan, atau ditambahkan ke layar utama ponsel lewat menu "Add to Home screen".
 |---|---|
 | **Layar pembuka** | Splash, onboarding 3 langkah, dan layar masuk — sesuai rancangan di Claude Design |
 | **Pilihan kebutuhan** | Anak / dewasa / umroh & haji / lansia; pilihan ini menyaring rekomendasi vaksin di beranda dan daftar harga |
-| **Banner promo** | Slider geser di bawah tombol booking: paket berharga coret dari price list, plus pengenalan layanan Home Care dan modul Korporat |
+| **Banner promo** | Slider geser di bawah kartu reservasi/booking, berputar tiap 5 detik dan berhenti begitu disentuh. Isinya diatur di daftar `BANNER` pada `app/app.js` (label, judul, teks, warna atau gambar 20:9, tujuan ketukan) |
+| **Paket promo haji & umrah** | Kartu harga coret dari price list di Beranda |
 | **Profil pendaftar** | Nama & nomor HP, dipakai sebagai kontak reservasi |
 | **Data pasien** | Tambah/ubah/hapus anggota keluarga; usia dihitung dari tanggal lahir |
 | **Jadwal vaksin personal** | Ceklis otomatis menyesuaikan usia: anak mengikuti **IDAI 2024**, dewasa mengikuti **PAPDI 2025** (rentang usia dipilih otomatis) |
@@ -159,7 +160,7 @@ src/
   data_katalog.py          Isi katalog (harga, jadwal, layanan, dokter, klinik)
   build_bundle.py          Merakit aplikasi pasien + font & logo jadi satu berkas
   build_admin.py           Merakit dashboard manajemen jadi satu berkas
-  uji_app.py               Uji fungsional aplikasi pasien (102 uji)
+  uji_app.py               Uji fungsional aplikasi pasien (99 uji)
   uji_admin.py             Uji fungsional dashboard (78 uji)
   tangkap_layar.py         Tangkap layar aplikasi pasien
   tangkap_dashboard.py     Tangkap layar dashboard
@@ -178,7 +179,7 @@ cd src
 python3 build_bundle.py       # → VaksinKu-App.html (font tertanam, siap offline)
 python3 build_admin.py        # → VaksinKu-Dashboard.html
 python3 build_bundle.py --tanpa-font   # lebih cepat, font dari Google Fonts
-python3 uji_app.py            # 102 uji fungsional aplikasi pasien
+python3 uji_app.py            # 99 uji fungsional aplikasi pasien
 python3 uji_admin.py          # 78 uji fungsional dashboard
 python3 tangkap_layar.py      # tangkap layar aplikasi pasien
 python3 tangkap_dashboard.py  # tangkap layar dashboard

@@ -322,41 +322,47 @@ table.price td.p{text-align:right;font-family:var(--disp);font-weight:800;color:
   font-size:13px;font-weight:600;color:var(--ink-3);border-bottom:2.4px solid transparent;
 }
 .kortab.on{color:var(--magenta-dark);font-weight:700;border-bottom-color:var(--magenta);}
-
-/* ---------- banner promo (slider) ---------- */
-/* pembungkus melebar sampai tepi layar, lalu padding di dalamnya mengembalikan
-   perataan slide dengan kartu lain — tanpa ini isi slider meluber dari bingkai */
-.banner-bungkus{display:flex;flex-direction:column;gap:9px;margin:0 -18px;}
-.banner{
-  display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;
-  scroll-padding-left:18px;padding:2px 18px;
-  -webkit-overflow-scrolling:touch;scrollbar-width:none;
+/* ── Banner promo di Beranda ─────────────────────────────────────
+   Digeser dengan jari; scroll-snap yang menahannya di tiap banner.
+   Perbandingan sisinya tetap 20:9 pada lebar berapa pun, jadi
+   gambar yang dipasang Dokter tidak pernah terpotong tak terduga. */
+.promo{ position:relative; }
+.promo-rel{
+  display:flex; gap:10px; overflow-x:auto; scroll-snap-type:x mandatory;
+  scrollbar-width:none; -webkit-overflow-scrolling:touch; scroll-behavior:smooth;
 }
-.banner::-webkit-scrollbar{height:0;}
-.banner-slide{
-  flex:0 0 100%;scroll-snap-align:start;position:relative;overflow:hidden;
-  aspect-ratio:64/25;min-height:112px;border:0;border-radius:18px;cursor:pointer;
-  padding:15px 17px;display:flex;align-items:center;color:#fff;text-align:left;
-  box-shadow:0 10px 22px -16px rgba(38,38,38,.55);
+.promo-rel::-webkit-scrollbar{ display:none; }
+.promo-kartu{
+  position:relative; flex:0 0 100%; scroll-snap-align:center;
+  aspect-ratio:20/9; border-radius:16px; overflow:hidden;
+  display:flex; flex-direction:column; justify-content:center;
+  padding:14px 16px; color:#fff; text-align:left; border:0;
+  font:inherit; cursor:pointer; isolation:isolate;
 }
-.banner-ikon{
-  position:absolute;right:-12px;bottom:-16px;color:#fff;opacity:.17;
-  display:flex;pointer-events:none;transform:rotate(-8deg);
+.promo-kartu img{
+  position:absolute; inset:0; width:100%; height:100%; object-fit:cover; z-index:-2;
 }
-.banner-ikon svg{width:96px;height:96px;}
-.banner-isi{display:flex;flex-direction:column;gap:3px;position:relative;z-index:1;max-width:76%;}
-.banner-tag{
-  align-self:flex-start;background:rgba(255,255,255,.22);border-radius:999px;
-  padding:3px 9px;font-size:9.5px;font-weight:800;letter-spacing:.07em;
+/* Tirai gelap tipis supaya tulisan tetap terbaca di atas gambar apa pun
+   yang kelak dipasang - termasuk gambar terang. */
+.promo-kartu .tirai{
+  position:absolute; inset:0; z-index:-1;
+  background:linear-gradient(90deg,rgba(0,0,0,.42) 0%,rgba(0,0,0,.12) 72%,rgba(0,0,0,0) 100%);
 }
-.banner-judul{font-size:17px;font-weight:800;line-height:1.2;}
-.banner-teks{font-size:11px;line-height:1.45;opacity:.88;}
-.banner-harga{display:flex;align-items:baseline;gap:8px;margin-top:3px;}
-.banner-harga .disp{font-size:19px;font-weight:800;}
-.banner-harga s{font-size:11.5px;opacity:.7;}
-.banner-titik{display:flex;justify-content:center;gap:6px;}
-.banner-titik button{
-  width:6px;height:6px;border-radius:50%;border:0;padding:0;cursor:pointer;
-  background:var(--line-2);transition:width .2s,background .2s;
+.promo-mata{
+  align-self:flex-start; font-size:10px; font-weight:800; letter-spacing:.7px;
+  text-transform:uppercase; background:rgba(255,255,255,.22); backdrop-filter:blur(3px);
+  padding:3px 9px; border-radius:999px; margin-bottom:6px;
 }
-.banner-titik button.on{width:16px;border-radius:3px;background:var(--magenta);}
+.promo-judul{ font-size:15.5px; font-weight:800; line-height:1.25; }
+.promo-teks{ font-size:12px; opacity:.92; margin-top:3px; line-height:1.4; }
+.promo-ajak{
+  display:inline-flex; align-items:center; gap:4px; margin-top:8px;
+  font-size:11.5px; font-weight:700; opacity:.95;
+}
+.promo-titik{ display:flex; justify-content:center; gap:6px; margin-top:9px; }
+.promo-titik i{
+  width:6px; height:6px; border-radius:999px; background:var(--ink-4);
+  opacity:.35; transition:width .2s, opacity .2s;
+}
+.promo-titik i.on{ width:17px; opacity:1; background:var(--magenta); }
+@media (prefers-reduced-motion: reduce){ .promo-rel{ scroll-behavior:auto; } }
