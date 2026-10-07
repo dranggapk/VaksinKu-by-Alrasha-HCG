@@ -168,6 +168,13 @@ select.input{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xml
 }
 .icon-sq.mag{background:var(--magenta-tint);color:var(--magenta-dark);}
 .icon-sq.amber{background:var(--amber-tint);color:var(--amber);}
+/* ikon kategori vaksin & cara vaksinasi: kotak membulat, tiga keadaan */
+.ikon-kotak{
+  border-radius:28%;background:var(--teal-tint2);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.ikon-kotak.aktif{background:var(--magenta-tint2);}
+.ikon-kotak.nonaktif{background:#EFEFEF;}
 /* ikon menu berwarna (Alternatif 2): lingkaran teal pucat */
 .ikon-menu{
   width:40px;height:40px;border-radius:50%;background:var(--teal-tint2);

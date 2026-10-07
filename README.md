@@ -34,6 +34,7 @@ tautan, atau ditambahkan ke layar utama ponsel lewat menu "Add to Home screen".
 | **Layar pembuka** | Splash, onboarding 3 langkah, dan layar masuk — sesuai rancangan di Claude Design |
 | **Pilihan kebutuhan** | Anak / dewasa / umroh & haji / lansia; pilihan ini menyaring rekomendasi vaksin di beranda dan daftar harga |
 | **Ikon menu** | Gaya *Flat Filled with Outline* (Alternatif 2 dari lembar desain ikon): isi teal & pink, garis tepi biru tua, di atas lingkaran teal pucat. Dipakai di menu bawah (yang tidak aktif tampil abu-abu), menu Profil, dan pintasan Beranda. Digambar sebagai SVG di `IKON_MENU` pada `app/app.js` |
+| **Ikon kategori vaksin & cara vaksinasi** | Gaya yang sama dalam kotak membulat, dengan tiga keadaan: *Default* (teal), *Aktif/Dipilih* (pink), *Nonaktif* (abu-abu). Suntik untuk tiap kategori di Daftar Harga, pemilih vaksin, dan vaksin pranikah; kategori kombinasi (DPT Combo, Campak + Rubella) memakai varian bertanda +. Home Care, On Site Klinik, dan On Site Corporate di Beranda, form Booking, dan onboarding |
 | **Banner promo** | Slider geser di bawah kartu reservasi/booking, berputar tiap 5 detik dan berhenti begitu disentuh. Berisi 5 banner promo (Bundling HPV, HPV 4, Little Protection, Influenza, Vaksin Dewasa). Diatur di daftar `BANNER` pada `app/app.js`; gambar 1200×540 (20:9) disimpan di `app/banner/` dan ditanam ke berkas aplikasi saat build |
 | **Paket promo haji & umrah** | Kartu harga coret dari price list di Beranda |
 | **Profil pendaftar** | Nama & nomor HP, dipakai sebagai kontak reservasi |

@@ -180,6 +180,13 @@ select.input{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xml
 }
 .icon-sq.mag{background:var(--magenta-tint);color:var(--magenta-dark);}
 .icon-sq.amber{background:var(--amber-tint);color:var(--amber);}
+/* ikon kategori vaksin & cara vaksinasi: kotak membulat, tiga keadaan */
+.ikon-kotak{
+  border-radius:28%;background:var(--teal-tint2);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.ikon-kotak.aktif{background:var(--magenta-tint2);}
+.ikon-kotak.nonaktif{background:#EFEFEF;}
 /* ikon menu berwarna (Alternatif 2): lingkaran teal pucat */
 .ikon-menu{
   width:40px;height:40px;border-radius:50%;background:var(--teal-tint2);
@@ -523,11 +530,57 @@ table.price td.p{text-align:right;font-family:var(--disp);font-weight:800;color:
       '<path d="M33 9.5c-2 3-1 5 1.5 6.5s6 1 7 5.5A17.5 17.5 0 0 0 33 9.5zM29 31c2.5-1 5 0 5.5 2.5S32 39 29.5 39 26 33 29 31z" fill="' + IM.t + '" stroke-width="1.8"/>' +
       '<path d="M37 4.5 44 8l-3.5 1.6 1.2 4.2-2.2-1.9-2.6 1.3 1.1-3z" fill="' + IM.p + '" stroke-width="1.6"/>'
   };
-  function icm(name, size) {
-    return '<svg class="icm" width="' + (size || 28) + '" height="' + (size || 28) + '" viewBox="0 0 48 48" fill="none" ' +
+  var SUNTIK =
+    '<path d="M-6 -20h12M0 -20v6" stroke-width="2.4"/>' +
+    '<rect x="-5" y="-14" width="10" height="22" rx="2" fill="' + IM.tm + '" stroke="none"/>' +
+    '<rect x="-5" y="-3" width="10" height="11" fill="' + IM.p + '" stroke="none"/>' +
+    '<rect x="-5" y="-14" width="10" height="22" rx="2"/>' +
+    '<path d="M-5 -9h4M-5 -4h4M1 1h4" stroke-width="1.6"/>' +
+    '<path d="M-3 8h6l-1.5 4h-3z" fill="' + IM.t + '" stroke-width="1.8"/><path d="M0 12v9" stroke-width="2"/>';
+  // ikon kategori vaksin dan cara vaksinasi (lembar "Ikon Kategori Vaksin")
+  IKON_MENU.suntik = '<g transform="translate(24 24) rotate(45) scale(1.22)" stroke-width="1.9">' + SUNTIK + '</g>';
+  IKON_MENU['suntik-combo'] = '<g transform="translate(20.5 20.5) rotate(45) scale(1.08)" stroke-width="2">' + SUNTIK + '</g>' +
+    '<circle cx="36.5" cy="36.5" r="8" fill="' + IM.p + '"/><path d="M36.5 32.5v8M32.5 36.5h8" stroke="#fff" stroke-width="2.6"/>';
+  IKON_MENU.homecare = IKON_MENU.beranda;
+  IKON_MENU.klinik =
+    '<path d="M3.5 42.5h41"/>' +
+    '<rect x="5" y="20" width="10" height="22.5" fill="' + IM.tm + '"/><rect x="33" y="20" width="10" height="22.5" fill="' + IM.tm + '"/>' +
+    '<rect x="15" y="8" width="18" height="34.5" fill="#fff"/>' +
+    '<path d="M22 11.5h4v3.5h3.5v4H26v3.5h-4V19h-3.5v-4H22z" fill="' + IM.p + '" stroke-width="1.6"/>' +
+    '<path d="M20.5 42.5V33h7v9.5" fill="' + IM.t + '"/>' +
+    '<g fill="' + IM.t + '" stroke-width="1.5"><rect x="8" y="25" width="4" height="4" rx=".6"/><rect x="8" y="32" width="4" height="4" rx=".6"/>' +
+    '<rect x="36" y="25" width="4" height="4" rx=".6"/><rect x="36" y="32" width="4" height="4" rx=".6"/>' +
+    '<rect x="18.5" y="26" width="3.5" height="3.5" rx=".6"/><rect x="26" y="26" width="3.5" height="3.5" rx=".6"/></g>';
+  IKON_MENU.corporate =
+    '<rect x="12" y="4" width="24" height="30" rx="1.5" fill="#fff"/>' +
+    '<g fill="' + IM.t + '" stroke="none"><rect x="16" y="8.5" width="4" height="3.5" rx=".6"/><rect x="22" y="8.5" width="4" height="3.5" rx=".6"/>' +
+    '<rect x="28" y="8.5" width="4" height="3.5" rx=".6"/><rect x="16" y="14.5" width="4" height="3.5" rx=".6"/><rect x="22" y="14.5" width="4" height="3.5" rx=".6"/>' +
+    '<rect x="28" y="14.5" width="4" height="3.5" rx=".6"/><rect x="16" y="20.5" width="4" height="3.5" rx=".6"/><rect x="28" y="20.5" width="4" height="3.5" rx=".6"/></g>' +
+    '<circle cx="12" cy="30" r="4" fill="' + IM.t + '"/><path d="M4.5 44c0-5 3.3-8 7.5-8s7.5 3 7.5 8z" fill="' + IM.t + '"/>' +
+    '<circle cx="36" cy="30" r="4" fill="' + IM.t + '"/><path d="M28.5 44c0-5 3.3-8 7.5-8s7.5 3 7.5 8z" fill="' + IM.t + '"/>' +
+    '<circle cx="24" cy="28" r="4.8" fill="#fff"/><path d="M14.5 45c0-6 4.2-9.6 9.5-9.6s9.5 3.6 9.5 9.6z" fill="' + IM.p + '"/>';
+
+  // Varian warna sesuai lembar ikon: 'aktif' (dipilih) berubah pink,
+  // 'nonaktif' jadi abu-abu. Warna diganti sekali jalan agar tidak bertumpuk.
+  var VARIAN_IKON = {
+    aktif: { '#1E3A4C': '#A81260', '#56C3C7': '#E8488C', '#C9EEEF': '#FAD0E0' },
+    nonaktif: { '#1E3A4C': '#A3A8AD', '#56C3C7': '#C9CDD1', '#C9EEEF': '#E6E8EA', '#E8488C': '#BFC3C7',
+      '#FAD0E0': '#E6E8EA', '#F5C04A': '#D5D8DB' }
+  };
+  function icm(name, size, varian) {
+    var svg = '<svg class="icm" width="' + (size || 28) + '" height="' + (size || 28) + '" viewBox="0 0 48 48" fill="none" ' +
       'stroke="' + IM.o + '" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
       (IKON_MENU[name] || '') + '</svg>';
+    var peta = VARIAN_IKON[varian];
+    return peta ? svg.replace(/#[0-9A-F]{6}/g, function (c) { return peta[c] || c; }) : svg;
   }
+  // ikon dalam kotak membulat; varian '' | 'aktif' | 'nonaktif'
+  function ikonKotak(name, varian, ukuran) {
+    ukuran = ukuran || 40;
+    return '<span class="ikon-kotak' + (varian ? ' ' + varian : '') + '" style="width:' + ukuran + 'px;height:' + ukuran + 'px;">' +
+      icm(name, Math.round(ukuran * 0.72), varian) + '</span>';
+  }
+  function ikonKategori(kategori) { return /combo|\+/i.test(kategori) ? 'suntik-combo' : 'suntik'; }
 
   /* ============================ util ============================ */
   function h(s) {
@@ -1454,14 +1507,14 @@ table.price td.p{text-align:right;font-family:var(--disp);font-weight:800;color:
       }
     } else {
       var pilihan = [
-        ['homecare', 'house', 'Home Care', 'Petugas datang ke rumah'],
-        ['klinik', 'building', 'Datang ke Klinik', 'Kunjungan ke klinik Alrasha Ibumas'],
-        ['korporat', 'chart', 'Korporat / Sekolah', 'Vaksinasi massal karyawan atau siswa']
+        ['homecare', 'homecare', 'Home Care', 'Petugas datang ke rumah'],
+        ['klinik', 'klinik', 'Datang ke Klinik', 'Kunjungan ke klinik Alrasha Ibumas'],
+        ['korporat', 'corporate', 'Korporat / Sekolah', 'Vaksinasi massal karyawan atau siswa']
       ];
       isi = '<div class="stack g10">' + pilihan.map(function (p) {
         var on = S.onboarding.layanan === p[0];
         return '<button class="checkrow' + (on ? ' on' : '') + '" data-act="set-fokus-layanan" data-arg="' + p[0] + '">' +
-          '<span class="icon-sq">' + ic(p[1], 18) + '</span>' +
+          ikonKotak(p[1], on ? 'aktif' : '', 40) +
           '<span class="grow"><span class="small" style="font-weight:700;display:block;">' + h(p[2]) + '</span>' +
           '<span class="tiny muted">' + h(p[3]) + '</span></span>' +
           '<span class="box">' + (on ? ic('check', 14, 2.6) : '') + '</span></button>';
@@ -1563,7 +1616,7 @@ table.price td.p{text-align:right;font-family:var(--disp);font-weight:800;color:
       });
     } else {
       body += '<div class="card stack g12 center">' +
-        '<div class="icon-sq mag" style="margin:0 auto;">' + ic('syringe', 20) + '</div>' +
+        '<div style="display:flex;justify-content:center;">' + ikonKotak('suntik', 'aktif', 48) + '</div>' +
         '<div><div style="font-weight:700;">Belum ada reservasi aktif</div>' +
         '<div class="small muted" style="margin-top:4px;">Atur jadwal vaksinasi keluarga Anda sekarang.</div></div>' +
         '<button class="btn primary" data-act="go" data-arg="booking">' + ic('plus', 17, 2.2) + ' Booking Vaksinasi</button></div>';
@@ -1625,9 +1678,9 @@ table.price td.p{text-align:right;font-family:var(--disp);font-weight:800;color:
     body += '<div class="card stack g12">' +
       '<div class="row mid"><div class="sect-title">Pilih cara vaksinasi</div><div class="grow"></div><span class="chip teal">3 layanan</span></div>' +
       '<div class="row g8">' +
-      layananPintasan('house', 'Home Care', 'homecare') +
-      layananPintasan('pin', 'On Site Klinik', 'klinik') +
-      layananPintasan('building', 'On Site Corporate', 'corporate') +
+      layananPintasan('homecare', 'Home Care', 'homecare') +
+      layananPintasan('klinik', 'On Site Klinik', 'klinik') +
+      layananPintasan('corporate', 'On Site Corporate', 'corporate') +
       '</div>' +
       '<div class="divider"></div>' +
       '<div class="row wrap g6 mid"><span class="tiny muted" style="font-weight:600;">Sudah termasuk:</span>' +
@@ -1660,7 +1713,7 @@ table.price td.p{text-align:right;font-family:var(--disp);font-weight:800;color:
   }
   function layananPintasan(icon, label, jenis) {
     return '<button class="stack mid g8 tap" style="flex:1;background:none;border:0;padding:4px 0;cursor:pointer;" data-act="mulai-booking" data-arg="' + jenis + '">' +
-      '<div class="icon-sq mag" style="width:44px;height:44px;border-radius:13px;">' + ic(icon, 20) + '</div>' +
+      ikonKotak(icon, '', 52) +
       '<span class="tiny" style="font-weight:700;text-align:center;line-height:1.3;">' + h(label) + '</span></button>';
   }
 
@@ -1677,9 +1730,9 @@ table.price td.p{text-align:right;font-family:var(--disp);font-weight:800;color:
     // 1 layanan
     body += '<div class="stack g8"><label class="lbl">1. Jenis layanan<span class="req">*</span></label>' +
       '<div class="row g8">' +
-      ['homecare|house|Home Care', 'klinik|pin|On Site Klinik', 'corporate|building|On Site Corporate'].map(function (s) {
-        var p = s.split('|');
-        return '<button class="opt' + (d.layanan === p[0] ? ' on' : '') + '" data-act="set-layanan" data-arg="' + p[0] + '">' + ic(p[1], 20) + '<span>' + p[2] + '</span></button>';
+      ['homecare|homecare|Home Care', 'klinik|klinik|On Site Klinik', 'corporate|corporate|On Site Corporate'].map(function (s) {
+        var p = s.split('|'), on = d.layanan === p[0];
+        return '<button class="opt' + (on ? ' on' : '') + '" data-act="set-layanan" data-arg="' + p[0] + '">' + ikonKotak(p[1], on ? 'aktif' : '', 44) + '<span>' + p[2] + '</span></button>';
       }).join('') + '</div>' +
       (errB.layanan ? '<div class="errmsg">' + h(errB.layanan) + '</div>' : '') + '</div>';
 
@@ -1827,6 +1880,7 @@ table.price td.p{text-align:right;font-family:var(--disp);font-weight:800;color:
       var hrg = hargaVaksin(v, d.dokter);
       html += '<button class="checkrow' + (on ? ' on' : '') + '" data-act="toggle-vaksin" data-arg="' + v.id + '">' +
         '<div class="box">' + (on ? ic('check', 14, 3) : '') + '</div>' +
+        ikonKotak(ikonKategori(v.kategori), on ? 'aktif' : '', 34) +
         '<div class="grow"><div class="small" style="font-weight:700;">' + h(v.kategori) + '</div>' +
         '<div class="tiny muted">' + h(v.sediaan === v.merk ? v.merk : v.sediaan + ' · ' + v.merk) + '</div></div>' +
         '<div class="disp nowrap small" style="font-weight:800;color:var(--magenta-dark);">' + (hrg ? rp(hrg) : 'Hubungi CS') + '</div></button>';
@@ -1957,7 +2011,7 @@ table.price td.p{text-align:right;font-family:var(--disp);font-weight:800;color:
       body = topbar('Vaksin Pranikah', 'Persiapan sebelum menikah', 'jadwal');
       isi += '<div class="card stack g10"><div class="sect-title">Vaksin yang dianjurkan</div>' +
         K.pranikahVaksin.map(function (v) {
-          return '<div class="row g12" style="align-items:flex-start;"><div class="icon-sq mag" style="width:32px;height:32px;border-radius:9px;">' + ic('syringe', 16) + '</div>' +
+          return '<div class="row g12" style="align-items:flex-start;">' + ikonKotak(ikonKategori(v[0]), '', 34) +
             '<div class="grow"><div class="small" style="font-weight:700;">' + h(v[0]) + '</div>' +
             '<div class="tiny muted">' + h(v[1] + ' · ' + v[2]) + '</div></div></div>';
         }).join('') + '</div>';
@@ -2108,7 +2162,7 @@ table.price td.p{text-align:right;font-family:var(--disp);font-weight:800;color:
     if (!urut.length) body += '<div class="small muted center" style="padding:24px 0;">Vaksin tidak ditemukan.</div>';
     urut.forEach(function (nama) {
       body += '<div class="card stack g6" style="padding:14px 16px;">' +
-        '<div class="row mid g8"><div class="icon-sq" style="width:30px;height:30px;border-radius:9px;">' + ic('syringe', 16) + '</div>' +
+        '<div class="row mid g10">' + ikonKotak(ikonKategori(nama), '', 38) +
         '<span style="font-weight:700;font-size:13.5px;">' + h(nama) + '</span></div>' +
         '<table class="price">' + grup[nama].map(function (v) {
           var hrg = tarif === 'spesialis' ? v.spesialis : v.umum;
