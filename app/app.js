@@ -46,6 +46,91 @@
       (ICON[name] || '') + '</svg>';
   }
 
+  /* ============================ ikon menu (Alternatif 2) ============================
+     Gaya "flat filled with outline" dari lembar Alternatif Desain Ikon Menu:
+     isi teal & pink, garis tepi biru tua, di atas lingkaran teal pucat.
+     Digambar sebagai SVG berwarna (viewBox 48) agar tajam di layar apa pun. */
+  var IM = { o: '#1E3A4C', t: '#56C3C7', tm: '#C9EEEF', p: '#E8488C', pm: '#FAD0E0', k: '#F5C04A' };
+  var IKON_MENU = {
+    beranda:
+      '<path d="M11 22v17a2 2 0 0 0 2 2h22a2 2 0 0 0 2-2V22" fill="#fff"/>' +
+      '<path d="M4.6 23.4 24 6.6l19.4 16.8-2.7 3.1L24 12 7.3 26.5z" fill="' + IM.p + '"/>' +
+      '<path d="M24 36.4s-6-3.6-6-7.5a3.1 3.1 0 0 1 6-1.5 3.1 3.1 0 0 1 6 1.5c0 3.9-6 7.5-6 7.5z" fill="' + IM.p + '" stroke-width="1.8"/>',
+    konsultasi:
+      '<path d="M11 7h19a6 6 0 0 1 6 6v5a6 6 0 0 1-6 6H17l-7 5 1.4-5H11a6 6 0 0 1-6-6v-5a6 6 0 0 1 6-6z" fill="' + IM.pm + '"/>' +
+      '<circle cx="14" cy="15.5" r="1.7" fill="' + IM.o + '" stroke="none"/><circle cx="20" cy="15.5" r="1.7" fill="' + IM.o + '" stroke="none"/>' +
+      '<circle cx="26" cy="15.5" r="1.7" fill="' + IM.o + '" stroke="none"/>' +
+      '<path d="M22 20h16a5 5 0 0 1 5 5v6a5 5 0 0 1-5 5h-1l1.4 5-7-5H22a5 5 0 0 1-5-5v-6a5 5 0 0 1 5-5z" fill="' + IM.t + '"/>' +
+      '<path d="M24 26.5h12M24 31h7" stroke="#fff" stroke-width="2.4"/>',
+    rekam:
+      '<path d="M12 5h17l9 9v27a2 2 0 0 1-2 2H12a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z" fill="#fff"/>' +
+      '<path d="M29 5v7a2 2 0 0 0 2 2h7" fill="' + IM.tm + '"/>' +
+      '<path d="M19.5 10.5v9M15 15h9" stroke="' + IM.p + '" stroke-width="3.2"/>' +
+      '<path d="M16 25.5h16M16 31h16M16 36.5h9" stroke="' + IM.t + '" stroke-width="2.8"/>' +
+      '<circle cx="33" cy="37" r="3.4" fill="' + IM.p + '" stroke-width="1.8"/>',
+    profil:
+      '<circle cx="21" cy="15" r="7.5" fill="#fff"/>' +
+      '<path d="M6.5 41c0-8.3 6.5-13.5 14.5-13.5 4.6 0 8.6 1.8 11.2 4.8L27.5 41z" fill="' + IM.tm + '"/>' +
+      '<circle cx="35" cy="35" r="8" fill="' + IM.p + '"/>' +
+      '<path d="M35 31v8M31 35h8" stroke="#fff" stroke-width="2.6"/>',
+    pasien:
+      '<circle cx="12.5" cy="16" r="5" fill="' + IM.t + '"/><path d="M3.5 37c0-6.2 4-10.5 9-10.5s9 4.3 9 10.5z" fill="' + IM.t + '"/>' +
+      '<circle cx="35.5" cy="16" r="5" fill="' + IM.t + '"/><path d="M26.5 37c0-6.2 4-10.5 9-10.5s9 4.3 9 10.5z" fill="' + IM.t + '"/>' +
+      '<circle cx="24" cy="14.5" r="6.5" fill="#fff"/><path d="M12.5 41c0-7.4 5.1-12.5 11.5-12.5S35.5 33.6 35.5 41z" fill="' + IM.p + '"/>',
+    alamat:
+      '<path d="M4.5 22.5 16 18.5l16 5 11.5-4v21L32 44.5l-16-5-11.5 4z" fill="' + IM.tm + '"/>' +
+      '<path d="M16 18.5v21M32 23.5v21"/>' +
+      '<path d="M24 3a10.5 10.5 0 0 0-10.5 10.5C13.5 21.4 24 32 24 32s10.5-10.6 10.5-18.5A10.5 10.5 0 0 0 24 3z" fill="' + IM.p + '"/>' +
+      '<circle cx="24" cy="13.5" r="4" fill="#fff"/>',
+    jadwal:
+      '<rect x="5" y="9" width="32" height="31" rx="4" fill="#fff"/>' +
+      '<path d="M9 9h24a4 4 0 0 1 4 4v5H5v-5a4 4 0 0 1 4-4z" fill="' + IM.p + '"/>' +
+      '<path d="M13 5v7M29 5v7" stroke-width="2.8"/>' +
+      '<g fill="' + IM.tm + '" stroke-width="1.5"><rect x="9.5" y="23" width="5.5" height="4.5" rx="1"/><rect x="17.5" y="23" width="5.5" height="4.5" rx="1"/>' +
+      '<rect x="25.5" y="23" width="5.5" height="4.5" rx="1"/><rect x="9.5" y="30.5" width="5.5" height="4.5" rx="1"/></g>' +
+      '<g transform="translate(35 32) rotate(45)"><path d="M0 -15v4M-4 -15h8"/><rect x="-3.6" y="-11" width="7.2" height="16" rx="1.4" fill="' + IM.t + '"/>' +
+      '<path d="M-3.6 -6h3M-3.6 -2h3M-3.6 2h3" stroke-width="1.5"/><path d="M0 5v7" stroke-width="2"/></g>',
+    pengingat:
+      '<path d="M24 5a3 3 0 0 1 3 3v1.3c5.8 1.3 10 6.4 10 12.5V29l3.6 5.2H7.4L11 29v-7.2c0-6.1 4.2-11.2 10-12.5V8a3 3 0 0 1 3-3z" fill="' + IM.pm + '"/>' +
+      '<path d="M19.4 38.5a4.6 4.6 0 0 0 9.2 0z" fill="' + IM.p + '"/>' +
+      '<path d="M16.5 22.5c0-3 1.6-5.6 4-6.8" stroke="#fff" stroke-width="2.4"/>',
+    korporat:
+      '<path d="M3.5 42.5h41"/>' +
+      '<rect x="5" y="22" width="9" height="20.5" fill="' + IM.tm + '"/><rect x="34" y="22" width="9" height="20.5" fill="' + IM.tm + '"/>' +
+      '<rect x="14" y="15.5" width="20" height="27" fill="' + IM.t + '"/>' +
+      '<g fill="#fff" stroke-width="1.5"><rect x="17.5" y="20" width="4.5" height="4.5" rx=".8"/><rect x="26" y="20" width="4.5" height="4.5" rx=".8"/>' +
+      '<rect x="17.5" y="27" width="4.5" height="4.5" rx=".8"/><rect x="26" y="27" width="4.5" height="4.5" rx=".8"/>' +
+      '<path d="M21 42.5V35h6v7.5"/><rect x="8" y="27" width="3" height="3.5"/><rect x="8" y="34" width="3" height="3.5"/>' +
+      '<rect x="37" y="27" width="3" height="3.5"/><rect x="37" y="34" width="3" height="3.5"/></g>' +
+      '<path d="M21.8 3h4.4v3.8H30v4.4h-3.8V15h-4.4v-3.8H18V6.8h3.8z" fill="' + IM.p + '" stroke-width="1.8"/>',
+    harga:
+      '<path d="M7.5 21.5 21 8h13a3 3 0 0 1 3 3v13L23.5 37.5a3 3 0 0 1-4.2 0L7.5 25.7a3 3 0 0 1 0-4.2z" fill="' + IM.p + '"/>' +
+      '<circle cx="31" cy="14" r="2.6" fill="#fff"/>' +
+      '<text transform="translate(22 27) rotate(-45)" text-anchor="middle" font-family="Plus Jakarta Sans,Arial,sans-serif" ' +
+      'font-weight="800" font-size="10" fill="#fff" stroke="none">Rp</text>' +
+      '<g fill="' + IM.k + '" stroke-width="1.8"><ellipse cx="36" cy="42" rx="8" ry="3"/><ellipse cx="36" cy="38" rx="8" ry="3"/>' +
+      '<ellipse cx="36" cy="34" rx="8" ry="3"/></g>',
+    tentang:
+      '<ellipse cx="24" cy="42.5" rx="9" ry="2.6" fill="' + IM.pm + '" stroke="none"/>' +
+      '<path d="M24 3.5A13.5 13.5 0 0 0 10.5 17c0 10 13.5 23 13.5 23s13.5-13 13.5-23A13.5 13.5 0 0 0 24 3.5z" fill="#fff"/>' +
+      '<circle cx="24" cy="11.5" r="2.3" fill="' + IM.p + '" stroke="none"/><path d="M24 17v9" stroke="' + IM.p + '" stroke-width="3.6"/>',
+    riwayat:
+      '<rect x="9" y="7" width="30" height="36" rx="4" fill="#fff"/>' +
+      '<path d="M17 4.5h14v6a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 17 10.5z" fill="' + IM.p + '"/>' +
+      '<path d="M15.5 22l3 3 5-5.5M15.5 33l3 3 5-5.5" stroke="' + IM.t + '" stroke-width="2.8"/>' +
+      '<path d="M27.5 23h6M27.5 34h6" stroke-width="2.4"/>',
+    internasional:
+      '<circle cx="24" cy="24" r="17.5" fill="' + IM.tm + '"/>' +
+      '<path d="M15 11.5c3 2 2.5 5.5 6 6.5s3.5 5 1 7-6.5 1-8 4.5-1 5.5-3 6.2A17.5 17.5 0 0 1 15 11.5z" fill="' + IM.t + '" stroke-width="1.8"/>' +
+      '<path d="M33 9.5c-2 3-1 5 1.5 6.5s6 1 7 5.5A17.5 17.5 0 0 0 33 9.5zM29 31c2.5-1 5 0 5.5 2.5S32 39 29.5 39 26 33 29 31z" fill="' + IM.t + '" stroke-width="1.8"/>' +
+      '<path d="M37 4.5 44 8l-3.5 1.6 1.2 4.2-2.2-1.9-2.6 1.3 1.1-3z" fill="' + IM.p + '" stroke-width="1.6"/>'
+  };
+  function icm(name, size) {
+    return '<svg class="icm" width="' + (size || 28) + '" height="' + (size || 28) + '" viewBox="0 0 48 48" fill="none" ' +
+      'stroke="' + IM.o + '" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+      (IKON_MENU[name] || '') + '</svg>';
+  }
+
   /* ============================ util ============================ */
   function h(s) {
     return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
@@ -838,12 +923,12 @@
       (aksi || '') + '</div>';
   }
   function navbar(aktif) {
-    var items = [['beranda', 'home', 'Beranda'], ['chat', 'chat', 'Konsultasi'], null,
-      ['rekam', 'doc', 'Rekam Medis'], ['profil', 'user', 'Profil']];
+    var items = [['beranda', 'beranda', 'Beranda'], ['chat', 'konsultasi', 'Konsultasi'], null,
+      ['rekam', 'rekam', 'Rekam Medis'], ['profil', 'profil', 'Profil']];
     return '<nav class="navbar">' + items.map(function (it) {
       if (!it) return '<button class="navfab" data-act="go" data-arg="booking" aria-label="Booking vaksinasi">' + ic('plus', 24, 2.4) + '</button>';
       return '<button class="navitem' + (aktif === it[0] ? ' on' : '') + '" data-act="go" data-arg="' + it[0] + '">' +
-        ic(it[1], 21) + '<span>' + it[2] + '</span></button>';
+        icm(it[1], 26) + '<span>' + it[2] + '</span></button>';
     }).join('') + '</nav>';
   }
   function toast(msg) {
@@ -1134,9 +1219,9 @@
     }
 
     body += '<div class="card row g8">' +
-      pintasan('tag', 'Daftar Harga', 'harga') +
-      pintasan('calendar', 'Jadwal Vaksin', 'jadwal') +
-      pintasan('globe', 'Internasional', 'internasional') +
+      pintasan('harga', 'Daftar Harga', 'harga') +
+      pintasan('jadwal', 'Jadwal Vaksin', 'jadwal') +
+      pintasan('internasional', 'Internasional', 'internasional') +
       '</div>';
 
     body += '<div class="card stack g12">' +
@@ -1172,7 +1257,7 @@
   }
   function pintasan(icon, label, target) {
     return '<button class="stack mid g8 tap" style="flex:1;background:none;border:0;padding:4px 0;cursor:pointer;" data-act="go" data-arg="' + target + '">' +
-      '<div class="icon-sq" style="width:44px;height:44px;border-radius:13px;">' + ic(icon, 20) + '</div>' +
+      '<div class="ikon-menu" style="width:52px;height:52px;">' + icm(icon, 34) + '</div>' +
       '<span class="tiny" style="font-weight:700;text-align:center;line-height:1.3;">' + h(label) + '</span></button>';
   }
   function layananPintasan(icon, label, jenis) {
@@ -1756,25 +1841,25 @@
       '<div class="tiny" style="color:#8A6A21;">+10 poin setiap vaksinasi selesai</div></div></div>';
 
     body += '<div class="card stack g4">' +
-      menuRow('family', 'Daftar Pasien', S.pasien.length + ' orang terdaftar', 'pasien') +
+      menuRow('pasien', 'Daftar Pasien', S.pasien.length + ' orang terdaftar', 'pasien') +
       '<div class="divider"></div>' +
-      menuRow('pin', 'Daftar Alamat', S.alamat.length + ' alamat tersimpan', 'alamat') +
+      menuRow('alamat', 'Daftar Alamat', S.alamat.length + ' alamat tersimpan', 'alamat') +
       '<div class="divider"></div>' +
-      menuRow('doc', 'Riwayat Reservasi', S.booking.length + ' reservasi', 'riwayat-booking') +
+      menuRow('riwayat', 'Riwayat Reservasi', S.booking.length + ' reservasi', 'riwayat-booking') +
       '<div class="divider"></div>' +
-      menuRow('calendar', 'Jadwal Vaksin', 'IDAI 2024 & PAPDI 2025', 'jadwal') +
+      menuRow('jadwal', 'Jadwal Vaksin', 'IDAI 2024 & PAPDI 2025', 'jadwal') +
       '<div class="divider"></div>' +
-      menuRow('bell', 'Pengingat & Notifikasi', jumlahBaru() + ' pengingat baru', 'notifikasi') +
+      menuRow('pengingat', 'Pengingat & Notifikasi', jumlahBaru() + ' pengingat baru', 'notifikasi') +
       '<div class="divider"></div>' +
-      menuRow('chat', 'Konsultasi Dokter', S.konsultasi.length + ' konsultasi', 'chat') +
+      menuRow('konsultasi', 'Konsultasi Dokter', S.konsultasi.length + ' konsultasi', 'chat') +
       '<div class="divider"></div>' +
-      menuRow('chart', 'Korporat / Sekolah',
+      menuRow('korporat', 'Korporat / Sekolah',
         S.korporat.nama ? S.korporat.nama + ' · ' + korPeserta().length + ' peserta' : 'Vaksinasi massal karyawan atau siswa',
         S.korporat.nama ? 'korporat' : 'korporat-setup') +
       '<div class="divider"></div>' +
-      menuRow('tag', 'Daftar Harga', 'Price list lengkap', 'harga') +
+      menuRow('harga', 'Daftar Harga', 'Price list lengkap', 'harga') +
       '<div class="divider"></div>' +
-      menuRow('info', 'Tentang & Lokasi', 'Klinik, dokter, kontak', 'tentang') +
+      menuRow('tentang', 'Tentang & Lokasi', 'Klinik, dokter, kontak', 'tentang') +
       '</div>';
 
     body += '<div class="card stack g10"><div class="sect-title">Data aplikasi</div>' +
@@ -1796,7 +1881,7 @@
   }
   function menuRow(icon, judul, sub, target) {
     return '<button class="rowlink" data-act="go" data-arg="' + target + '">' +
-      '<div class="icon-sq" style="width:34px;height:34px;border-radius:10px;">' + ic(icon, 17) + '</div>' +
+      '<div class="ikon-menu">' + icm(icon, 26) + '</div>' +
       '<div class="grow"><div class="small" style="font-weight:700;">' + h(judul) + '</div>' +
       '<div class="tiny muted">' + h(sub) + '</div></div>' +
       '<span style="color:var(--ink-4);">' + ic('chevron', 15) + '</span></button>';
