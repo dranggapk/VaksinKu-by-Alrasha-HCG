@@ -21,6 +21,7 @@ APP = os.path.join(ROOT, "app")
 sys.path.insert(0, HERE)
 
 import data_katalog as D  # noqa: E402
+import jadwal_anak as J  # noqa: E402
 
 UA = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
 FONT_CSS_URL = ("https://fonts.googleapis.com/css2?"
@@ -56,6 +57,20 @@ def b64_file(path):
         return base64.b64encode(f.read()).decode("ascii")
 
 
+# Antigen yang dikandung tiap produk, untuk mencatat dosis jadwal anak saat
+# vaksinasi selesai. Kategori yang isinya beragam dibedakan lewat sediaannya.
+ANTIGEN_KATEGORI = {
+    "BCG (TBC)": ["bcg"], "Rotavirus (diare)": ["rv"], "Pneumococcus": ["pcv"], "Influenza": ["flu"],
+    "Typhoid (Tipes)": ["tif"], "Tetanus": ["td"], "Campak + Rubella": ["mr"], "Varicella": ["var"],
+    "Hepatitis B": ["hepb"], "Hepatitis A": ["hepa"], "HPV (Kanker Serviks)": ["hpv"],
+    "Demam Berdarah": ["dbd"], "Japanese Encephalitis": ["je"], "Flu Singapura": ["hfmd"],
+}
+ANTIGEN_SEDIAAN = {
+    "Polio Oral": ["polio"], "Polio IPV": ["ipv"],
+    "DPaT + IPV + HIB + HB": ["dtp", "hib", "hepb", "ipv"], "DPaT + HIB + HB": ["dtp", "hib", "hepb"],
+}
+
+
 def katalog_js():
     harga = []
     for no, kategori, sediaan, merk, spes, umum in D.HARGA:
@@ -63,11 +78,8 @@ def katalog_js():
             "id": "v%d-%d" % (int(no), len(harga)),
             "kategori": kategori, "sediaan": sediaan, "merk": merk,
             "spesialis": "" if spes == "—" else spes, "umum": umum,
+            "antigen": ANTIGEN_SEDIAAN.get(sediaan, ANTIGEN_KATEGORI.get(kategori, [])),
         })
-
-    jadwal_anak = [{
-        "usia": usia, "badge": badge or "", "usiaBulan": usia_ke_bulan(usia), "items": items,
-    } for usia, badge, items in D.JADWAL_ANAK]
 
     jadwal_dewasa = []
     for usia, keys in D.JADWAL_DEWASA:
@@ -94,7 +106,10 @@ def katalog_js():
             "nama": D.PAKET_TRIPLE["nama"], "isi": D.PAKET_TRIPLE["isi"],
             "harga": D.PAKET_TRIPLE["harga"], "coret": D.PAKET_TRIPLE["coret"],
         },
-        "jadwalAnak": jadwal_anak,
+        "jadwalIDAI": J.IDAI,
+        "jadwalKIA": J.KIA,
+        "kiaKolom": J.KIA_KOLOM,
+        "labelLama": J.LABEL_LAMA,
         "jadwalDewasa": jadwal_dewasa,
         "catatanDewasa": D.JADWAL_DEWASA_CATATAN,
         "pranikahVaksin": D.JADWAL_PRANIKAH_VAKSIN,

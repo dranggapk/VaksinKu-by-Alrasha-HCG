@@ -255,6 +255,7 @@
     catch (e) { storageOk = false; }
   }
   S = baca();
+  migrasiRiwayat();
 
   /* ============================ katalog ============================ */
   function vaksinById(id) {
@@ -298,23 +299,12 @@
         }]
       };
     }
-    return {
-      tipe: 'anak', judul: 'Jadwal IDAI 2024', catatan: '',
-      langkah: K.jadwalAnak.map(function (st) {
-        return {
-          usia: st.usia, badge: st.badge, usiaBulan: st.usiaBulan,
-          jatuhTempo: st.usiaBulan <= bln,
-          berikutnya: st.usiaBulan > bln,
-          items: st.items.map(function (lb) {
-            return { label: lb, selesai: sudah(p.id, lb) };
-          })
-        };
-      })
-    };
+    return jadwalAnak(p, bln);
   }
   function ringkasJadwal(p) {
     var j = jadwalPasien(p);
     if (!j) return null;
+    if (j.tipe === 'anak') return j.ringkas;
     var total = 0, selesai = 0, belum = [];
     j.langkah.forEach(function (st) {
       if (!st.jatuhTempo) return;
@@ -324,6 +314,137 @@
       });
     });
     return { total: total, selesai: selesai, belum: belum, persen: total ? Math.round(selesai / total * 100) : 0, jadwal: j };
+  }
+
+  /* ============================ jadwal anak per dosis ============================
+     Dua rujukan: IDAI 2024 dan Buku KIA 2024 (program pemerintah), dipilih per
+     anak. Riwayat dicatat per kunci antigen:urutan (mis. "hepb:1"), bukan per
+     nama baris, sehingga saat orang tua berganti rujukan, dosis yang sudah
+     diberikan langsung terbaca di jadwal yang baru — DPT-HB-Hib 1 di KIA
+     memenuhi DTP 1, Hib 1, dan Hepatitis B 1 di IDAI. Lihat src/jadwal_anak.py. */
+  var NAMA_JADWAL = { idai: 'IDAI 2024', kia: 'Buku KIA 2024' };
+  function rujukanAnak(p) { return p.jadwalAnak === 'kia' ? 'kia' : 'idai'; }
+  function daftarDosis(rujukan) { return rujukan === 'kia' ? K.jadwalKIA : K.jadwalIDAI; }
+  function petaRiwayat(pasienId) {
+    var peta = {};
+    S.riwayat.forEach(function (r) {
+      if (r.pasienId !== pasienId) return;
+      (r.kunci || []).forEach(function (k) {
+        if (!peta[k] || r.tanggal > peta[k].tanggal) peta[k] = r;
+      });
+    });
+    return peta;
+  }
+  function antigenDari(kunci) { return kunci.split(':')[0]; }
+  // tanggal dosis terakhir suatu antigen (untuk dosis berulang: flu, tifoid)
+  function terakhirAntigen(peta, antigen) {
+    var t = '';
+    for (var k in peta) if (antigenDari(k) === antigen && peta[k].tanggal > t) t = peta[k].tanggal;
+    return t;
+  }
+  function usiaDosisTeks(bln) {
+    if (bln === 0) return 'Lahir';
+    if (bln < 24) return bln + ' bulan';
+    return (bln % 12 ? (bln / 12).toFixed(1).replace('.', ',') : bln / 12) + ' tahun';
+  }
+  function dosisOpsional(p, d) {
+    if (d.syarat === 'tambahan') return 'Vaksin tambahan, di luar jadwal rujukan';
+    if (d.syarat === 'endemis' && !p.endemis) return 'Hanya untuk daerah endemis JE';
+    if (d.syarat === 'perempuan' && p.jenisKelamin === 'Laki-laki') return 'Dianjurkan untuk anak perempuan';
+    if (d.syarat === 'rv5' && p.rv === 'rv1') return 'Tidak perlu — memakai Rotarix (2 dosis)';
+    return '';
+  }
+  // st: belum | tepat | boleh | kejar | terlewat | selesai
+  function statusDosis(p, d, bln, peta) {
+    var o = { d: d, opsional: dosisOpsional(p, d), catatan: peta[d.kunci[0]] || null,
+      jatuh: tambahBulan(p.tglLahir, d.mulai), pkm: !!(p.pkm && p.pkm[d.kunci.join('+')]) };
+    if (d.ulang) {
+      var akhir = terakhirAntigen(peta, antigenDari(d.kunci[0]));
+      if (akhir && tambahBulan(akhir, d.ulang) > hariIni()) {
+        o.st = 'selesai'; o.berikut = tambahBulan(akhir, d.ulang); o.catatan = { tanggal: akhir };
+        return o;
+      }
+      if (akhir) o.jatuh = tambahBulan(akhir, d.ulang);
+    } else if (d.kunci.every(function (k) { return peta[k]; })) {
+      o.st = 'selesai';
+      return o;
+    }
+    o.st = bln < d.mulai ? 'belum' : bln <= d.tepat ? 'tepat' : bln <= d.boleh ? 'boleh' : bln <= d.batas ? 'kejar' : 'terlewat';
+    // Lewat batas program pemerintah bukan berarti tidak boleh lagi: bila
+    // menurut IDAI antigen itu masih boleh dikejar, tampilkan sebagai kejar.
+    if (o.st === 'terlewat' && d.id.indexOf('k-') === 0) {
+      var batasIdai = 0;
+      K.jadwalIDAI.forEach(function (x) {
+        if (x.kunci.some(function (k) { return d.kunci.indexOf(k) >= 0; })) batasIdai = Math.max(batasIdai, x.batas);
+      });
+      if (bln <= batasIdai) { o.st = 'kejar'; o.lewatProgram = true; }
+    }
+    return o;
+  }
+  function jadwalAnak(p, bln) {
+    var rujukan = rujukanAnak(p), peta = petaRiwayat(p.id);
+    var dosis = daftarDosis(rujukan).map(function (d) { return statusDosis(p, d, bln, peta); });
+    var total = 0, selesai = 0, belum = [], kejar = 0, terlewat = 0, pkm = 0;
+    dosis.forEach(function (x) {
+      if (x.opsional) return;
+      if (x.st === 'selesai' && x.d.mulai <= bln) { total++; selesai++; }
+      else if (x.st === 'tepat' || x.st === 'boleh' || x.st === 'kejar') {
+        total++;
+        belum.push({ usia: usiaDosisTeks(x.d.mulai), label: x.d.label, st: x.st, pkm: x.pkm });
+        if (x.st !== 'tepat') kejar++;
+        if (x.pkm) pkm++;
+      } else if (x.st === 'terlewat') terlewat++;
+    });
+    var j = { tipe: 'anak', rujukan: rujukan, judul: 'Jadwal ' + NAMA_JADWAL[rujukan], catatan: '', dosis: dosis, bln: bln };
+    j.ringkas = { total: total, selesai: selesai, belum: belum, kejar: kejar, terlewat: terlewat, pkm: pkm,
+      persen: total ? Math.round(selesai / total * 100) : 100, jadwal: j };
+    return j;
+  }
+  // produk price list → antigen yang dikandungnya (lihat build_bundle.py)
+  // Produk yang antigennya termasuk program imunisasi pemerintah: untuk anak
+  // dosis ini tersedia gratis di Puskesmas/Posyandu.
+  var ANTIGEN_PROGRAM = {};
+  K.jadwalKIA.forEach(function (d) { d.kunci.forEach(function (k) { ANTIGEN_PROGRAM[antigenDari(k)] = true; }); });
+  function produkProgram(v) {
+    return (v.antigen || []).some(function (a) { return ANTIGEN_PROGRAM[a]; });
+  }
+  var CHIP_PKM = '<span class="chip green" style="font-size:9.5px;padding:2px 7px;" title="Untuk anak sesuai jadwal program pemerintah">Gratis di Puskesmas (anak)</span>';
+  function antigenProduk(vaksinId) {
+    var v = K.harga.filter(function (x) { return x.id === vaksinId; })[0];
+    return v ? v.antigen || [] : [];
+  }
+  // Catat dosis dari produk yang diberikan: tiap antigen mengisi dosis
+  // berikutnya yang belum tercatat pada jadwal anak tersebut.
+  function catatDariProduk(p, vaksinId, tanggal, tambahan) {
+    var antigen = antigenProduk(vaksinId), bln = umurBulan(p.tglLahir);
+    if (!antigen.length || bln == null || bln >= 228) return null;
+    var peta = petaRiwayat(p.id), kunci = [];
+    antigen.forEach(function (ag) {
+      var urut = K.jadwalIDAI.concat(K.jadwalKIA).map(function (d) { return d.kunci; })
+        .reduce(function (a, b) { return a.concat(b); }, [])
+        .filter(function (k, i, arr) { return antigenDari(k) === ag && arr.indexOf(k) === i; })
+        .sort(function (a, b) {
+          var x = a.split(':')[1], y = b.split(':')[1];
+          return (x === 't' ? 99 : +x) - (y === 't' ? 99 : +y);
+        });
+      var berikut = urut.filter(function (k) { return !peta[k] && k.split(':')[1] !== 't'; })[0] ||
+        urut.filter(function (k) { return k.split(':')[1] === 't'; })[0];
+      if (berikut) kunci.push(berikut);
+    });
+    if (!kunci.length) return null;
+    var v = K.harga.filter(function (x) { return x.id === vaksinId; })[0];
+    if (v && /rotarix/i.test(v.merk)) p.rv = 'rv1';
+    var rec = { id: uid(), pasienId: p.id, label: v ? v.kategori + ' — ' + v.merk : 'Vaksin', kunci: kunci, tanggal: tanggal,
+      merek: v ? v.merk : '', sumber: 'booking' };
+    for (var k in (tambahan || {})) rec[k] = tambahan[k];
+    S.riwayat.push(rec);
+    return rec;
+  }
+  // Riwayat versi lama dicatat per nama baris; terjemahkan ke kunci dosis.
+  function migrasiRiwayat() {
+    S.riwayat.forEach(function (r) {
+      if (!r.kunci && K.labelLama[r.label]) r.kunci = K.labelLama[r.label].slice();
+    });
   }
 
   /* ============================ booking ============================ */
@@ -454,15 +575,21 @@
     d.setDate(Math.min(hari, akhir));
     return isoDari(d);
   }
-  /* Tiap langkah jadwal anak punya tanggal jatuh tempo nyata: lahir + usia langkah. */
+  /* Dosis anak yang masih bisa diberikan, dikelompokkan per tanggal jatuh tempo
+     (lahir + usia mulai). Dosis terlewat dan opsional tidak diingatkan. */
   function jadwalBertanggal(p) {
     if (!p.tglLahir) return [];
-    return K.jadwalAnak.map(function (st) {
-      return {
-        usia: st.usia, tanggal: tambahBulan(p.tglLahir, st.usiaBulan),
-        items: st.items.filter(function (lb) { return !sudah(p.id, lb); })
-      };
-    }).filter(function (st) { return st.items.length; });
+    var j = jadwalPasien(p);
+    if (!j || j.tipe !== 'anak') return [];
+    var grup = {}, urut = [];
+    j.dosis.forEach(function (x) {
+      if (x.opsional || x.st === 'selesai' || x.st === 'terlewat') return;
+      var kunci = x.jatuh;
+      if (!grup[kunci]) { grup[kunci] = { usia: usiaDosisTeks(x.d.mulai), tanggal: x.jatuh, items: [], kejar: false }; urut.push(kunci); }
+      grup[kunci].items.push(x.d.label + (x.pkm ? ' (Puskesmas)' : ''));
+      if (x.st === 'kejar' || x.st === 'boleh') grup[kunci].kejar = true;
+    });
+    return urut.sort().map(function (k) { return grup[k]; });
   }
   function pengaturan() {
     if (!S.pengaturan) S.pengaturan = JSON.parse(JSON.stringify(kosong.pengaturan));
@@ -660,7 +787,7 @@
         if (!st.tanggal || st.tanggal < hariIni() || st.tanggal > batas) return;
         acara('v' + p.id + st.tanggal, st.tanggal, '',
           'Jadwal vaksin ' + p.nama + ' (' + st.usia + ')',
-          st.items.join(', ') + '\nSesuai jadwal IDAI 2024.\nReservasi: ' + K.brand.callCenter, 7);
+          st.items.join(', ') + '\nSesuai jadwal ' + NAMA_JADWAL[rujukanAnak(p)] + '.\nReservasi: ' + K.brand.callCenter, 7);
       });
     });
 
@@ -1477,7 +1604,8 @@
         '<div class="box">' + (on ? ic('check', 14, 3) : '') + '</div>' +
         ikonKotak(ikonKategori(v.kategori), on ? 'aktif' : '', 34) +
         '<div class="grow"><div class="small" style="font-weight:700;">' + h(v.kategori) + '</div>' +
-        '<div class="tiny muted">' + h(v.sediaan === v.merk ? v.merk : v.sediaan + ' · ' + v.merk) + '</div></div>' +
+        '<div class="tiny muted">' + h(v.sediaan === v.merk ? v.merk : v.sediaan + ' · ' + v.merk) + '</div>' +
+        (produkProgram(v) ? '<div style="margin-top:3px;">' + CHIP_PKM + '</div>' : '') + '</div>' +
         '<div class="disp nowrap small" style="font-weight:800;color:var(--magenta-dark);">' + (hrg ? rp(hrg) : 'Hubungi CS') + '</div></button>';
     });
     return html + '</div></div></div>';
@@ -1549,6 +1677,10 @@
     }
     body += '<div class="pad stack g14">' + pilihPasien(p);
     var r = ringkasJadwal(p);
+    if (r && r.jadwal.tipe === 'anak') {
+      body += jadwalAnakHTML(p, r) + kartuJadwalUmum() + '</div>';
+      return { body: body, nav: 'jadwal' };
+    }
     if (!r) {
       body += '<div class="card small muted">Tanggal lahir pasien belum diisi, jadi jadwal belum bisa dihitung. ' +
         '<button class="linkbtn" data-act="go" data-arg="pasien-form/' + p.id + '">Lengkapi data pasien</button></div>';
@@ -1583,6 +1715,266 @@
     }
     body += kartuJadwalUmum() + '</div>';
     return { body: body, nav: 'jadwal' };
+  }
+  /* ---------- tampilan jadwal anak: pilihan rujukan, ringkasan, tabel ceklis ---------- */
+  var LABEL_ST = { selesai: 'Sudah', tepat: 'Saatnya', boleh: 'Boleh dilengkapi', kejar: 'Imunisasi kejar',
+    terlewat: 'Terlewat', belum: 'Akan datang' };
+  var KONDISI = [
+    ['bblr', 'Berat lahir kurang dari 2.000 g', 'Hepatitis B 0 sebaiknya ditunda sampai usia 1 bulan atau saat pulang dari rumah sakit, kecuali ibu HBsAg positif.'],
+    ['hbsag', 'Ibu HBsAg positif', 'Bayi perlu vaksin Hepatitis B dan HBIg (di paha berbeda) dalam 24 jam setelah lahir, lalu cek anti-HBs & HBsAg di usia 9–12 bulan.'],
+    ['tbibu', 'Ibu menderita TB aktif', 'BCG ditunda sampai bayi terbukti tidak terinfeksi TB; bayi mendapat terapi pencegahan TB.'],
+    ['imuno', 'Gangguan sistem imun / terapi imunosupresan', 'Vaksin hidup (BCG, polio tetes, rotavirus, MR/MMR, varisela, dengue) hanya atas persetujuan dokter.'],
+    ['alergi', 'Pernah alergi berat setelah vaksin', 'Konsultasikan dengan dokter sebelum dosis berikutnya; vaksin dengan komponen yang sama mungkin tidak boleh diulang.']
+  ];
+  function jadwalAnakHTML(p, r) {
+    var j = r.jadwal, out = '';
+    // pilihan rujukan
+    out += '<div class="card stack g10"><div class="row mid between"><div class="sect-title">Jadwal yang diikuti</div>' +
+      '<button class="linkbtn tiny" data-act="go" data-arg="jadwal-banding">Bandingkan</button></div>' +
+      '<div class="row g8">' + [['idai', 'IDAI 2024', 'Rekomendasi dokter anak, lengkap'], ['kia', 'Buku KIA', 'Program pemerintah, gratis di Puskesmas']].map(function (o) {
+        var on = j.rujukan === o[0];
+        return '<button class="opt' + (on ? ' on' : '') + '" style="align-items:flex-start;text-align:left;" data-act="ganti-jadwal" data-arg="' + p.id + '|' + o[0] + '">' +
+          '<span style="font-size:13px;">' + o[1] + '</span><span class="tiny" style="font-weight:600;color:var(--ink-3);">' + o[2] + '</span></button>';
+      }).join('') + '</div>' +
+      '<div class="tiny muted">Bisa diganti kapan saja. Dosis yang sudah dicatat tetap tersimpan dan langsung terbaca di jadwal yang baru.</div></div>';
+
+    // kondisi khusus
+    var kon = KONDISI.filter(function (k) { return p.kondisi && p.kondisi[k[0]]; });
+    if (kon.length) {
+      out += '<div class="card warn stack g8"><div class="row mid g8">' + ic('info', 17) + '<b class="small" style="color:#8A6A21;">Kondisi khusus — konsultasikan dengan dokter</b></div>' +
+        kon.map(function (k) { return '<div class="tiny" style="color:#8A6A21;line-height:1.55;"><b>' + h(k[1]) + ':</b> ' + h(k[2]) + '</div>'; }).join('') +
+        '<button class="btn outline sm" data-act="tanya-dokter" data-arg="' + p.id + '">' + ic('chat', 15) + ' Tanya dokter</button></div>';
+    }
+
+    // ringkasan
+    out += '<div class="card stack g10">' +
+      '<div class="row mid"><div><div class="sect-title">Kelengkapan sesuai usia</div>' +
+      '<div class="tiny muted">' + h(j.judul) + ' · usia ' + h(umurTeks(j.bln)) + '</div></div>' +
+      '<div class="grow"></div><div class="disp" style="font-size:20px;font-weight:800;color:var(--teal-dark);">' + r.persen + '%</div></div>' +
+      '<div class="bar"><i style="width:' + r.persen + '%"></i></div>' +
+      '<div class="tiny muted">' + r.selesai + ' dari ' + r.total + ' dosis yang sudah waktunya telah dicatat.</div>' +
+      '<div class="row g6 wrap">' +
+      (r.belum.length - r.kejar ? '<span class="chip st-tepat">' + (r.belum.length - r.kejar) + ' saatnya</span>' : '') +
+      (r.kejar ? '<span class="chip st-kejar">' + r.kejar + ' perlu dikejar</span>' : '') +
+      (r.terlewat ? '<span class="chip grey">' + r.terlewat + ' terlewat, tidak diberikan lagi</span>' : '') +
+      (r.pkm ? '<span class="chip green">' + r.pkm + ' direncanakan di Puskesmas</span>' : '') + '</div>' +
+      (r.belum.length ? '<div class="row g8"><button class="btn primary sm grow" data-act="go" data-arg="booking">Booking di klinik</button>' +
+        '<button class="btn outline sm grow" data-act="pkm-semua" data-arg="' + p.id + '">Gratis di Puskesmas</button></div>' : '') +
+      '</div>';
+
+    // tabel ceklis
+    var tab = S.ui.tabJadwal === 'daftar' ? 'daftar' : 'tabel';
+    out += '<div class="card stack g10"><div class="row mid between"><div class="sect-title">Ceklis imunisasi</div>' +
+      '<div class="row g4">' + [['tabel', 'Tabel'], ['daftar', 'Daftar']].map(function (t) {
+        return '<button class="pill' + (tab === t[0] ? ' on' : '') + '" style="padding:6px 12px;font-size:12px;" data-act="tab-jadwal" data-arg="' + t[0] + '">' + t[1] + '</button>';
+      }).join('') + '</div></div>' +
+      '<div class="tiny muted" style="margin-top:-4px;">Ketuk dosis untuk mencatat tanggal, tempat, dan No. Batch.</div>' +
+      (tab === 'daftar' ? daftarDosisHTML(p, j) : j.rujukan === 'kia' ? tabelKIA(p, j) : tabelIDAI(p, j)) +
+      legendaJadwal(j.rujukan) + '</div>';
+    return out;
+  }
+  function tglPendek(iso) {
+    var d = new Date(iso + 'T00:00:00');
+    return isNaN(d) ? '' : d.getDate() + '/' + (d.getMonth() + 1) + '/' + String(d.getFullYear()).slice(2);
+  }
+  function umurPada(lahir, iso) {
+    var a = new Date(lahir + 'T00:00:00'), b = new Date(iso + 'T00:00:00');
+    var m = (b.getFullYear() - a.getFullYear()) * 12 + b.getMonth() - a.getMonth();
+    if (b.getDate() < a.getDate()) m--;
+    return Math.max(0, m);
+  }
+  // Tabel meniru Buku KIA: baris = dosis, kolom = usia; warna sel = jendela usia.
+  function tabelKIA(p, j) {
+    var kolom = K.kiaKolom, bayi = j.dosis.filter(function (x) { return x.d.mulai < 84; });
+    var bias = j.dosis.filter(function (x) { return x.d.mulai >= 84; });
+    function warna(d, c) {
+      var a = c === 59 ? 24 : c;
+      if (a < d.mulai || a > d.batas) return 'kia-abu';
+      return a <= d.tepat ? 'kia-putih' : a <= d.boleh ? 'kia-kuning' : 'kia-pink';
+    }
+    var kolSkrg = -1;
+    kolom.forEach(function (c, i) { if ((c === 59 ? 24 : c) <= j.bln) kolSkrg = i; });
+    var html = '<div class="kia-gulir"><table class="kia"><thead><tr><th class="kia-nama">Jenis vaksin</th>' +
+      kolom.map(function (c, i) { return '<th' + (i === kolSkrg ? ' class="kini"' : '') + '>' + (c === 59 ? '24–59' : c) + '</th>'; }).join('') +
+      '</tr></thead><tbody>';
+    bayi.forEach(function (x) {
+      var d = x.d, cat = x.st === 'selesai' && x.catatan, umurBeri = cat ? umurPada(p.tglLahir, cat.tanggal) : -1;
+      var kolBeri = -1;
+      kolom.forEach(function (c, i) { if ((c === 59 ? 24 : c) <= umurBeri) kolBeri = i; });
+      html += '<tr class="kia-baris' + (x.opsional ? ' ops' : '') + '" data-act="buka-dosis" data-arg="' + p.id + '|' + d.id + '">' +
+        '<td class="kia-nama"><b>' + h(d.label) + '</b><span>' +
+        (cat ? 'No. Batch: ' + h(cat.batch || '—') : x.opsional ? h(x.opsional) : x.lewatProgram ? 'Kejar di klinik' : h(LABEL_ST[x.st])) + '</span>' +
+        (x.pkm && x.st !== 'selesai' ? '<i class="pkm">Puskesmas</i>' : '') + '</td>' +
+        kolom.map(function (c, i) {
+          return '<td class="' + warna(d, c) + (i === kolSkrg ? ' kini' : '') + '">' +
+            (i === kolBeri ? '<span class="cek" title="' + h(tgl(cat.tanggal)) + '">' + ic('check', 11, 3.2) + '</span>' : '') + '</td>';
+        }).join('') + '</tr>';
+    });
+    html += '</tbody></table></div>';
+    if (bias.length) {
+      html += '<div class="small" style="font-weight:800;margin-top:4px;">BIAS — imunisasi anak sekolah</div>' +
+        '<div class="stack g6">' + bias.map(function (x) { return barisDosis(p, x); }).join('') + '</div>';
+    }
+    return html;
+  }
+  // Tabel versi IDAI: baris = jenis vaksin, sel = dosis dengan usia anjurannya.
+  function tabelIDAI(p, j) {
+    var grup = {}, urut = [];
+    j.dosis.forEach(function (x) {
+      if (!grup[x.d.baris]) { grup[x.d.baris] = []; urut.push(x.d.baris); }
+      grup[x.d.baris].push(x);
+    });
+    return '<div class="stack" style="border:1px solid var(--line);border-radius:14px;overflow:hidden;">' + urut.map(function (b, i) {
+      return '<div class="idai-baris"' + (i ? '' : ' style="border-top:0;"') + '><div class="idai-nama">' + h(b) + '</div><div class="idai-sel">' +
+        grup[b].map(function (x) {
+          var d = x.d, no = (d.label.match(/(\d+)$/) || [0, 1])[1];
+          var ke = d.ulang ? (d.ulang === 12 ? 'Tiap thn' : 'Tiap 3 thn') : d.jenis === 'booster' ? 'Booster' : 'Dosis ' + no;
+          if (d.id === 'hb0' || d.id === 'p0') ke = 'Dosis 0';
+          if (d.id === 'td1') ke = 'Td/Tdap';
+          return '<button class="idai-dosis st-' + x.st + (x.opsional ? ' ops' : '') + (d.jenis === 'booster' ? ' bst' : '') + '" data-act="buka-dosis" data-arg="' + p.id + '|' + d.id + '">' +
+            (x.st === 'selesai' ? '<span class="cek">' + ic('check', 10, 3.4) + '</span>' : '') +
+            '<b>' + h(ke) + '</b><span>' + h(usiaDosisTeks(d.mulai)) + '</span>' +
+            (x.pkm && x.st !== 'selesai' ? '<i class="pkm">PKM</i>' : '') + '</button>';
+        }).join('') + '</div></div>';
+    }).join('') + '</div>';
+  }
+  function barisDosis(p, x) {
+    var d = x.d;
+    return '<button class="checkrow' + (x.st === 'selesai' ? ' done' : '') + '" style="padding:9px 11px;' + (x.opsional ? 'opacity:.6;' : '') + '" data-act="buka-dosis" data-arg="' + p.id + '|' + d.id + '">' +
+      '<div class="box" style="width:19px;height:19px;border-radius:6px;">' + (x.st === 'selesai' ? ic('check', 12, 3) : '') + '</div>' +
+      '<div class="grow"><span class="small" style="font-weight:700;">' + h(d.label) + '</span>' +
+      '<div class="tiny muted">' + h(usiaDosisTeks(d.mulai)) +
+      (x.st === 'selesai' && x.catatan ? ' · diberikan ' + h(tgl(x.catatan.tanggal)) + (x.catatan.batch ? ' · Batch ' + h(x.catatan.batch) : '') : '') +
+      (x.berikut ? ' · berikutnya ' + h(tgl(x.berikut)) : '') + '</div></div>' +
+      (d.program && !x.lewatProgram && x.st !== 'selesai' ? '<span class="chip green" style="font-size:9.5px;padding:2px 7px;">' + (x.pkm ? 'Puskesmas' : 'Gratis PKM') + '</span>' : '') +
+      (x.st !== 'selesai' ? '<span class="chip st-' + x.st + '" style="font-size:9.5px;padding:2px 7px;">' + h(x.opsional ? 'Opsional' : LABEL_ST[x.st]) + '</span>' : '') +
+      '</button>';
+  }
+  function daftarDosisHTML(p, j) {
+    var kel = [['Perlu diberikan', function (x) { return !x.opsional && (x.st === 'tepat' || x.st === 'boleh' || x.st === 'kejar'); }],
+      ['Akan datang', function (x) { return !x.opsional && x.st === 'belum'; }],
+      ['Sudah dicatat', function (x) { return x.st === 'selesai'; }],
+      ['Opsional', function (x) { return x.opsional && x.st !== 'selesai' && x.st !== 'terlewat'; }],
+      ['Terlewat — tidak diberikan lagi', function (x) { return !x.opsional && x.st === 'terlewat'; }]];
+    return kel.map(function (k) {
+      var isi = j.dosis.filter(k[1]);
+      if (k[0] === 'Akan datang') isi = isi.slice(0, 6);
+      if (!isi.length) return '';
+      return '<div class="stack g6"><div class="tiny" style="font-weight:800;color:var(--ink-3);text-transform:uppercase;letter-spacing:.05em;">' + k[0] + ' · ' + isi.length + '</div>' +
+        isi.map(function (x) { return barisDosis(p, x); }).join('') + '</div>';
+    }).join('');
+  }
+  function legendaJadwal(rujukan) {
+    var item = rujukan === 'kia'
+      ? [['kia-putih', 'Usia tepat'], ['kia-kuning', 'Masih boleh dilengkapi'], ['kia-pink', 'Imunisasi kejar'], ['kia-abu', 'Tidak boleh diberikan']]
+      : [['st-tepat', 'Saatnya (primer)'], ['st-boleh', 'Catch-up'], ['st-kejar', 'Imunisasi kejar'], ['st-selesai', 'Sudah'], ['bst', 'Booster'], ['ops', 'Opsional / daerah endemis']];
+    return '<div class="legenda">' + item.map(function (i) {
+      return '<span><i class="' + i[0] + '"></i>' + h(i[1]) + '</span>';
+    }).join('') + '</div>';
+  }
+  // lembar catat dosis
+  var fotoDosis = null, dosisAktif = '';
+  function cariDosis(pid, doseId) {
+    var p = S.pasien.filter(function (x) { return x.id === pid; })[0];
+    if (!p) return null;
+    var j = jadwalPasien(p);
+    if (!j || j.tipe !== 'anak') return null;
+    var x = j.dosis.filter(function (y) { return y.d.id === doseId; })[0];
+    return x ? { p: p, j: j, x: x } : null;
+  }
+  function sheetDosis(pid, doseId) {
+    var c = cariDosis(pid, doseId);
+    if (!c) return '';
+    var p = c.p, x = c.x, d = x.d, cat = x.st === 'selesai' && !d.ulang ? x.catatan : null;
+    var html = '<div class="sheet" data-act="tutup-sheet"><div data-stop="1"><div class="stack g12">' +
+      '<div class="row mid g12">' + ikonKotak(ikonKategori(d.label), x.st === 'selesai' ? 'aktif' : '', 46) +
+      '<div class="grow"><div class="disp" style="font-size:17px;font-weight:800;line-height:1.2;">' + h(d.label) + '</div>' +
+      '<div class="tiny muted">' + h(p.nama) + ' · ' + h(NAMA_JADWAL[c.j.rujukan]) + ' · anjuran ' + h(usiaDosisTeks(d.mulai)) + '</div></div>' +
+      '<button class="linkbtn" data-act="tutup-sheet">' + ic('close', 18) + '</button></div>' +
+      '<div class="row g6 wrap"><span class="chip st-' + x.st + '">' + h(LABEL_ST[x.st]) + '</span>' +
+      (d.jenis === 'booster' ? '<span class="chip teal">Booster</span>' : '') +
+      (d.program && !x.lewatProgram ? '<span class="chip green">Gratis di Puskesmas</span>' : '') +
+      (x.opsional ? '<span class="chip grey">' + h(x.opsional) + '</span>' : '') + '</div>' +
+      (d.ket ? '<div class="small" style="color:var(--ink-2);line-height:1.55;">' + h(d.ket) + '</div>' : '') +
+      (x.lewatProgram ? '<div class="card warn tiny" style="color:#8A6A21;">Usia anak sudah melewati batas imunisasi kejar program pemerintah, sehingga dosis ini tidak lagi gratis di Puskesmas. Menurut IDAI dosis ini masih boleh dikejar di klinik.</div>' : '') +
+      (x.st === 'terlewat' ? '<div class="card warn tiny" style="color:#8A6A21;">Usia anak sudah melewati batas pemberian dosis ini, sehingga tidak dihitung kurang. Konsultasikan dengan dokter bila ragu.</div>' : '') +
+      (d.kunci.length > 1 ? '<div class="tiny muted">Satu suntikan ini sekaligus mencatat: ' + d.kunci.map(function (k) { return h(NAMA_ANTIGEN[antigenDari(k)] || k); }).join(', ') + '.</div>' : '');
+    if (d.program && x.st !== 'selesai' && !x.lewatProgram) {
+      html += '<button class="btn ' + (x.pkm ? 'outline' : 'teal') + ' sm" data-act="pkm-dosis" data-arg="' + p.id + '|' + d.id + '">' +
+        (x.pkm ? 'Batalkan rencana di Puskesmas' : 'Rencanakan gratis di Puskesmas') + '</button>';
+    }
+    html += '<form id="form-dosis" class="stack g10" style="border-top:1px solid var(--line);padding-top:12px;">' +
+      '<div class="sect-title" style="font-size:14px;">' + (cat ? 'Catatan pemberian' : 'Catat sudah diberikan') + '</div>' +
+      '<input type="hidden" name="pid" value="' + p.id + '"><input type="hidden" name="dosis" value="' + d.id + '">' +
+      '<div class="row g8"><div class="grow"><label class="lbl">Tanggal</label><input class="input" type="date" name="tanggal" max="' + hariIni() + '" min="' + h(p.tglLahir) + '" value="' + h(cat ? cat.tanggal : hariIni()) + '"></div>' +
+      '<div class="grow"><label class="lbl">Tempat</label><select class="input" name="tempat">' +
+      ['Posyandu', 'Puskesmas', 'Klinik', 'Rumah sakit', 'Bidan / dokter praktik', 'Lainnya'].map(function (t) {
+        return '<option' + ((cat ? cat.tempat : 'Posyandu') === t ? ' selected' : '') + '>' + t + '</option>';
+      }).join('') + '</select></div></div>' +
+      '<div><label class="lbl">Nama fasilitas (opsional)</label><input class="input" name="faskes" value="' + h(cat && cat.faskes || '') + '" placeholder="mis. Puskesmas Batu 10"></div>' +
+      '<div class="row g8"><div class="grow"><label class="lbl">Merek vaksin</label><input class="input" name="merek" value="' + h(cat && cat.merek || '') + '" placeholder="mis. Pentabio"></div>' +
+      '<div class="grow"><label class="lbl">No. Batch</label><input class="input" name="batch" value="' + h(cat && cat.batch || '') + '" placeholder="Tertera di label/buku KIA"></div></div>' +
+      '<div><label class="lbl">Foto label / halaman buku KIA (opsional)</label>' +
+      '<input class="input" type="file" id="foto-dosis" accept="image/*" capture="environment" style="padding:9px;">' +
+      ((fotoDosis || (cat && cat.foto)) ? '<img src="' + (fotoDosis || cat.foto) + '" alt="Foto label vaksin" style="margin-top:8px;max-height:140px;border-radius:10px;border:1px solid var(--line);">' : '') +
+      '<div class="hint" style="margin-top:6px;">Foto dikecilkan otomatis dan disimpan di perangkat ini saja.</div></div>' +
+      '<button type="submit" class="btn primary">' + (cat ? 'Simpan perubahan' : 'Simpan catatan') + '</button>' +
+      (cat ? '<button type="button" class="btn danger sm" data-act="hapus-dosis" data-arg="' + p.id + '|' + d.id + '">Hapus catatan dosis ini</button>' : '') +
+      (x.st !== 'selesai' && !x.opsional ? '<button type="button" class="btn outline sm" data-act="go" data-arg="booking">Booking di klinik</button>' : '') +
+      '</form></div></div></div>';
+    return html;
+  }
+  var NAMA_ANTIGEN = { hepb: 'Hepatitis B', polio: 'Polio', ipv: 'Polio suntik (IPV)', bcg: 'BCG', dtp: 'DTP', hib: 'Hib',
+    pcv: 'PCV', rv: 'Rotavirus', flu: 'Influenza', mr: 'MR/MMR', je: 'JE', 'var': 'Varisela', hepa: 'Hepatitis A',
+    tif: 'Tifoid', dbd: 'Dengue', hpv: 'HPV', td: 'Td/Tdap', hfmd: 'Flu Singapura' };
+  function kecilkanFoto(berkas, selesai) {
+    var fr = new FileReader();
+    fr.onload = function () {
+      var img = new Image();
+      img.onload = function () {
+        var skala = Math.min(1, 640 / Math.max(img.width, img.height));
+        var cv = document.createElement('canvas');
+        cv.width = Math.round(img.width * skala); cv.height = Math.round(img.height * skala);
+        cv.getContext('2d').drawImage(img, 0, 0, cv.width, cv.height);
+        selesai(cv.toDataURL('image/jpeg', 0.6));
+      };
+      img.src = fr.result;
+    };
+    fr.readAsDataURL(berkas);
+  }
+  // Perbandingan per dosis: usia anjuran IDAI 2024 vs Buku KIA 2024.
+  function scJadwalBanding() {
+    var body = topbar('IDAI vs Buku KIA', 'Perbandingan jadwal imunisasi anak', 'jadwal');
+    var baris = [], sudah = {};
+    K.jadwalIDAI.concat(K.jadwalKIA).forEach(function (d) {
+      d.kunci.forEach(function (k) {
+        if (sudah[k] || k.split(':')[1] === 't') return;
+        sudah[k] = true;
+        var di = K.jadwalIDAI.filter(function (x) { return x.kunci.indexOf(k) >= 0; })[0];
+        var dk = K.jadwalKIA.filter(function (x) { return x.kunci.indexOf(k) >= 0; })[0];
+        baris.push({ k: k, idai: di, kia: dk });
+      });
+    });
+    var urutAg = ['hepb', 'polio', 'ipv', 'bcg', 'dtp', 'td', 'hib', 'pcv', 'rv', 'flu', 'mr', 'je', 'var', 'hepa', 'tif', 'dbd', 'hpv', 'hfmd'];
+    baris.sort(function (a, b) {
+      var x = urutAg.indexOf(antigenDari(a.k)) - urutAg.indexOf(antigenDari(b.k));
+      return x || (+a.k.split(':')[1] - +b.k.split(':')[1]);
+    });
+    function sel(d) {
+      if (!d) return '<td class="muted">—</td>';
+      return '<td>' + h(usiaDosisTeks(d.mulai)) + (d.syarat === 'endemis' ? '<div class="tiny muted">endemis</div>' : '') + '</td>';
+    }
+    body += '<div class="pad stack g12"><div class="card tint small" style="line-height:1.6;color:var(--ink-2);">' +
+      '<b>IDAI 2024</b> adalah rekomendasi lengkap Ikatan Dokter Anak Indonesia, termasuk vaksin pilihan berbayar. ' +
+      '<b>Buku KIA</b> memuat program imunisasi pemerintah yang gratis di Puskesmas/Posyandu. Baris yang berbeda ditandai.</div>' +
+      '<div class="card rapat" style="padding:0;overflow:hidden;"><table class="mk-banding"><tr><th>Dosis</th><th>IDAI 2024</th><th>Buku KIA</th></tr>' +
+      baris.map(function (b) {
+        var beda = !b.idai || !b.kia || b.idai.mulai !== b.kia.mulai;
+        return '<tr' + (beda ? ' class="beda"' : '') + '><td><b>' + h(NAMA_ANTIGEN[antigenDari(b.k)] || b.k) + ' ' + h(b.k.split(':')[1]) + '</b></td>' +
+          sel(b.idai) + sel(b.kia) + '</tr>';
+      }).join('') + '</table></div>' +
+      '<div class="tiny muted">Sumber: Jadwal Imunisasi Anak 0–18 Tahun IDAI 2024; Buku KIA 2024 (Kemenkes) dan jadwal BIAS.</div></div>';
+    return { body: body };
   }
   function pilihPasien(aktif) {
     return '<div class="tabs">' + S.pasien.map(function (p) {
@@ -1666,7 +2058,10 @@
         return '<div class="row g12" style="align-items:flex-start;padding:8px 0;border-top:1px solid var(--line);">' +
           '<div class="icon-sq" style="width:32px;height:32px;border-radius:9px;background:var(--green-tint);color:var(--green);">' + ic('checkc', 16) + '</div>' +
           '<div class="grow"><div class="small" style="font-weight:700;">' + h(x.label) + '</div>' +
-          '<div class="tiny muted">' + tgl(x.tanggal) + ' · ' + h(x.sumber === 'booking' ? 'dari reservasi' : 'dicatat manual') + '</div></div>' +
+          '<div class="tiny muted">' + tgl(x.tanggal) + ' · ' + h(x.tempat || (x.sumber === 'booking' ? 'dari reservasi' : 'dicatat manual')) +
+          (x.faskes ? ' · ' + h(x.faskes) : '') + (x.merek && x.label.indexOf(x.merek) < 0 ? ' · ' + h(x.merek) : '') + '</div>' +
+          (x.batch ? '<div class="tiny" style="color:var(--teal-dark);font-weight:700;">No. Batch ' + h(x.batch) + '</div>' : '') +
+          (x.foto ? '<img src="' + x.foto + '" alt="Foto label vaksin" style="margin-top:6px;max-height:70px;border-radius:8px;border:1px solid var(--line);">' : '') + '</div>' +
           '<button class="linkbtn" data-act="hapus-riwayat" data-arg="' + x.id + '" style="color:var(--ink-4);">' + ic('trash', 15) + '</button></div>';
       }).join('');
     }
@@ -1758,7 +2153,8 @@
     urut.forEach(function (nama) {
       body += '<div class="card stack g6" style="padding:14px 16px;">' +
         '<div class="row mid g10">' + ikonKotak(ikonKategori(nama), '', 38) +
-        '<span style="font-weight:700;font-size:13.5px;">' + h(nama) + '</span></div>' +
+        '<span class="grow" style="font-weight:700;font-size:13.5px;">' + h(nama) + '</span>' +
+        (grup[nama].some(produkProgram) ? CHIP_PKM : '') + '</div>' +
         '<table class="price">' + grup[nama].map(function (v) {
           var hrg = tarif === 'spesialis' ? v.spesialis : v.umum;
           return '<tr><td><div style="font-weight:600;">' + h(v.sediaan) + '</div>' +
@@ -2001,6 +2397,7 @@
       korAngka(total, 'Total Peserta', 'var(--ink)') +
       korAngka(sudah, 'Sudah Divaksin', 'var(--teal-dark)') +
       korAngka(korPersen() + '%', 'Coverage', 'var(--magenta-dark)') + '</div>';
+    if (kor().jenis !== 'perusahaan') body += kartuBIAS();
 
     if (!total) {
       body += empty('family', 'Belum ada peserta', 'Tambahkan daftar siswa atau karyawan terlebih dahulu. Semua angka di dashboard dihitung dari daftar itu.',
@@ -2030,6 +2427,19 @@
     }
     body += '</div>';
     return body;
+  }
+  // BIAS: imunisasi program pemerintah yang diberikan Puskesmas di sekolah dasar.
+  function kartuBIAS() {
+    var baris = [['Kelas 1', 'Campak-Rubella (MR) dan DT'], ['Kelas 2', 'Td'],
+      ['Kelas 5', 'Td, dan HPV dosis 1 untuk siswi'], ['Kelas 6', 'HPV dosis 2 untuk siswi']];
+    return '<div class="card stack g10"><div class="row mid g10">' + ikonKotak('jadwal', '', 40) +
+      '<div class="grow"><div class="sect-title">Jadwal BIAS</div><div class="tiny muted">Bulan Imunisasi Anak Sekolah · program pemerintah</div></div>' +
+      '<span class="chip green" style="font-size:10px;">Gratis</span></div>' +
+      baris.map(function (b) {
+        return '<div class="row g10 small" style="padding:7px 0;border-top:1px solid var(--line);"><b style="width:62px;flex-shrink:0;">' + b[0] + '</b>' +
+          '<span style="color:var(--ink-2);">' + h(b[1]) + '</span></div>';
+      }).join('') +
+      '<div class="tiny muted" style="line-height:1.55;">Dilaksanakan Puskesmas setempat di sekolah. Vaksin di luar program — misalnya influenza, tifoid, atau dengue — dapat diajukan lewat booking massal.</div></div>';
   }
   function korAngka(nilai, label, warna) {
     return '<div class="card center" style="flex:1;padding:14px 8px;">' +
@@ -2289,11 +2699,30 @@
       }).join('') + '</select></div>' +
       '<div><label class="lbl">Hubungan keluarga</label>' +
       '<input class="input" name="hubungan" value="' + h(p.hubungan) + '" placeholder="Anak, istri, orang tua..."></div>' +
+      '<div class="card flat stack g10" style="padding:14px;"><div class="small" style="font-weight:800;">Untuk anak (0–18 tahun)</div>' +
+      '<div><label class="lbl">Jadwal imunisasi yang diikuti</label><select class="input" name="jadwalAnak">' +
+      [['idai', 'IDAI 2024 — rekomendasi dokter anak (lengkap)'], ['kia', 'Buku KIA — program pemerintah (gratis di Puskesmas)']].map(function (o) {
+        return '<option value="' + o[0] + '"' + ((p.jadwalAnak || 'idai') === o[0] ? ' selected' : '') + '>' + o[1] + '</option>';
+      }).join('') + '</select><div class="hint" style="margin-top:6px;">Bisa diganti kapan saja di halaman Jadwal Vaksin.</div></div>' +
+      '<label class="row mid g8 small"><input type="checkbox" name="endemis"' + (p.endemis ? ' checked' : '') + '> Tinggal di / akan bepergian ke daerah endemis Japanese Encephalitis</label>' +
+      '<div><div class="lbl">Kondisi khusus (opsional)</div><div class="stack g6">' +
+      KONDISI.map(function (k) {
+        return '<label class="row mid g8 small"><input type="checkbox" name="kondisi-' + k[0] + '"' + (p.kondisi && p.kondisi[k[0]] ? ' checked' : '') + '> ' + h(k[1]) + '</label>';
+      }).join('') + '</div><div class="hint" style="margin-top:6px;">Membantu aplikasi menampilkan peringatan yang perlu dikonsultasikan dengan dokter.</div></div></div>' +
       '<input type="hidden" name="pid" value="' + h(p.id) + '">' +
       '<button type="submit" class="btn primary">' + (id ? 'Simpan perubahan' : 'Simpan pasien') + '</button>' +
       (id ? '<button type="button" class="btn danger" data-act="hapus-pasien" data-arg="' + id + '">Hapus pasien</button>' : '') +
       '</form></div>';
     return { body: body };
+  }
+  function bacaFieldAnak(p, f) {
+    if (f.elements.jadwalAnak) p.jadwalAnak = f.elements.jadwalAnak.value;
+    p.endemis = !!(f.elements.endemis && f.elements.endemis.checked);
+    p.kondisi = {};
+    KONDISI.forEach(function (k) {
+      var el = f.elements['kondisi-' + k[0]];
+      if (el && el.checked) p.kondisi[k[0]] = true;
+    });
   }
   function scAlamat() {
     var body = topbar('Daftar Alamat', 'Untuk layanan Home Care', 'profil');
@@ -2389,6 +2818,7 @@
       case 'harga-fokus': fokusHarga = true; route.name = 'harga'; r = scHarga(); break;
       case 'internasional': r = scInternasional(); break;
       case 'tentang': r = scTentang(); break;
+      case 'jadwal-banding': r = scJadwalBanding(); break;
       case 'profil': r = scProfil(); break;
       case 'korporat': r = scKorporat(); break;
       case 'korporat-setup': r = scKorporatSetup(); break;
@@ -2408,6 +2838,9 @@
     var s = document.getElementById('cari-vaksin');
     if (s) { s.focus(); s.setSelectionRange(s.value.length, s.value.length); }
     pasangBanner();
+    // tabel KIA lebar: gulir otomatis ke kolom usia anak saat ini
+    var gulir = document.querySelector(".kia-gulir"), kini = gulir && gulir.querySelector("th.kini");
+    if (kini) gulir.scrollLeft = Math.max(0, kini.offsetLeft - 190);
     if (route.name === 'splash') {
       // splash berpindah sendiri; ketuk di mana saja untuk langsung lanjut
       clearTimeout(jedaSplash);
@@ -2631,7 +3064,58 @@
         simpan(); render(); return;
       }
       case 'buka-vaksin': cariVaksin = ''; sheetHTML = sheetVaksin(); render(); return;
-      case 'tutup-sheet': sheetHTML = ''; render(); return;
+      case 'buka-dosis': {
+        var bd = arg.split('|');
+        dosisAktif = arg; fotoDosis = null; sheetHTML = sheetDosis(bd[0], bd[1]); render(); return;
+      }
+      case 'tab-jadwal': S.ui.tabJadwal = arg; simpan(); render(); return;
+      case 'ganti-jadwal': {
+        var gj = arg.split('|'), pg = S.pasien.filter(function (x) { return x.id === gj[0]; })[0];
+        if (!pg || rujukanAnak(pg) === gj[1]) return;
+        if (!konfirmasi('Ganti ke jadwal ' + NAMA_JADWAL[gj[1]] + '? Dosis yang sudah dicatat tetap tersimpan dan dibaca ulang sesuai jadwal baru.')) return;
+        var tercatat = S.riwayat.filter(function (r) { return r.pasienId === pg.id && r.kunci && r.kunci.length; }).length;
+        pg.jadwalAnak = gj[1];
+        var rb = ringkasJadwal(pg);
+        simpan(); render();
+        toast('Jadwal ' + NAMA_JADWAL[gj[1]] + ' dipakai. ' + (tercatat ? rb.selesai + ' dosis tercatat terbaca di jadwal baru.' : ''));
+        return;
+      }
+      case 'pkm-dosis': {
+        var pk = cariDosis.apply(null, arg.split('|'));
+        if (!pk) return;
+        var kk = pk.x.d.kunci.join('+');
+        pk.p.pkm = pk.p.pkm || {};
+        if (pk.p.pkm[kk]) delete pk.p.pkm[kk]; else pk.p.pkm[kk] = true;
+        simpan(); sheetHTML = sheetDosis(pk.p.id, pk.x.d.id); render();
+        toast(pk.p.pkm[kk] ? pk.x.d.label + ' direncanakan gratis di Puskesmas.' : 'Rencana Puskesmas dibatalkan.');
+        return;
+      }
+      case 'pkm-semua': {
+        var ps = S.pasien.filter(function (x) { return x.id === arg; })[0];
+        var js = ps && jadwalPasien(ps);
+        if (!js || js.tipe !== 'anak') return;
+        var calon = js.dosis.filter(function (x) {
+          return x.d.program && !x.opsional && !x.lewatProgram && x.st !== 'selesai' && x.st !== 'terlewat';
+        });
+        ps.pkm = ps.pkm || {};
+        var semua = calon.length && calon.every(function (x) { return ps.pkm[x.d.kunci.join('+')]; });
+        calon.forEach(function (x) { if (semua) delete ps.pkm[x.d.kunci.join('+')]; else ps.pkm[x.d.kunci.join('+')] = true; });
+        simpan(); render();
+        toast(semua ? 'Rencana Puskesmas dibatalkan.' : calon.length + ' dosis program ditandai gratis di Puskesmas. Vaksin lainnya bisa dibooking di klinik.');
+        return;
+      }
+      case 'hapus-dosis': {
+        var hd = cariDosis.apply(null, arg.split('|'));
+        if (!hd || !konfirmasi('Hapus catatan ' + hd.x.d.label + '?')) return;
+        S.riwayat = S.riwayat.filter(function (r) {
+          if (r.pasienId !== hd.p.id || !r.kunci) return true;
+          r.kunci = r.kunci.filter(function (k) { return hd.x.d.kunci.indexOf(k) < 0; });
+          return r.kunci.length > 0;
+        });
+        simpan(); sheetHTML = ''; render(); toast('Catatan dosis dihapus.');
+        return;
+      }
+      case 'tutup-sheet': sheetHTML = ''; dosisAktif = ''; fotoDosis = null; render(); return;
       case 'toggle-vaksin': {
         var j = d.vaksinIds.indexOf(arg);
         if (j >= 0) d.vaksinIds.splice(j, 1); else d.vaksinIds.push(arg);
@@ -2755,8 +3239,13 @@
         if (!konfirmasi('Tandai vaksinasi ini sudah selesai? Vaksin akan dicatat di rekam medis pasien.')) return;
         b2.status = 'selesai';
         b2.pasienIds.forEach(function (pid) {
-          b2.rincian.concat(b2.tanpaHarga.map(function (n) { return { nama: n }; })).forEach(function (r) {
-            S.riwayat.push({ id: uid(), pasienId: pid, label: r.nama, tanggal: b2.tanggal, sumber: 'booking', bookingId: b2.id });
+          var pp = S.pasien.filter(function (x) { return x.id === pid; })[0];
+          (b2.vaksinIds || []).forEach(function (vid) {
+            var anak = pp && catatDariProduk(pp, vid, b2.tanggal, { bookingId: b2.id, tempat: 'Klinik', faskes: b2.lokasi });
+            if (anak) return;
+            var v = K.harga.filter(function (x) { return x.id === vid; })[0];
+            S.riwayat.push({ id: uid(), pasienId: pid, label: v ? v.kategori + ' — ' + v.merk : 'Vaksin', merek: v ? v.merk : '',
+              tanggal: b2.tanggal, sumber: 'booking', bookingId: b2.id });
           });
         });
         S.poin += 10;
@@ -2874,6 +3363,18 @@
   });
 
   document.addEventListener('change', function (ev) {
+    if (ev.target.id === 'foto-dosis' && ev.target.files.length && dosisAktif) {
+      var form = document.getElementById('form-dosis'), simpanan = {};
+      if (form) ['tanggal', 'tempat', 'faskes', 'merek', 'batch'].forEach(function (n) { simpanan[n] = form.elements[n].value; });
+      kecilkanFoto(ev.target.files[0], function (url) {
+        fotoDosis = url;
+        var bd = dosisAktif.split('|');
+        sheetHTML = sheetDosis(bd[0], bd[1]); render();
+        var f2 = document.getElementById('form-dosis');
+        if (f2) for (var n in simpanan) f2.elements[n].value = simpanan[n];
+      });
+      return;
+    }
     if (ev.target.id !== 'file-impor' || !ev.target.files.length) return;
     var fr = new FileReader();
     fr.onload = function () {
@@ -2881,7 +3382,7 @@
         var data = JSON.parse(fr.result);
         if (!data || typeof data !== 'object' || !('pasien' in data)) throw new Error('bukan cadangan VaksinKu');
         for (var k in kosong) if (!(k in data)) data[k] = JSON.parse(JSON.stringify(kosong[k]));
-        S = data; simpan(); render(); toast('Data berhasil dipulihkan.');
+        S = data; migrasiRiwayat(); simpan(); render(); toast('Data berhasil dipulihkan.');
       } catch (e) { toast('Berkas tidak dikenali sebagai cadangan VaksinKu.'); }
     };
     fr.readAsText(ev.target.files[0]);
@@ -2894,6 +3395,26 @@
     var f = ev.target, formId = f.getAttribute('id');
     var get = function (n) { return (f.elements[n] ? f.elements[n].value : '').trim(); };
     formErr = {};
+    if (formId === 'form-dosis') {
+      var cd = cariDosis(get('pid'), get('dosis'));
+      if (!cd) return;
+      var tgD = get('tanggal') || hariIni();
+      if (tgD > hariIni()) { toast('Tanggal pemberian tidak boleh di masa depan.'); return; }
+      var dd0 = cd.x.d, lama = cd.x.st === 'selesai' && !dd0.ulang ? cd.x.catatan : null;
+      var rec = lama && lama.id ? lama : { id: uid(), pasienId: cd.p.id, sumber: 'jadwal' };
+      rec.label = dd0.label; rec.tanggal = tgD; rec.tempat = get('tempat'); rec.faskes = get('faskes');
+      rec.merek = get('merek'); rec.batch = get('batch');
+      rec.kunci = dd0.ulang ? [dd0.kunci[0]] : dd0.kunci.slice();
+      if (fotoDosis) rec.foto = fotoDosis;
+      if (!lama || !lama.id) S.riwayat.push(rec);
+      if (/rotarix/i.test(rec.merek)) cd.p.rv = 'rv1';
+      if (cd.p.pkm) delete cd.p.pkm[dd0.kunci.join('+')];
+      storageOk = true; simpan();
+      if (!storageOk && rec.foto) { delete rec.foto; simpan(); toast('Penyimpanan perangkat penuh — foto tidak disimpan, catatan lainnya tersimpan.'); }
+      else toast(dd0.label + ' dicatat' + (rec.batch ? ' · Batch ' + rec.batch : '') + '.');
+      sheetHTML = ''; dosisAktif = ''; fotoDosis = null; render();
+      return;
+    }
     if (formId === 'form-pasien') {
       if (!get('nama')) formErr.nama = 'Nama pasien wajib diisi.';
       if (!get('tglLahir')) formErr.tglLahir = 'Tanggal lahir wajib diisi.';
@@ -2905,9 +3426,11 @@
           if (p.id !== id) return;
           p.nama = get('nama'); p.tglLahir = get('tglLahir');
           p.jenisKelamin = get('jenisKelamin'); p.hubungan = get('hubungan');
+          bacaFieldAnak(p, f);
         });
       } else {
         var baru = { id: uid(), nama: get('nama'), tglLahir: get('tglLahir'), jenisKelamin: get('jenisKelamin'), hubungan: get('hubungan') };
+        bacaFieldAnak(baru, f);
         S.pasien.push(baru);
         if (!S.ui.pasienAktif) S.ui.pasienAktif = baru.id;
       }
@@ -3021,6 +3544,7 @@
     ['Hep B 0', 'Polio 0', 'BCG', 'Combo DPT 1', 'PCV 1', 'Rotavirus 1', 'Combo DPT 2'].forEach(function (lb, i) {
       S.riwayat.push({ id: uid(), pasienId: anak.id, label: lb, tanggal: (thn - 5) + '-0' + Math.min(9, 5 + i) + '-20', sumber: 'jadwal' });
     });
+    migrasiRiwayat();
     S.pertumbuhan = [
       { id: uid(), pasienId: anak.id, tanggal: (thn - 1) + '-06-10', berat: '15.2', tinggi: '102', kepala: '49' },
       { id: uid(), pasienId: anak.id, tanggal: thn + '-01-15', berat: '16.8', tinggi: '106', kepala: '49.5' },

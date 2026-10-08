@@ -232,15 +232,67 @@ TEST_JS = r"""
     ok('riwayat vaksin tercatat', s6.riwayat.length > 0, s6.riwayat.length + ' catatan');
     ok('poin bertambah', s6.poin === 10, s6.poin + ' poin');
 
-    /* 7. jadwal & ceklis */
+    /* 6b. vaksin dari reservasi tercatat sebagai dosis jadwal anak */
+    var rFlu = s6.riwayat.filter(function (r) { return r.sumber === 'booking'; })[0];
+    ok('vaksin reservasi dipetakan ke dosis jadwal', !!rFlu && (rFlu.kunci || []).indexOf('flu:1') >= 0,
+       rFlu ? JSON.stringify(rFlu.kunci) : '-');
+
+    /* 7. jadwal anak: IDAI ↔ KIA, ceklis per dosis dengan No. Batch */
     ganti('#/jadwal');
-    var ceklis = document.querySelectorAll('[data-act="toggle-riwayat"]');
-    ok('ceklis jadwal tampil', ceklis.length > 10, ceklis.length + ' item');
+    var selIdai = document.querySelectorAll('.idai-dosis');
+    ok('tabel ceklis IDAI tampil', selIdai.length > 40, selIdai.length + ' dosis');
+    ok('jadwal bawaan IDAI 2024', document.body.textContent.indexOf('Jadwal IDAI 2024') > 0);
+    ok('dosis terlewat tidak dihitung kurang (Rotavirus usia 5 thn)',
+       !!document.querySelector('[data-arg$="|rv1"].st-terlewat'));
     var bar = function () { var i = document.querySelector('.bar > i'); return i ? i.style.width : '-'; };
     var persenSebelum = bar();
-    ceklis[0].click();
-    var persenSesudah = bar();
-    ok('ceklis mengubah kelengkapan', persenSebelum !== persenSesudah, persenSebelum + '% → ' + persenSesudah + '%');
+    klik('[data-act="buka-dosis"][data-arg$="|bcg"]');
+    var fd = document.getElementById('form-dosis');
+    ok('lembar catat dosis terbuka', !!fd && !!fd.elements.batch);
+    fd.elements.tanggal.value = (new Date().getFullYear() - 5) + '-06-01';
+    fd.elements.tempat.value = 'Posyandu';
+    fd.elements.batch.value = 'BCG-2104A';
+    fd.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    var rBcg = st().riwayat.filter(function (r) { return (r.kunci || []).indexOf('bcg:1') >= 0; })[0];
+    ok('dosis tercatat dengan No. Batch', !!rBcg && rBcg.batch === 'BCG-2104A' && rBcg.tempat === 'Posyandu',
+       rBcg ? rBcg.batch + ' · ' + rBcg.tempat : '-');
+    ok('ceklis mengubah kelengkapan', persenSebelum !== bar(), persenSebelum + ' → ' + bar());
+
+    klik('[data-act="buka-dosis"][data-arg$="|dtp1"]');
+    var fd2 = document.getElementById('form-dosis');
+    fd2.elements.batch.value = 'HX-77';
+    fd2.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+
+    klik('[data-act="ganti-jadwal"][data-arg$="|kia"]');
+    ok('ganti ke jadwal Buku KIA', st().pasien[0].jadwalAnak === 'kia' && document.querySelectorAll('table.kia tr.kia-baris').length > 15,
+       document.querySelectorAll('table.kia tr.kia-baris').length + ' baris');
+    ok('BCG tercatat terbaca di tabel KIA', !!document.querySelector('[data-arg$="|k-bcg"] .cek'));
+    ok('DTP 1 saja belum memenuhi DPT-HB-Hib 1', !document.querySelector('[data-arg$="|k-dpt1"] .cek'));
+    klik('[data-act="buka-dosis"][data-arg$="|k-dpt1"]');
+    ok('dosis kombinasi menjelaskan antigen yang tercatat', document.body.textContent.indexOf('sekaligus mencatat') > 0);
+    ok('lewat batas program: masih bisa dikejar di klinik, tidak ditawarkan gratis',
+       document.body.textContent.indexOf('masih boleh dikejar') > 0 && !document.querySelector('[data-act="pkm-dosis"]'));
+    klik('[data-act="tutup-sheet"]');
+    klik('[data-act="buka-dosis"][data-arg$="|k-bias-mr"]');
+    klik('[data-act="pkm-dosis"][data-arg$="|k-bias-mr"]');
+    ok('rencana gratis di Puskesmas tersimpan', !!(st().pasien[0].pkm || {})['mr:3']);
+    klik('[data-act="tutup-sheet"]');
+    klik('[data-act="ganti-jadwal"][data-arg$="|idai"]');
+    ok('kembali ke IDAI, catatan tetap', st().pasien[0].jadwalAnak === 'idai' &&
+       !!document.querySelector('[data-arg$="|bcg"].st-selesai') && !!document.querySelector('[data-arg$="|dtp1"].st-selesai'));
+
+    /* 7b. perbandingan jadwal, kondisi khusus, tanda gratis di Puskesmas */
+    ganti('#/jadwal-banding');
+    ok('perbandingan IDAI vs KIA tampil', document.querySelectorAll('.mk-banding tr.beda').length > 5,
+       document.querySelectorAll('.mk-banding tr.beda').length + ' dosis berbeda');
+    ganti('#/pasien-form/' + st().pasien[0].id);
+    var fk = document.getElementById('form-pasien');
+    fk.elements['kondisi-bblr'].checked = true;
+    fk.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    ganti('#/jadwal');
+    ok('kondisi khusus memunculkan peringatan', document.body.textContent.indexOf('Berat lahir kurang dari 2.000 g') > 0);
+    ganti('#/harga');
+    ok('tanda gratis di Puskesmas di daftar harga', document.body.textContent.indexOf('Gratis di Puskesmas (anak)') > 0);
 
     /* 8. rekam medis + pertumbuhan */
     ganti('#/rekam');
@@ -376,6 +428,8 @@ TEST_JS = r"""
     kirim(fk);
     ok('dashboard institusi dibuat', st().korporat.nama === 'SDN 001 Tanjungpinang' && location.hash === '#/korporat',
        st().korporat.jenis + ' · ' + location.hash);
+    ok('dashboard sekolah memuat jadwal BIAS', document.body.textContent.indexOf('Jadwal BIAS') > 0 &&
+       document.body.textContent.indexOf('HPV dosis 2 untuk siswi') > 0);
 
     /* tempel daftar nama sekaligus */
     ganti('#/korporat-massal');

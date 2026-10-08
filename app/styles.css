@@ -79,7 +79,6 @@ a{color:var(--magenta-dark);text-decoration:none;}
   background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;
   box-shadow:0 1px 2px rgba(38,38,38,.03),0 10px 24px -18px rgba(38,38,38,.22);
 }
-.card.flat{box-shadow:none;}
 .card.tint{background:var(--teal-tint);border-color:transparent;}
 .card.warn{background:var(--amber-tint);border-color:transparent;}
 .divider{height:1px;background:var(--line);}
@@ -381,3 +380,56 @@ table.price td.p{text-align:right;font-family:var(--disp);font-weight:800;color:
 }
 .promo-titik i.on{ width:17px; opacity:1; background:var(--magenta); }
 @media (prefers-reduced-motion: reduce){ .promo-rel{ scroll-behavior:auto; } }
+
+/* ---------- jadwal anak: status dosis, tabel KIA & IDAI ---------- */
+.chip.st-tepat{background:var(--teal-tint2);color:var(--teal-deep);}
+.chip.st-boleh{background:#FFF1C2;color:#8A6A00;}
+.chip.st-kejar{background:#FDE0E9;color:var(--magenta-dark);}
+.chip.st-terlewat{background:#EFEFEF;color:var(--ink-3);}
+.chip.st-belum{background:#F6F6F5;color:var(--ink-3);}
+.chip.st-selesai{background:var(--green-tint);color:var(--green);}
+.kia-gulir{overflow-x:auto;border:1px solid var(--line);border-radius:12px;-webkit-overflow-scrolling:touch;}
+.kia{border-collapse:separate;border-spacing:0;font-size:10.5px;min-width:100%;}
+.kia th{background:var(--teal-deep);color:#fff;font-weight:700;padding:6px 0;min-width:22px;text-align:center;position:sticky;top:0;}
+.kia th.kini{background:var(--magenta);}
+.kia td{height:34px;border-bottom:1px solid #fff;border-right:1px solid #fff;text-align:center;padding:0;}
+.kia .kia-nama{position:sticky;left:0;z-index:1;background:#fff;text-align:left;min-width:132px;max-width:132px;padding:5px 8px;border-right:1px solid var(--line);}
+.kia th.kia-nama{background:var(--teal-deep);z-index:2;}
+.kia td.kia-nama b{display:block;font-size:11px;line-height:1.25;}
+.kia td.kia-nama span{display:block;font-size:9.5px;color:var(--ink-3);}
+.kia-baris{cursor:pointer;}
+.kia-baris.ops td.kia-nama{opacity:.55;}
+.kia-putih{background:#fff;box-shadow:inset 0 0 0 1px var(--line);}
+.kia-kuning{background:#FCE3A6;}
+.kia-pink{background:#F9D3DE;}
+.kia-abu{background:#CFCFCF;}
+.kia td.kini{box-shadow:inset 2px 0 0 var(--magenta),inset -2px 0 0 var(--magenta);}
+.legenda i.kia-putih{box-shadow:inset 0 0 0 1px var(--line-2);}
+.cek{display:inline-flex;width:18px;height:18px;border-radius:50%;background:var(--green);color:#fff;align-items:center;justify-content:center;}
+i.pkm{display:inline-block;font-style:normal;font-size:8.5px;font-weight:800;color:var(--green);background:var(--green-tint);border-radius:5px;padding:1px 5px;margin-top:2px;}
+.idai-baris{display:flex;border-top:1px solid var(--line);}
+.idai-nama{width:92px;flex-shrink:0;background:var(--teal-deep);color:#fff;font-size:11px;font-weight:800;padding:8px;display:flex;align-items:center;line-height:1.2;}
+.idai-sel{display:flex;flex-wrap:wrap;gap:5px;padding:6px;flex:1;background:#fff;}
+.idai-dosis{position:relative;border:0;border-radius:9px;padding:5px 7px;min-width:58px;display:flex;flex-direction:column;align-items:flex-start;cursor:pointer;text-align:left;}
+.idai-dosis b{font-size:10.5px;line-height:1.2;} .idai-dosis span{font-size:9.5px;opacity:.85;}
+.idai-dosis .cek{position:absolute;top:-5px;right:-5px;width:16px;height:16px;}
+.idai-dosis.st-selesai{background:var(--green-tint);color:var(--green);}
+.idai-dosis.st-tepat{background:#7FBEC6;color:#fff;}
+.idai-dosis.st-boleh,.idai-dosis.st-kejar{background:#FBD95F;color:#5C4500;}
+.idai-dosis.st-kejar{box-shadow:inset 0 0 0 2px var(--magenta);}
+.idai-dosis.st-belum{background:#F1F1F0;color:var(--ink-2);}
+.idai-dosis.st-terlewat{background:#F6F6F5;color:var(--ink-4);text-decoration:line-through;}
+.idai-dosis.bst.st-belum{background:#DCE8A8;color:#46521A;}
+.idai-dosis.ops{background:#fff !important;color:var(--ink-3) !important;box-shadow:inset 0 0 0 1.4px var(--line-2) !important;border:0;}
+.legenda{display:flex;flex-wrap:wrap;gap:6px 12px;font-size:10.5px;color:var(--ink-3);}
+.legenda span{display:inline-flex;align-items:center;gap:5px;}
+.legenda i{width:12px;height:12px;border-radius:3px;display:inline-block;}
+.legenda i.st-tepat{background:#7FBEC6;} .legenda i.st-boleh{background:#FBD95F;}
+.legenda i.st-kejar{background:#FBD95F;box-shadow:inset 0 0 0 2px var(--magenta);}
+.legenda i.st-selesai{background:var(--green-tint);box-shadow:inset 0 0 0 1px var(--green);}
+.legenda i.bst{background:#DCE8A8;} .legenda i.ops{background:#fff;box-shadow:inset 0 0 0 1.4px var(--line-2);}
+.card.flat{box-shadow:none;}
+.mk-banding{width:100%;border-collapse:collapse;font-size:12px;}
+.mk-banding th{background:var(--teal-deep);color:#fff;padding:8px;font-size:11px;text-align:left;}
+.mk-banding td{padding:7px 8px;border-top:1px solid var(--line);vertical-align:top;}
+.mk-banding tr.beda td{background:#FFF7E0;}
