@@ -22,6 +22,7 @@ sys.path.insert(0, HERE)
 
 import data_katalog as D  # noqa: E402
 import jadwal_anak as J  # noqa: E402
+import panduan_vaksin as P  # noqa: E402
 
 UA = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
 FONT_CSS_URL = ("https://fonts.googleapis.com/css2?"
@@ -69,6 +70,22 @@ ANTIGEN_SEDIAAN = {
     "Polio Oral": ["polio"], "Polio IPV": ["ipv"],
     "DPaT + IPV + HIB + HB": ["dtp", "hib", "hepb", "ipv"], "DPaT + HIB + HB": ["dtp", "hib", "hepb"],
 }
+
+
+def foto_merek():
+    """Foto kemasan per merek dari app/merek/<foto>.(webp|jpg|png), ditanam sebagai
+    data URI. Merek tanpa foto memakai ilustrasi vial di aplikasi."""
+    folder, tipe, out = os.path.join(APP, "merek"), {".webp": "image/webp", ".jpg": "image/jpeg",
+                                                     ".jpeg": "image/jpeg", ".png": "image/png"}, {}
+    nama = {m["foto"] for v in P.VAKSIN for m in v["merek"]}
+    for berkas in sorted(os.listdir(folder)) if os.path.isdir(folder) else []:
+        dasar, ext = os.path.splitext(berkas)
+        if dasar in nama and ext.lower() in tipe:
+            with open(os.path.join(folder, berkas), "rb") as f:
+                out[dasar] = "data:%s;base64,%s" % (tipe[ext.lower()], base64.b64encode(f.read()).decode("ascii"))
+    if nama - set(out):
+        print("  foto merek: %d terpasang, %d memakai ilustrasi" % (len(out), len(nama - set(out))))
+    return out
 
 
 def katalog_js():
@@ -120,6 +137,9 @@ def katalog_js():
         "dokter": D.DOKTER,
         "klinik": D.KLINIK,
         "mitra": D.MITRA,
+        "panduan": P.VAKSIN,
+        "jadwalHamil": P.JADWAL_HAMIL,
+        "fotoMerek": foto_merek(),
         "alurReservasi": D.ALUR_RESERVASI,
         "logoMark": "data:image/png;base64," + b64_file(os.path.join(HERE, "vaksinku-logo-mark.png")),
         "logoFull": "data:image/png;base64," + b64_file(os.path.join(HERE, "vaksinku-logo.png")),

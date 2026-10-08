@@ -314,6 +314,31 @@ TEST_JS = r"""
     ganti('#/harga');
     ok('tanda gratis di Puskesmas di daftar harga', document.body.textContent.indexOf('Gratis di Puskesmas (anak)') > 0);
 
+    /* 7c. Panduan Vaksinasi */
+    ganti('#/panduan');
+    ok('beranda panduan: 7 jadwal & 21 jenis vaksin', document.querySelectorAll('.pd-tile').length === 7 &&
+       document.querySelectorAll('.pd-vk').length === K2.panduan.length && K2.panduan.length === 21,
+       document.querySelectorAll('.pd-vk').length + ' vaksin');
+    isi('#cari-panduan', 'kanker serviks');
+    ok('pencarian panduan menurut penyakit', document.querySelectorAll('.pd-vk').length === 1 &&
+       document.querySelector('.pd-vk').getAttribute('data-arg') === 'panduan/hpv');
+    isi('#cari-panduan', '');
+    ganti('#/panduan/hepb');
+    ok('profil vaksin: merek, foto/ilustrasi, jadwal terbuka', document.querySelectorAll('.pd-merek').length === 4 &&
+       document.querySelectorAll('.pd-merek .pd-foto').length === 4 && !!document.querySelector('details.pd-acc[open]'));
+    ok('ketersediaan merek di klinik terpilih', document.querySelector('.pd-merek .chip.teal') !== null);
+    var dLama = (st().draft || {}).vaksinIds ? st().draft.vaksinIds.length : 0;
+    klik('[data-act="booking-panduan"]');
+    ok('booking dari panduan menambahkan vaksin', location.hash === '#/booking' && st().draft.vaksinIds.length === dLama + 1,
+       (st().draft.vaksinIds || []).join(','));
+    ganti('#/harga');
+    klik('.link-vaksin');
+    ok('nama vaksin di daftar harga membuka panduan', location.hash.indexOf('#/panduan/') === 0, location.hash);
+    ganti('#/panduan-jadwal/hamil');
+    ok('jadwal ibu hamil POGI', document.body.textContent.indexOf('27–36 minggu') > 0 && document.body.textContent.indexOf('32–36 minggu') > 0);
+    ganti('#/panduan-jadwal/kia');
+    ok('jadwal Buku KIA di panduan', document.querySelector('.scroll').textContent.indexOf('DPT-HB-Hib 1') >= 0);
+
     /* 8. rekam medis + pertumbuhan */
     ganti('#/rekam');
     ok('rekam medis tampil', document.body.textContent.indexOf('Riwayat vaksinasi') > 0);

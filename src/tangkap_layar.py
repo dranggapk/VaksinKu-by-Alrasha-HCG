@@ -26,6 +26,7 @@ LAYAR = {
     "chat": "#/chat", "chat-baru": "#/chat-baru", "chat-detail": "#/chat-detail/k1",
     "booking-detail": "#/booking-detail/b1",
     "notifikasi": "#/notifikasi",
+    "panduan": "#/panduan", "panduan-hepb": "#/panduan/hepb", "panduan-hamil": "#/panduan-jadwal/hamil",
     "splash": "#/splash", "onboarding": "#/onboarding", "masuk": "#/masuk",
     "korporat": "#/korporat", "korporat-peserta": "#/korporat",
     "korporat-laporan": "#/korporat",

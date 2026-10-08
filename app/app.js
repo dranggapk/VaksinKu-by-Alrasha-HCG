@@ -137,6 +137,11 @@
   IKON_MENU['suntik-combo'] = '<g transform="translate(20.5 20.5) rotate(45) scale(1.08)" stroke-width="2">' + SUNTIK + '</g>' +
     '<circle cx="36.5" cy="36.5" r="8" fill="' + IM.p + '"/><path d="M36.5 32.5v8M32.5 36.5h8" stroke="#fff" stroke-width="2.6"/>';
   IKON_MENU.homecare = IKON_MENU.beranda;
+  IKON_MENU.panduan =
+    '<path d="M5 9c5.5-2.2 10-1.6 19 2.6V41c-9-4.2-13.5-4.8-19-2.6z" fill="' + IM.tm + '"/>' +
+    '<path d="M43 9c-5.5-2.2-10-1.6-19 2.6V41c9-4.2 13.5-4.8 19-2.6z" fill="#fff"/>' +
+    '<path d="M29 19h8.5M29 24.5h8.5M29 30h5.5" stroke="' + IM.t + '" stroke-width="2.4"/>' +
+    '<path d="M14 15.5v9M9.5 20h9" stroke="' + IM.p + '" stroke-width="3"/>';
   IKON_MENU.klinik =
     '<path d="M3.5 42.5h41"/>' +
     '<rect x="5" y="20" width="10" height="22.5" fill="' + IM.tm + '"/><rect x="33" y="20" width="10" height="22.5" fill="' + IM.tm + '"/>' +
@@ -1448,7 +1453,7 @@
         '<div class="tiny muted" style="margin-top:-4px;">' + h(namaFokus.join(' · ')) + ' — ' + rek.length + ' jenis vaksin</div>' +
         '<table class="price">' + termurah.slice(0, 4).map(function (v) {
           var hrg = hargaVaksin(v, tarif);
-          return '<tr><td><div style="font-weight:600;">' + h(v.kategori) + '</div>' +
+          return '<tr><td><div style="font-weight:600;">' + tautPanduan(v.kategori) + '</div>' +
             '<div class="tiny muted">' + h(v.merk) + '</div></td>' +
             '<td class="p">' + (hrg ? rp(hrg) : '<span class="muted" style="font-weight:600;">' + (punyaHarga() ? 'Hubungi CS' : 'Dikonfirmasi klinik') + '</span>') + '</td></tr>';
         }).join('') + '</table>' +
@@ -1459,6 +1464,7 @@
       pintasan('harga', 'Daftar Harga', 'harga') +
       pintasan('jadwal', 'Jadwal Vaksin', 'jadwal') +
       pintasan('internasional', 'Internasional', 'internasional') +
+      pintasan('panduan', 'Panduan', 'panduan') +
       '</div>';
 
     body += '<div class="card stack g12">' +
@@ -1594,7 +1600,7 @@
         var v = vaksinById(id); if (!v) return '';
         var hrg = hargaVaksin(v, d.dokter);
         return '<div class="row mid g10 card flat" style="padding:11px 13px;">' +
-          '<div class="grow"><div class="small" style="font-weight:700;">' + h(v.kategori) + '</div>' +
+          '<div class="grow"><div class="small" style="font-weight:700;">' + tautPanduan(v.kategori) + '</div>' +
           '<div class="tiny muted">' + h(v.sediaan === v.merk ? v.merk : v.sediaan + ' · ' + v.merk) + '</div></div>' +
           '<div class="disp nowrap" style="font-weight:800;color:var(--magenta-dark);">' + (hrg ? rp(hrg) : 'Hubungi CS') + '</div>' +
           '<button class="linkbtn" data-act="hapus-vaksin" data-arg="' + id + '" aria-label="Hapus" style="color:var(--ink-4);">' + ic('trash', 16) + '</button></div>';
@@ -1968,6 +1974,8 @@
       (d.program && !x.lewatProgram ? '<span class="chip green">Gratis di Puskesmas</span>' : '') +
       (x.opsional ? '<span class="chip grey">' + h(x.opsional) + '</span>' : '') + '</div>' +
       (d.ket ? '<div class="small" style="color:var(--ink-2);line-height:1.55;">' + h(d.ket) + '</div>' : '') +
+      (idPanduan(d.label) ? '<button class="linkbtn small" style="align-self:flex-start;" data-act="go" data-arg="panduan/' + idPanduan(d.label) + '">' +
+        icm('panduan', 18) + ' Pelajari vaksin ini di Panduan</button>' : '') +
       (x.lewatProgram ? '<div class="card warn tiny" style="color:#8A6A21;">Usia anak sudah melewati batas imunisasi kejar program pemerintah, sehingga dosis ini tidak lagi gratis di Puskesmas. Menurut IDAI dosis ini masih boleh dikejar di klinik.</div>' : '') +
       (x.st === 'terlewat' ? '<div class="card warn tiny" style="color:#8A6A21;">Usia anak sudah melewati batas pemberian dosis ini, sehingga tidak dihitung kurang. Konsultasikan dengan dokter bila ragu.</div>' : '') +
       (d.kunci.length > 1 ? '<div class="tiny muted">Satu suntikan ini sekaligus mencatat: ' + d.kunci.map(function (k) { return h(NAMA_ANTIGEN[antigenDari(k)] || k); }).join(', ') + '.</div>' : '');
@@ -2048,6 +2056,204 @@
       '<div class="tiny muted">Sumber: Jadwal Imunisasi Anak 0–18 Tahun IDAI 2024; Buku KIA 2024 (Kemenkes) dan jadwal BIAS.</div></div>';
     return { body: body };
   }
+  /* ============================ panduan vaksinasi di Indonesia ============================
+     Profil 21 jenis vaksin dan 7 jadwal rujukan (src/panduan_vaksin.py). Nama vaksin
+     di layar mana pun yang dapat dikenali menjadi tautan ke profilnya. */
+  var cariPanduan = '';
+  // urutan penting: yang lebih spesifik dulu (MMR sebelum MR, Hep A sebelum Hep B, Flu Singapura sebelum flu)
+  var KATA_PANDUAN = [
+    [/singapura|hfmd|ev71|inlive/i, ''], [/dpt|dtp|combo|infanrix|hexaxim|pentabio|tetraxim|\bdt\b/i, 'dtp'],
+    [/tdap|\btd\b|tetanus|adacel|boostrix/i, 'td'], [/mmr/i, 'mmr'], [/\bmr\b|campak|rubel/i, 'mr'],
+    [/hepatitis a|hep a|avaxim|havrix|healive/i, 'hepa'], [/hepatitis b|hep b|engerix|\bhb\b/i, 'hepb'],
+    [/polio|ipv|opv/i, 'polio'], [/bcg|tbc/i, 'bcg'], [/pcv|pneumo|prevenar|synflorix/i, 'pcv'], [/rota/i, 'rv'],
+    [/influenza|\bflu\b|vaxigrip|flubio|fluarix|influvac/i, 'flu'], [/japanese|\bje\b|imojev/i, 'je'],
+    [/varicella|varisela|cacar air|varivax|varilrix/i, 'var'], [/tifoid|typhoid|tipes|typhim/i, 'tif'],
+    [/hpv|gardasil|cervarix|serviks/i, 'hpv'], [/dengue|demam berdarah|qdenga|\bdbd\b/i, 'dbd'],
+    [/mening|menivax|menactra|menquadfi/i, 'men'], [/rabies|verorab/i, 'rabies'], [/yellow|demam kuning|stamaril/i, 'yf'],
+    [/zoster|cacar api|cacar ular|shingrix/i, 'zoster'], [/\brsv\b|arexvy|abrysvo/i, 'rsv']
+  ];
+  function idPanduan(teks) {
+    for (var i = 0; i < KATA_PANDUAN.length; i++) if (KATA_PANDUAN[i][0].test(teks)) return KATA_PANDUAN[i][1];
+    return '';
+  }
+  function panduanById(id) { return K.panduan.filter(function (v) { return v.id === id; })[0] || null; }
+  function tautPanduan(teks, label) {
+    var id = idPanduan(teks), t = h(label == null ? teks : label);
+    return id ? '<button class="link-vaksin" data-act="go" data-arg="panduan/' + id + '">' + t + '</button>' : t;
+  }
+  function norm(t) { return String(t).toLowerCase().replace(/\(.*?\)/g, '').replace(/[^a-z0-9]/g, ''); }
+  var ALIAS_MEREK = { bopv: 'poliotetes', ipv: 'polioinjeksi', mrbiofarma: 'mr', mmrii: 'mmr' };
+  // Merek ini ada di price list klinik terpilih? null = klinik belum dipilih / belum punya price list.
+  function merekDiKlinik(m) {
+    if (!punyaHarga()) return null;
+    var a = norm(m.nama); a = ALIAS_MEREK[a] || a;
+    return K.harga.some(function (x) {
+      return [norm(x.merk), norm(x.sediaan)].some(function (b) { return b && (b.indexOf(a) >= 0 || a.indexOf(b) >= 0); });
+    });
+  }
+  function produkPanduan(v) {
+    return K.harga.filter(function (x) {
+      if (v.kategori.indexOf(x.kategori) < 0) return false;
+      if (v.id === 'mmr') return /mmr|measles/i.test(x.merk + x.sediaan);
+      if (v.id === 'mr') return !/mmr|measles/i.test(x.merk + x.sediaan);
+      if (v.id === 'hepb' && x.kategori !== 'Hepatitis B') return false;
+      if (v.id === 'polio' && x.kategori !== 'Polio') return false;
+      return true;
+    });
+  }
+  function hargaMulai(v) {
+    var best = null;
+    produkPanduan(v).forEach(function (x) {
+      var hg = hargaVaksin(x, 'umum');
+      if (hg && (!best || hg < best.harga)) best = { harga: hg, produk: x };
+    });
+    return best;
+  }
+  function fotoMerek(m, w, hgt) {
+    var url = (K.fotoMerek || {})[m.foto];
+    if (url) return '<img class="pd-foto" src="' + url + '" alt="Kemasan ' + h(m.nama) + '" style="width:' + w + 'px;height:' + hgt + 'px;">';
+    // ilustrasi vial netral bertuliskan nama merek, dipakai sampai foto kemasan tersedia
+    var warna = ['#56C3C7', '#E8488C', '#C8890F', '#2E9BA0', '#A81260'][m.nama.length % 5];
+    return '<svg class="pd-foto" width="' + w + '" height="' + hgt + '" viewBox="0 0 120 80" role="img" aria-label="Ilustrasi ' + h(m.nama) + '">' +
+      '<rect width="120" height="80" rx="12" fill="#F4FAFA"/>' +
+      '<rect x="44" y="10" width="32" height="9" rx="2.5" fill="' + warna + '"/><rect x="47" y="18" width="26" height="5" fill="#C9D5D7"/>' +
+      '<path d="M43 23h34v41a6 6 0 0 1-6 6H49a6 6 0 0 1-6-6z" fill="#fff" stroke="#1E3A4C" stroke-width="2"/>' +
+      '<rect x="43" y="38" width="34" height="18" fill="' + warna + '" opacity=".18"/>' +
+      '<text x="60" y="50" text-anchor="middle" font-family="Plus Jakarta Sans,Arial,sans-serif" font-size="' + (m.nama.length > 10 ? 6.5 : 8) + '" font-weight="800" fill="#1E3A4C">' +
+      h(m.nama.length > 14 ? m.nama.slice(0, 13) + '…' : m.nama) + '</text></svg>';
+  }
+  var PANDUAN_JADWAL = [
+    ['pasien', 'Anak · IDAI 2024', '0–18 tahun', 'panduan-jadwal/idai'],
+    ['rekam', 'Anak · Buku KIA', 'Program pemerintah', 'panduan-jadwal/kia'],
+    ['profil', 'Dewasa · PAPDI 2025', '19 tahun ke atas', 'panduan-jadwal/dewasa'],
+    ['pengingat', 'Ibu Hamil · POGI 2026', 'Flu, Tdap, RSV', 'panduan-jadwal/hamil'],
+    ['tentang', 'Pra Nikah', 'Calon pengantin', 'panduan-jadwal/pranikah'],
+    ['jadwal', 'Lansia', '60 tahun ke atas', 'panduan-jadwal/lansia'],
+    ['internasional', 'Internasional', 'Haji, umrah, perjalanan', 'internasional']
+  ];
+  function scPanduan() {
+    var body = topbar('Panduan Vaksinasi', 'Di Indonesia · ' + K.panduan.length + ' jenis vaksin', 'beranda');
+    var q = cariPanduan.toLowerCase();
+    var daftar = K.panduan.filter(function (v) {
+      return !q || (v.nama + ' ' + v.mencegah + ' ' + v.merek.map(function (m) { return m.nama; }).join(' ')).toLowerCase().indexOf(q) >= 0;
+    });
+    body += '<div class="pad stack g14">' +
+      '<div style="position:relative;"><input class="input" id="cari-panduan" placeholder="Cari vaksin, penyakit, atau merek…" value="' + h(cariPanduan) + '" style="padding-left:38px;">' +
+      '<span style="position:absolute;left:12px;top:12px;color:var(--ink-4);">' + ic('search', 18) + '</span></div>';
+    if (!q) {
+      body += '<div class="stack g8"><div class="row mid between"><div class="sect-title">Jadwal vaksinasi</div><span class="tiny muted">' + PANDUAN_JADWAL.length + ' jadwal</span></div>' +
+        '<div class="pd-grid3">' + PANDUAN_JADWAL.map(function (j) {
+          return '<button class="pd-tile" data-act="go" data-arg="' + j[3] + '">' + ikonKotak(j[0], '', 44) + '<b>' + h(j[1]) + '</b><span>' + h(j[2]) + '</span></button>';
+        }).join('') + '</div></div>';
+    }
+    body += '<div class="stack g8"><div class="sect-title">Jenis vaksin</div>' +
+      (daftar.length ? '<div class="pd-grid2">' + daftar.map(function (v) {
+        return '<button class="card pd-vk" data-act="go" data-arg="panduan/' + v.id + '">' + ikonKotak(ikonKategori(v.nama), '', 38) +
+          '<div><b>' + h(v.nama) + '</b><span>' + h(v.mencegah) + '</span></div>' +
+          '<span class="row g4 wrap"><span class="chip teal" style="font-size:10px;padding:2px 8px;">' + v.merek.length + ' merek</span>' +
+          (v.program ? '<span class="chip green" style="font-size:10px;padding:2px 8px;">Program</span>' : '') + '</span></button>';
+      }).join('') + '</div>' : '<div class="small muted center" style="padding:16px 0;">Tidak ditemukan. Coba nama penyakit, misalnya "diare" atau "kanker serviks".</div>') +
+      '</div><div class="tiny muted">Informasi ini tidak menggantikan anjuran dokter. Sumber: Buku Vaksin Indonesia (2024), IDAI 2024, Buku KIA 2024, PAPDI 2025, POGI 2026.</div></div>';
+    return { body: body };
+  }
+  function bagian(judul, isi, buka) {
+    if (!isi) return '';
+    return '<details class="card pd-acc"' + (buka ? ' open' : '') + '><summary><b>' + h(judul) + '</b>' + ic('chevron', 16) + '</summary>' +
+      '<div class="pd-isi">' + isi + '</div></details>';
+  }
+  function butir(arr) {
+    return arr && arr.length ? '<ul class="pd-ul">' + arr.map(function (t) { return '<li>' + h(t) + '</li>'; }).join('') + '</ul>' : '';
+  }
+  function scPanduanVaksin(id) {
+    var v = panduanById(id);
+    if (!v) return scPanduan();
+    var kl = klinikAktif(), mulai = hargaMulai(v);
+    var body = topbar('Vaksin ' + v.nama, 'Panduan Vaksinasi', 'panduan');
+    body += '<div class="pd-hero">' + ikonKotak(ikonKategori(v.nama), '', 58) +
+      '<div class="grow"><div class="disp" style="font-size:20px;font-weight:800;line-height:1.2;">' + h(v.nama) + '</div>' +
+      '<div class="small" style="color:var(--ink-2);margin-top:2px;">Mencegah ' + h(v.mencegah.charAt(0).toLowerCase() + v.mencegah.slice(1)) + '</div>' +
+      '<div class="row g6 wrap" style="margin-top:8px;">' + (v.program ? '<span class="chip green">Gratis di Puskesmas</span>' : '') +
+      '<span class="chip teal">' + h(v.untuk) + '</span></div></div></div>';
+    body += '<div class="pad stack g10">' +
+      '<div class="pd-fakta">' + v.fakta.map(function (f) { return '<div><span>' + h(f[0]) + '</span><b>' + h(f[1]) + '</b></div>'; }).join('') + '</div>';
+    body += '<div class="card stack g8"><div class="row mid between"><b>Merek tersedia di Indonesia</b><span class="tiny muted">' + v.merek.length + ' merek</span></div>' +
+      v.merek.map(function (m) {
+        var ada = merekDiKlinik(m);
+        return '<div class="row mid g12 pd-merek">' + fotoMerek(m, 84, 56) +
+          '<div class="grow"><b>' + h(m.nama) + '</b><div class="tiny muted">' + h(m.jenis) + '</div><div class="tiny muted">Produksi ' + h(m.produsen) + '</div></div>' +
+          (ada === true ? '<span class="chip teal" style="font-size:9.5px;padding:2px 7px;" title="Ada di price list ' + h(kl.nama) + '">Tersedia</span>'
+            : ada === false ? '<span class="chip grey" style="font-size:9.5px;padding:2px 7px;">Tanya klinik</span>' : '') + '</div>';
+      }).join('') +
+      (v.beda.length ? '<div class="tiny" style="color:var(--ink-2);line-height:1.6;border-top:1px solid var(--line);padding-top:8px;">' + v.beda.map(h).join('<br>') + '</div>' : '') +
+      '</div>';
+    body += bagian('Manfaat', v.manfaat.map(function (t) { return '<p>' + h(t) + '</p>'; }).join('')) +
+      bagian('Jadwal pemberian', v.jadwal.map(function (j) {
+        return '<div class="pd-jdl"><b>' + h(j[0]) + '</b>' + butir(j[1]) + '</div>';
+      }).join(''), true) +
+      bagian('Siapa yang tidak boleh', butir(v.kontra) + '<p class="tiny muted">Bila ragu, konsultasikan dengan dokter.</p>') +
+      bagian('Perlu diperhatikan', butir(v.perhatian)) +
+      bagian('Reaksi setelah vaksin', butir(v.reaksi)) +
+      bagian('Bila tidak divaksin', butir(v.bahaya)) +
+      bagian('Pertanyaan umum', v.faq.length ? v.faq.map(function (f) {
+        return '<div class="pd-faq"><b>' + h(f[0]) + '</b><span>' + h(f[1]) + '</span></div>';
+      }).join('') : '') +
+      '<div class="tiny muted">Informasi ini tidak menggantikan anjuran dokter.</div></div>';
+    body += '<div class="pd-cta"><div class="grow"><div class="tiny muted">' + (kl ? (mulai ? 'Mulai dari · ' : '') + h(namaPendek(kl)) : 'Pilih klinik mitra untuk melihat harga') + '</div>' +
+      (mulai ? '<b class="disp" style="font-size:16px;color:var(--magenta-dark);">' + rp(mulai.harga) + '</b>'
+        : (kl ? '<b class="small">Harga dikonfirmasi klinik</b>' : '')) + '</div>' +
+      '<button class="btn primary sm" data-act="booking-panduan" data-arg="' + v.id + '">Booking vaksin ini</button></div>';
+    return { body: body };
+  }
+  function scPanduanJadwal(jenis) {
+    var body, isi = '';
+    if (jenis === 'idai' || jenis === 'kia') {
+      var dosis = jenis === 'kia' ? K.jadwalKIA : K.jadwalIDAI, grup = {}, urut = [];
+      body = topbar(jenis === 'kia' ? 'Jadwal Buku KIA' : 'Jadwal IDAI 2024', jenis === 'kia' ? 'Program imunisasi pemerintah · gratis' : 'Anak usia 0–18 tahun', 'panduan');
+      dosis.forEach(function (d) {
+        var g = jenis === 'kia' ? (d.mulai >= 84 ? 'BIAS — anak sekolah' : usiaDosisTeks(d.mulai)) : d.baris;
+        if (!grup[g]) { grup[g] = []; urut.push(g); }
+        grup[g].push(d);
+      });
+      isi += '<div class="card tint small" style="line-height:1.6;color:var(--ink-2);">' + (jenis === 'kia'
+        ? 'Imunisasi program pemerintah di Buku KIA 2024, tersedia gratis di Puskesmas dan Posyandu, ditambah imunisasi anak sekolah (BIAS).'
+        : 'Rekomendasi Ikatan Dokter Anak Indonesia 2024, termasuk vaksin pilihan di luar program pemerintah.') + '</div>';
+      isi += urut.map(function (g) {
+        return '<div class="card stack g6"><div class="sect-title" style="font-size:14px;">' + h(g) + '</div>' +
+          grup[g].map(function (d) {
+            var perUsia = jenis === 'kia' && d.mulai < 84;
+            return '<div class="row g10 small" style="padding:6px 0;border-top:1px solid var(--line);align-items:flex-start;">' +
+              (perUsia ? '' : '<span style="width:78px;flex-shrink:0;font-weight:700;color:var(--teal-deep);">' + h(usiaDosisTeks(d.mulai)) + '</span>') +
+              '<span class="grow">' + tautPanduan(d.label) +
+              (d.ket ? '<div class="tiny muted">' + h(d.ket) + '</div>' : '') +
+              (d.syarat === 'endemis' ? '<div class="tiny" style="color:var(--amber);">Daerah endemis</div>' : '') +
+              (d.syarat === 'tambahan' ? '<div class="tiny" style="color:var(--amber);">Vaksin tambahan</div>' : '') + '</span></div>';
+          }).join('') + '</div>';
+      }).join('');
+      isi += '<button class="btn outline" data-act="go" data-arg="jadwal-banding">Bandingkan IDAI dan Buku KIA</button>';
+    } else if (jenis === 'dewasa') {
+      body = topbar('Jadwal Dewasa', 'Rekomendasi PAPDI 2025', 'panduan');
+      isi += K.jadwalDewasa.map(function (b) {
+        return '<div class="card stack g6"><div class="sect-title" style="font-size:14px;">' + h(b.usia) + '</div>' +
+          b.items.map(function (it) {
+            return '<div class="row g10 small" style="padding:6px 0;border-top:1px solid var(--line);"><span class="grow">' + tautPanduan(it.nama) + '</span>' +
+              '<span class="tiny muted kanan" style="max-width:52%;">' + h(it.dosis) + '</span></div>';
+          }).join('') + '</div>';
+      }).join('') + '<div class="card warn tiny" style="color:#8A6A21;line-height:1.6;">' + h(K.catatanDewasa) + '</div>';
+    } else if (jenis === 'hamil') {
+      body = topbar('Jadwal Ibu Hamil', 'Rekomendasi POGI 2026', 'panduan');
+      isi += '<div class="card tint small" style="line-height:1.6;color:var(--ink-2);">Vaksin yang aman dan dianjurkan selama kehamilan, diberikan pada setiap kehamilan.</div>' +
+        K.jadwalHamil.map(function (x) {
+          return '<div class="card stack g8"><div class="row mid g10">' + ikonKotak(ikonKategori(x[0]), '', 40) +
+            '<div class="grow"><div style="font-weight:800;">' + tautPanduan(x[0]) + '</div><div class="small" style="color:var(--teal-deep);font-weight:700;">' + h(x[1]) + '</div></div></div>' +
+            '<div class="small" style="color:var(--ink-2);line-height:1.6;">' + h(x[2]) + '</div></div>';
+        }).join('') +
+        '<div class="tiny muted">Sumber: konsensus POGI, IDAI, PAPDI & PERALMUNI 2025; UK JCVI 2026.</div>';
+    } else if (jenis === 'pranikah' || jenis === 'lansia') {
+      var r = scJadwalInfo(jenis);
+      return { body: r.body.replace('data-arg="jadwal"', 'data-arg="panduan"') };
+    } else return scPanduan();
+    return { body: body + '<div class="pad stack g12">' + isi + '</div>' };
+  }
   function pilihPasien(aktif) {
     return '<div class="tabs">' + S.pasien.map(function (p) {
       return '<button class="pill' + (p.id === aktif.id ? ' on' : '') + '" data-act="pilih-pasien" data-arg="' + p.id + '">' + h(p.nama.split(' ')[0]) + '</button>';
@@ -2071,7 +2277,7 @@
       isi += '<div class="card stack g10"><div class="sect-title">Vaksin yang dianjurkan</div>' +
         K.pranikahVaksin.map(function (v) {
           return '<div class="row g12" style="align-items:flex-start;">' + ikonKotak(ikonKategori(v[0]), '', 34) +
-            '<div class="grow"><div class="small" style="font-weight:700;">' + h(v[0]) + '</div>' +
+            '<div class="grow"><div class="small" style="font-weight:700;">' + tautPanduan(v[0]) + '</div>' +
             '<div class="tiny muted">' + h(v[1] + ' · ' + v[2]) + '</div></div></div>';
         }).join('') + '</div>';
       isi += '<div class="card stack g10"><div class="sect-title">Jadwal pemberian</div>' +
@@ -2083,7 +2289,7 @@
     } else {
       body = topbar('Vaksin Lansia', '50 tahun ke atas', 'jadwal');
       isi += K.lansia.map(function (v) {
-        return '<div class="card stack g8"><div class="row mid g10">' + ic('checkc', 18) + '<span style="font-weight:700;">' + h(v[0]) + '</span></div>' +
+        return '<div class="card stack g8"><div class="row mid g10">' + ic('checkc', 18) + '<span style="font-weight:700;">' + tautPanduan(v[0]) + '</span></div>' +
           '<span class="chip teal">' + h(v[1]) + '</span>' +
           '<div class="small" style="color:var(--ink-2);line-height:1.6;">' + h(v[2]) + '</div></div>';
       }).join('');
@@ -2129,7 +2335,7 @@
       body += riw.map(function (x) {
         return '<div class="row g12" style="align-items:flex-start;padding:8px 0;border-top:1px solid var(--line);">' +
           '<div class="icon-sq" style="width:32px;height:32px;border-radius:9px;background:var(--green-tint);color:var(--green);">' + ic('checkc', 16) + '</div>' +
-          '<div class="grow"><div class="small" style="font-weight:700;">' + h(x.label) + '</div>' +
+          '<div class="grow"><div class="small" style="font-weight:700;">' + tautPanduan(x.label) + '</div>' +
           '<div class="tiny muted">' + tgl(x.tanggal) + ' · ' + h(x.tempat || (x.sumber === 'booking' ? 'dari reservasi' : 'dicatat manual')) +
           (x.faskes ? ' · ' + h(x.faskes) : '') + (x.merek && x.label.indexOf(x.merek) < 0 ? ' · ' + h(x.merek) : '') + '</div>' +
           (x.batch ? '<div class="tiny" style="color:var(--teal-dark);font-weight:700;">No. Batch ' + h(x.batch) + '</div>' : '') +
@@ -2229,7 +2435,7 @@
     urut.forEach(function (nama) {
       body += '<div class="card stack g6" style="padding:14px 16px;">' +
         '<div class="row mid g10">' + ikonKotak(ikonKategori(nama), '', 38) +
-        '<span class="grow" style="font-weight:700;font-size:13.5px;">' + h(nama) + '</span>' +
+        '<span class="grow" style="font-weight:700;font-size:13.5px;">' + tautPanduan(nama) + '</span>' +
         (grup[nama].some(produkProgram) ? CHIP_PKM : '') + '</div>' +
         '<table class="price">' + grup[nama].map(function (v) {
           var hrg = hargaVaksin(v, tarif);
@@ -2253,14 +2459,14 @@
       K.internasionalWajib.map(function (v) {
         return '<div class="row g12" style="align-items:flex-start;padding-top:10px;border-top:1px solid var(--line);">' +
           '<div class="icon-sq" style="width:32px;height:32px;border-radius:9px;">' + ic('shield', 16) + '</div>' +
-          '<div class="grow"><div class="small" style="font-weight:700;">' + h(v[0]) + '</div>' +
+          '<div class="grow"><div class="small" style="font-weight:700;">' + tautPanduan(v[0]) + '</div>' +
           '<div class="tiny muted" style="line-height:1.55;">' + h(v[1]) + '</div></div></div>';
       }).join('') + '</div>';
     body += '<div class="card stack g10"><div class="row mid g8"><div class="sect-title">Vaksin tambahan</div><span class="chip amber">Rekomendasi WHO</span></div>' +
       K.internasionalTambahan.map(function (v) {
         return '<div class="row g12" style="align-items:flex-start;padding-top:10px;border-top:1px solid var(--line);">' +
           '<div class="icon-sq mag" style="width:32px;height:32px;border-radius:9px;">' + ic('plus', 16) + '</div>' +
-          '<div class="grow"><div class="small" style="font-weight:700;">' + h(v[0]) + '</div>' +
+          '<div class="grow"><div class="small" style="font-weight:700;">' + tautPanduan(v[0]) + '</div>' +
           '<div class="tiny muted" style="line-height:1.55;">' + h(v[1]) + '</div></div></div>';
       }).join('') + '</div>';
     body += '<div class="sect-title" style="padding-top:2px;">Harga' + (klinikAktif() ? ' · ' + h(namaPendek(klinikAktif())) : '') + '</div>';
@@ -2388,6 +2594,8 @@
       menuRow('korporat', 'Korporat / Sekolah',
         S.korporat.nama ? S.korporat.nama + ' · ' + korPeserta().length + ' peserta' : 'Vaksinasi massal karyawan atau siswa',
         S.korporat.nama ? 'korporat' : 'korporat-setup') +
+      '<div class="divider"></div>' +
+      menuRow('panduan', 'Panduan Vaksinasi', K.panduan.length + ' jenis vaksin, merek & 7 jadwal', 'panduan') +
       '<div class="divider"></div>' +
       menuRow('harga', 'Daftar Harga', 'Price list lengkap', 'harga') +
       '<div class="divider"></div>' +
@@ -2908,6 +3116,8 @@
       case 'internasional': r = scInternasional(); break;
       case 'tentang': r = scTentang(); break;
       case 'jadwal-banding': r = scJadwalBanding(); break;
+      case 'panduan': r = route.param ? scPanduanVaksin(route.param) : scPanduan(); break;
+      case 'panduan-jadwal': r = scPanduanJadwal(route.param); break;
       case 'profil': r = scProfil(); break;
       case 'korporat': r = scKorporat(); break;
       case 'korporat-setup': r = scKorporatSetup(); break;
@@ -3074,7 +3284,10 @@
     var d = draft();
 
     switch (act) {
-      case 'go': location.hash = '#/' + arg; return;
+      case 'go':
+        sheetHTML = ''; dosisAktif = '';
+        if (location.hash === '#/' + arg) render(); else location.hash = '#/' + arg;
+        return;
       case 'toggle-fokus': {
         var fk = S.onboarding.fokus, fi = fk.indexOf(arg);
         if (fi >= 0) fk.splice(fi, 1); else fk.push(arg);
@@ -3146,6 +3359,14 @@
       case 'pasien-jadwal': S.ui.pasienAktif = arg; simpan(); location.hash = '#/jadwal'; return;
       case 'set-layanan': d.layanan = arg; simpan(); render(); return;
       case 'buka-lokasi': sheetHTML = sheetLokasi(); render(); return;
+      case 'booking-panduan': {
+        var vp = panduanById(arg), mp = vp && hargaMulai(vp), dp = draft();
+        if (mp && dp.vaksinIds.indexOf(mp.produk.id) < 0) dp.vaksinIds.push(mp.produk.id);
+        simpan(); location.hash = '#/booking';
+        toast(mp ? mp.produk.kategori + ' — ' + mp.produk.merk + ' ditambahkan ke reservasi. Merek bisa diganti di langkah Vaksin.'
+          : 'Pilih vaksin ' + (vp ? vp.nama : '') + ' di langkah Vaksin; harga dikonfirmasi klinik.');
+        return;
+      }
       case 'pilih-klinik': {
         var kp = klinikById(arg);
         if (!kp) return;
@@ -3423,6 +3644,13 @@
   document.addEventListener('input', function (ev) {
     var el = ev.target;
     if (el.id === 'cari-vaksin') { cariVaksin = el.value; sheetHTML = sheetVaksin(); render(); return; }
+    if (el.id === 'cari-panduan') {
+      cariPanduan = el.value;
+      var pp = el.selectionStart; render();
+      var np = document.getElementById('cari-panduan');
+      if (np) { np.focus(); np.setSelectionRange(pp, pp); }
+      return;
+    }
     if (el.id === 'cari-harga') {
       cariHarga = el.value;
       var pos = el.selectionStart; render();

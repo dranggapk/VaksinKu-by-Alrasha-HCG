@@ -40,6 +40,7 @@ tautan, atau ditambahkan ke layar utama ponsel lewat menu "Add to Home screen".
 | **Profil pendaftar** | Nama & nomor HP, dipakai sebagai kontak reservasi |
 | **Data pasien** | Tambah/ubah/hapus anggota keluarga; usia dihitung dari tanggal lahir |
 | **Mitra klinik per kota** | Pengguna memilih kota lalu klinik mitra: **Kota Bandung** (Klinik Utama Jasmine MQ Medika) dan **Kota Tanjungpinang** (Klinik Alrasha Health Care Center, Klinik Utama Alrasha Ibumas). Harga, ketersediaan, dokter, banner promo, dan paket haji/umrah mengikuti klinik terpilih |
+| **Panduan Vaksinasi di Indonesia** | Profil 21 jenis vaksin: merek yang beredar (foto/ilustrasi, produsen, tersedia di klinik terpilih), manfaat, jadwal, kontraindikasi, reaksi, tanya-jawab. Tujuh jadwal: anak IDAI 2024 & Buku KIA, dewasa PAPDI 2025, ibu hamil POGI 2026, pranikah, lansia, internasional. Nama vaksin di Daftar Harga, Jadwal, Rekam Medis, Booking, dan lainnya membuka profilnya |
 | **Jadwal anak: IDAI atau Buku KIA** | Tiap anak bisa mengikuti **IDAI 2024** (rekomendasi lengkap) atau **Buku KIA 2024** (program pemerintah + BIAS sekolah) dan berganti kapan saja — dosis yang sudah dicatat langsung terbaca di jadwal baru. Dewasa mengikuti **PAPDI 2025** |
 | **Tabel ceklis + No. Batch** | Tabel meniru Buku KIA (baris dosis × kolom usia, warna tepat/boleh/kejar/tidak boleh) dan tabel IDAI per jenis vaksin. Tiap dosis dicatat dengan tanggal, tempat, fasilitas, merek, **No. Batch**, dan foto label (opsional) |
 | **Gratis di Puskesmas** | Dosis program pemerintah ditandai; orang tua bisa merencanakan dosis tertentu (atau semuanya) di Puskesmas, vaksin lain dibooking di klinik |
@@ -142,6 +143,10 @@ ditanam — semua dihitung dari data yang dimasukkan petugas.
   datanya sudah ada. Kedua klinik Alrasha memakai price list katalog yang sama.
 - **Klinik Ibumas (Jl. D.I. Panjaitan) tidak lagi ditampilkan** — mitra Tanjungpinang
   sesuai daftar: Alrasha Health Care Center dan Klinik Utama Alrasha Ibumas.
+- **Foto kemasan merek belum terpasang.** Foto di buku sumber milik penerbitnya dan
+  bertanda air, sehingga tidak disalin. Letakkan foto kemasan dari stok klinik atau
+  foto resmi distributor di `app/merek/` (daftar nama berkas ada di
+  `app/merek/README.md`), lalu build ulang; merek tanpa foto memakai ilustrasi vial.
 - **Jadwal kejar bukan resep.** Aplikasi menandai dosis yang perlu dikejar dan batas
   usianya, tetapi jumlah dosis kejar (mis. PCV yang dimulai terlambat) ditentukan dokter.
 - Foto label vaksin disimpan di perangkat; penyimpanan browser terbatas (±5 MB),
@@ -170,6 +175,7 @@ app/                       Sumber aplikasi pasien
   index.html               Kerangka halaman
   styles.css               Design system: token warna, komponen, tata letak
   banner/                  Gambar banner promo Beranda (1200×540, WebP)
+  merek/                   Foto kemasan vaksin per merek untuk Panduan (lihat README di dalamnya)
   app.js                   Logika: penyimpanan, rute, layar, perhitungan biaya
 admin/                     Sumber dashboard manajemen
   index.html               Kerangka halaman
@@ -178,9 +184,10 @@ admin/                     Sumber dashboard manajemen
 src/
   data_katalog.py          Isi katalog (harga, jadwal dewasa, layanan, dokter, mitra klinik)
   jadwal_anak.py           Jadwal anak per dosis: IDAI 2024 & Buku KIA 2024
+  panduan_vaksin.py        Isi Panduan Vaksinasi: profil 21 vaksin & jadwal ibu hamil
   build_bundle.py          Merakit aplikasi pasien + font & logo jadi satu berkas
   build_admin.py           Merakit dashboard manajemen jadi satu berkas
-  uji_app.py               Uji fungsional aplikasi pasien (125 uji)
+  uji_app.py               Uji fungsional aplikasi pasien (133 uji)
   uji_admin.py             Uji fungsional dashboard (78 uji)
   tangkap_layar.py         Tangkap layar aplikasi pasien
   tangkap_dashboard.py     Tangkap layar dashboard
@@ -199,7 +206,7 @@ cd src
 python3 build_bundle.py       # → VaksinKu-App.html (font tertanam, siap offline)
 python3 build_admin.py        # → VaksinKu-Dashboard.html
 python3 build_bundle.py --tanpa-font   # lebih cepat, font dari Google Fonts
-python3 uji_app.py            # 125 uji fungsional aplikasi pasien
+python3 uji_app.py            # 133 uji fungsional aplikasi pasien
 python3 uji_admin.py          # 78 uji fungsional dashboard
 python3 tangkap_layar.py      # tangkap layar aplikasi pasien
 python3 tangkap_dashboard.py  # tangkap layar dashboard
