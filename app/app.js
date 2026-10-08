@@ -229,7 +229,8 @@
     notif: { dibaca: {}, terkirim: {} },
     onboarding: { selesai: false, langkah: 0, fokus: [], layanan: '' },
     akun: { masuk: false, metode: '' },
-    korporat: { aktif: false, nama: '', jenis: '', periode: '', peserta: [], tab: 'ringkasan', vaksinId: '', tanggal: '' }
+    korporat: { aktif: false, nama: '', jenis: '', periode: '', peserta: [], tab: 'ringkasan', vaksinId: '', tanggal: '' },
+    lokasi: { kota: '', klinik: '' }
   };
   var S, storageOk = true;
   function salin(v) { return JSON.parse(JSON.stringify(v)); }
@@ -256,13 +257,73 @@
   }
   S = baca();
   migrasiRiwayat();
+  migrasiLokasi();
 
   /* ============================ katalog ============================ */
   function vaksinById(id) {
     for (var i = 0; i < K.harga.length; i++) if (K.harga[i].id === id) return K.harga[i];
     return null;
   }
+  /* ============================ mitra klinik ============================
+     VaksinKu bekerja sama dengan klinik di beberapa kota. Harga, ketersediaan,
+     dokter, dan promo mengikuti klinik yang dipilih pengguna (S.lokasi). */
+  function semuaKlinik() {
+    var out = [];
+    K.mitra.forEach(function (m) {
+      m.klinik.forEach(function (k) {
+        var o = salin(k); o.kota = m.id; o.kotaNama = m.kota; out.push(o);
+      });
+    });
+    return out;
+  }
+  function klinikById(id) { return semuaKlinik().filter(function (k) { return k.id === id; })[0] || null; }
+  function klinikAktif() { return klinikById((S.lokasi || {}).klinik); }
+  function kotaAktif() {
+    var id = (S.lokasi || {}).kota;
+    return K.mitra.filter(function (m) { return m.id === id; })[0] || null;
+  }
+  function punyaHarga() { var k = klinikAktif(); return !!(k && k.harga); }
+  function promoKlinik() { var k = klinikAktif(); return k && k.harga === 'alrasha' ? 'alrasha' : ''; }
+  function dokterKlinik(k) {
+    k = k || klinikAktif();
+    return k ? k.dokter.map(function (i) { return K.dokter[i]; }).filter(Boolean) : [];
+  }
+  function namaPendek(k) { return k.nama.replace(/^Klinik (Utama )?/, ''); }
+  // Pengguna lama memakai VaksinKu saat masih satu jaringan klinik di Tanjungpinang.
+  function migrasiLokasi() {
+    if (S.lokasi && S.lokasi.klinik) return;
+    var lama = S.pasien.length || S.booking.length;
+    S.lokasi = lama ? { kota: 'tanjungpinang', klinik: 'alrasha-hcc' } : { kota: '', klinik: '' };
+  }
+  function lokasiChip() {
+    var k = klinikAktif();
+    return '<button class="lokasi-chip" data-act="buka-lokasi">' + ic('pin', 15) +
+      '<span class="grow">' + (k ? '<b>' + h(k.kotaNama.replace('Kota ', '')) + '</b> · ' + h(namaPendek(k)) : '<b>Pilih kota & klinik mitra</b>') + '</span>' +
+      ic('chevron', 14) + '</button>';
+  }
+  function sheetLokasi() {
+    var aktif = klinikAktif();
+    return '<div class="sheet" data-act="tutup-sheet"><div data-stop="1"><div class="stack g12">' +
+      '<div class="row mid between"><div><div class="sect-title">Lokasi vaksinasi</div>' +
+      '<div class="tiny muted">Harga dan ketersediaan vaksin mengikuti klinik mitra yang dipilih.</div></div>' +
+      '<button class="linkbtn" data-act="tutup-sheet">' + ic('close', 18) + '</button></div>' +
+      K.mitra.map(function (m) {
+        return '<div class="stack g8"><div class="tiny" style="font-weight:800;color:var(--ink-3);text-transform:uppercase;letter-spacing:.05em;">' + h(m.kota) + '</div>' +
+          m.klinik.map(function (k) {
+            var on = aktif && aktif.id === k.id;
+            return '<button class="checkrow' + (on ? ' on' : '') + '" data-act="pilih-klinik" data-arg="' + k.id + '">' +
+              ikonKotak('klinik', on ? 'aktif' : '', 40) +
+              '<div class="grow"><div class="small" style="font-weight:700;">' + h(k.nama) + '</div>' +
+              '<div class="tiny muted">' + h(k.alamat || 'Alamat menyusul') + '</div>' +
+              '<div style="margin-top:4px;">' + (k.harga ? '<span class="chip teal" style="font-size:9.5px;padding:2px 7px;">Price list tersedia</span>'
+                : '<span class="chip amber" style="font-size:9.5px;padding:2px 7px;">Harga dikonfirmasi klinik</span>') + '</div></div>' +
+              '<div class="box">' + (on ? ic('check', 14, 3) : '') + '</div></button>';
+          }).join('') + '</div>';
+      }).join('') +
+      '<div class="tiny muted">Klinik mitra di kota lain akan segera hadir.</div></div></div></div>';
+  }
   function hargaVaksin(v, dokter) {
+    if (!punyaHarga()) return 0;
     var s = dokter === 'spesialis' ? v.spesialis : v.umum;
     return s ? angka(s) : 0;
   }
@@ -469,7 +530,7 @@
     return { rincian: rincian, tanpaHarga: tanpaHarga, perPasien: subtotal, jumlahPasien: jml, total: subtotal * jml };
   }
   function lokasiTeks(d) {
-    if (d.layanan === 'klinik') { var kl = K.klinik[d.klinikIdx]; return kl ? kl[0] + ' — ' + kl[1] : ''; }
+    if (d.layanan === 'klinik') { var kl = klinikAktif(); return kl ? kl.nama + (kl.alamat ? ' — ' + kl.alamat : ', ' + kl.kotaNama) : ''; }
     if (d.layanan === 'homecare') {
       var a = S.alamat.filter(function (x) { return x.id === d.alamatId; })[0];
       return a ? a.label + ' — ' + a.alamat + ', ' + a.kecamatan : '';
@@ -483,7 +544,7 @@
     var e = {};
     if (!d.layanan) e.layanan = 'Pilih jenis layanan.';
     if (d.layanan === 'homecare' && !d.alamatId) e.lokasi = 'Pilih atau tambahkan alamat vaksinasi.';
-    if (d.layanan === 'klinik' && K.klinik[d.klinikIdx] == null) e.lokasi = 'Pilih klinik.';
+    if (!klinikAktif()) e.lokasi = 'Pilih kota dan klinik mitra yang akan melayani.';
     if (d.layanan === 'corporate' && !String(d.institusi).trim()) e.lokasi = 'Isi nama institusi/perusahaan.';
     if (!d.pasienIds.length) e.pasien = 'Pilih minimal satu pasien.';
     if (!d.vaksinIds.length) e.vaksin = 'Pilih minimal satu vaksin.';
@@ -502,6 +563,7 @@
       layanan: d.layanan, lokasi: lokasiTeks(d), pasienIds: d.pasienIds.slice(),
       vaksinIds: d.vaksinIds.slice(), dokter: d.dokter, tanggal: d.tanggal, jam: d.jam,
       catatan: d.catatan, rincian: b.rincian, tanpaHarga: b.tanpaHarga,
+      klinik: (klinikAktif() || {}).id || '', klinikNama: (klinikAktif() || {}).nama || '', kota: (klinikAktif() || {}).kotaNama || '',
       perPasien: b.perPasien, total: b.total,
       pendaftar: { nama: S.profil.nama, hp: S.profil.hp }
     };
@@ -520,6 +582,7 @@
     L.push('');
     L.push('Kode: ' + b.kode);
     L.push('Pendaftar: ' + b.pendaftar.nama + ' (' + b.pendaftar.hp + ')');
+    if (b.klinikNama) L.push('Klinik mitra: ' + b.klinikNama + ' (' + b.kota + ')');
     L.push('Layanan: ' + LAYANAN_NAMA[b.layanan]);
     L.push('Lokasi: ' + b.lokasi);
     L.push('Jadwal: ' + tgl(b.tanggal, true) + ', pukul ' + b.jam);
@@ -548,7 +611,7 @@
   function kodeData(b) {
     var d = {
       k: b.kode, n: b.pendaftar.nama, h: b.pendaftar.hp, l: b.layanan, lo: b.lokasi,
-      t: b.tanggal, j: b.jam, d: b.dokter, c: b.catatan || '', v: b.vaksinIds,
+      t: b.tanggal, j: b.jam, d: b.dokter, c: b.catatan || '', v: b.vaksinIds, kl: b.klinik || '',
       p: b.pasienIds.map(function (id) {
         var p = S.pasien.filter(function (x) { return x.id === id; })[0] || {};
         return [p.nama || namaPasien(id), p.tglLahir || '', p.jenisKelamin || ''];
@@ -1309,6 +1372,7 @@
       '<div style="height:14px;"></div>' +
       '<div class="disp" style="font-size:18px;font-weight:800;">Halo' + (S.profil.nama ? ', ' + h(S.profil.nama.split(' ')[0]) : '') + '</div>' +
       '<div class="small" style="color:var(--ink-2);margin-top:2px;">' + h(K.brand.tagline) + '</div>' +
+      '<div style="margin-top:12px;">' + lokasiChip() + '</div>' +
       '</div>';
 
     body += '<div class="pad stack g14">';
@@ -1365,7 +1429,7 @@
           return '<button class="rowlink" data-act="pasien-jadwal" data-arg="' + x.p.id + '">' +
             '<div class="avatar" style="width:32px;height:32px;font-size:12px;">' + h(inisial(x.p.nama)) + '</div>' +
             '<div class="grow"><div class="small" style="font-weight:700;">' + h(x.p.nama) + '</div>' +
-            '<div class="tiny muted">' + x.jml + ' vaksin tertunda · ' + h(x.contoh) + '</div></div>' +
+            '<div class="tiny muted">' + x.jml + ' dosis perlu diberikan · ' + h(x.contoh) + '</div></div>' +
             '<span style="color:var(--ink-4);">' + ic('chevron', 15) + '</span></button>';
         }).join('') + '</div>';
     }
@@ -1383,10 +1447,10 @@
         '<button class="linkbtn" data-act="go" data-arg="harga-fokus">Lihat semua</button></div>' +
         '<div class="tiny muted" style="margin-top:-4px;">' + h(namaFokus.join(' · ')) + ' — ' + rek.length + ' jenis vaksin</div>' +
         '<table class="price">' + termurah.slice(0, 4).map(function (v) {
-          var hrg = tarif === 'spesialis' ? v.spesialis : v.umum;
+          var hrg = hargaVaksin(v, tarif);
           return '<tr><td><div style="font-weight:600;">' + h(v.kategori) + '</div>' +
             '<div class="tiny muted">' + h(v.merk) + '</div></td>' +
-            '<td class="p">' + (hrg ? rp(angka(hrg)) : '<span class="muted" style="font-weight:600;">Hubungi CS</span>') + '</td></tr>';
+            '<td class="p">' + (hrg ? rp(hrg) : '<span class="muted" style="font-weight:600;">' + (punyaHarga() ? 'Hubungi CS' : 'Dikonfirmasi klinik') + '</span>') + '</td></tr>';
         }).join('') + '</table>' +
         '<button class="btn outline sm" data-act="ubah-fokus">Ubah kebutuhan vaksinasi</button></div>';
     }
@@ -1409,7 +1473,7 @@
       K.termasuk.map(function (t) { return '<span class="chip teal" style="padding:4px 9px;font-size:10.5px;">' + h(t) + '</span>'; }).join('') +
       '</div></div>';
 
-    var promo = K.hargaInternasional.filter(function (x) { return x.coret; })[0];
+    var promo = promoKlinik() === 'alrasha' && K.hargaInternasional.filter(function (x) { return x.coret; })[0];
     if (promo) {
       body += '<div class="card tap stack g6" style="background:linear-gradient(135deg,var(--teal-dark),var(--magenta-dark));border-color:transparent;color:#fff;" data-act="go" data-arg="internasional">' +
         '<div class="row mid g8"><span class="chip" style="background:#fff;color:var(--magenta-dark);padding:3px 10px;font-size:10px;">PROMO</span>' +
@@ -1421,8 +1485,8 @@
 
     body += '<button class="card rowlink" data-act="go" data-arg="tentang" style="padding:16px;">' +
       '<div class="icon-sq">' + ic('pin', 19) + '</div>' +
-      '<div class="grow"><div style="font-weight:700;font-size:13.5px;">' + K.klinik.length + ' klinik di Tanjungpinang</div>' +
-      '<div class="tiny muted">Alamat, dokter, dan alur reservasi</div></div>' +
+      '<div class="grow"><div style="font-weight:700;font-size:13.5px;">' + semuaKlinik().length + ' klinik mitra di ' + K.mitra.length + ' kota</div>' +
+      '<div class="tiny muted">' + h(K.mitra.map(function (m) { return m.kota.replace('Kota ', ''); }).join(' · ')) + ' — alamat, dokter, alur reservasi</div></div>' +
       '<span style="color:var(--ink-4);">' + ic('chevron', 16) + '</span></button>';
 
     body += '</div>';
@@ -1463,14 +1527,22 @@
     if (!d.layanan) {
       body += '<div class="card flat small muted" style="border-style:dashed;">Pilih jenis layanan dulu untuk menentukan lokasi.</div>';
     } else {
+      var kAkt = klinikAktif(), kota = kotaAktif();
       if (d.layanan === 'klinik') {
-        body += K.klinik.map(function (kl, i) {
-          return '<button class="checkrow' + (d.klinikIdx === i ? ' on' : '') + '" data-act="set-klinik" data-arg="' + i + '">' +
-            '<div class="box">' + (d.klinikIdx === i ? ic('check', 14, 3) : '') + '</div>' +
-            '<div class="grow"><div class="small" style="font-weight:700;">' + h(kl[0]) + '</div>' +
-            '<div class="tiny muted">' + h(kl[1]) + '</div></div></button>';
-        }).join('');
-      } else if (d.layanan === 'homecare') {
+        body += (kota ? kota.klinik : []).map(function (kl) {
+          var on = kAkt && kAkt.id === kl.id;
+          return '<button class="checkrow' + (on ? ' on' : '') + '" data-act="pilih-klinik" data-arg="' + kl.id + '">' +
+            '<div class="box">' + (on ? ic('check', 14, 3) : '') + '</div>' +
+            '<div class="grow"><div class="small" style="font-weight:700;">' + h(kl.nama) + '</div>' +
+            '<div class="tiny muted">' + h(kl.alamat || 'Alamat menyusul — dikonfirmasi CS') + '</div></div></button>';
+        }).join('') + lokasiChip();
+      } else if (kAkt) {
+        body += '<div class="tiny muted">Dilayani oleh <b>' + h(kAkt.nama) + '</b>, ' + h(kAkt.kotaNama) +
+          ' · <button class="linkbtn tiny" data-act="buka-lokasi">ganti</button></div>';
+      } else {
+        body += lokasiChip();
+      }
+      if (d.layanan === 'homecare') {
         body += S.alamat.map(function (a) {
           return '<button class="checkrow' + (d.alamatId === a.id ? ' on' : '') + '" data-act="set-alamat" data-arg="' + a.id + '">' +
             '<div class="box">' + (d.alamatId === a.id ? ic('check', 14, 3) : '') + '</div>' +
@@ -1478,7 +1550,7 @@
             '<div class="tiny muted">' + h(a.alamat + ', ' + a.kecamatan) + '</div></div></button>';
         }).join('');
         body += '<button class="btn outline sm" data-act="go" data-arg="alamat-form">' + ic('plus', 15, 2.2) + ' Tambah alamat</button>';
-      } else {
+      } else if (d.layanan === 'corporate') {
         body += '<input class="input" data-field="institusi" placeholder="Nama institusi / perusahaan" value="' + h(d.institusi) + '" style="margin-bottom:8px;">' +
           '<input class="input" data-field="institusiAlamat" placeholder="Alamat lokasi kegiatan" value="' + h(d.institusiAlamat) + '">' +
           '<div class="hint" style="margin-top:8px;">Untuk vaksinasi massal, jumlah peserta dan jadwal akan dikonfirmasi tim kami.</div>';
@@ -2125,8 +2197,12 @@
   /* ============================ layar: harga ============================ */
   var tarif = 'umum', cariHarga = '', fokusHarga = false;
   function scHarga() {
-    var body = topbar('Daftar Harga Vaksinasi', 'Price list terbuka', 'beranda');
-    body += '<div class="pad stack g12">' +
+    var kl = klinikAktif();
+    var body = topbar('Daftar Harga Vaksinasi', kl ? kl.nama : 'Pilih klinik mitra', 'beranda');
+    body += '<div class="pad stack g12">' + lokasiChip() +
+      (kl && !kl.harga ? '<div class="card warn tiny" style="color:#8A6A21;line-height:1.6;">Price list ' + h(kl.nama) +
+        ' sedang disiapkan. Jenis vaksin di bawah adalah daftar umum; harga dan ketersediaannya dikonfirmasi klinik saat reservasi.</div>' : '') +
+      (!kl ? '<div class="card warn tiny" style="color:#8A6A21;line-height:1.6;">Pilih kota dan klinik mitra untuk melihat harga yang berlaku di sana.</div>' : '') +
       '<div class="card tint row mid g8" style="padding:12px 14px;">' + ic('checkc', 16) +
       '<span class="tiny" style="color:var(--teal-dark);font-weight:600;line-height:1.5;">Harga sudah termasuk jasa dokter, vaksin, bahan habis pakai &amp; administrasi.</span></div>' +
       '<div class="row g8">' +
@@ -2156,10 +2232,10 @@
         '<span class="grow" style="font-weight:700;font-size:13.5px;">' + h(nama) + '</span>' +
         (grup[nama].some(produkProgram) ? CHIP_PKM : '') + '</div>' +
         '<table class="price">' + grup[nama].map(function (v) {
-          var hrg = tarif === 'spesialis' ? v.spesialis : v.umum;
+          var hrg = hargaVaksin(v, tarif);
           return '<tr><td><div style="font-weight:600;">' + h(v.sediaan) + '</div>' +
             (v.merk !== v.sediaan ? '<div class="tiny muted">' + h(v.merk) + '</div>' : '') + '</td>' +
-            '<td class="p">' + (hrg ? rp(angka(hrg)) : '<span class="muted" style="font-weight:600;">Hubungi CS</span>') + '</td></tr>';
+            '<td class="p">' + (hrg ? rp(hrg) : '<span class="muted" style="font-weight:600;">' + (punyaHarga() ? 'Hubungi CS' : 'Dikonfirmasi klinik') + '</span>') + '</td></tr>';
         }).join('') + '</table></div>';
     });
     body += '<div class="tiny muted" style="padding:0 4px;">Harga dapat berubah sewaktu-waktu. Konfirmasi terakhir saat reservasi melalui ' + h(K.brand.callCenter) + '.</div>';
@@ -2187,8 +2263,12 @@
           '<div class="grow"><div class="small" style="font-weight:700;">' + h(v[0]) + '</div>' +
           '<div class="tiny muted" style="line-height:1.55;">' + h(v[1]) + '</div></div></div>';
       }).join('') + '</div>';
-    body += '<div class="sect-title" style="padding-top:2px;">Harga</div>';
-    K.hargaInternasional.forEach(function (x) {
+    body += '<div class="sect-title" style="padding-top:2px;">Harga' + (klinikAktif() ? ' · ' + h(namaPendek(klinikAktif())) : '') + '</div>';
+    if (promoKlinik() !== 'alrasha') {
+      body += '<div class="card warn tiny" style="color:#8A6A21;line-height:1.6;">' + (klinikAktif()
+        ? 'Harga vaksin internasional di ' + h(klinikAktif().nama) + ' dikonfirmasi klinik saat reservasi.'
+        : 'Pilih klinik mitra untuk melihat harga vaksin internasional.') + '</div>' + lokasiChip();
+    } else K.hargaInternasional.forEach(function (x) {
       body += '<div class="card row mid g12" style="padding:15px 16px;">' +
         '<div class="grow"><div class="row mid g7"><span style="font-weight:700;font-size:13px;">' + h(x.nama) + '</span>' +
         (x.coret ? '<span class="chip mag" style="padding:2px 8px;font-size:9.5px;margin-left:7px;">PROMO</span>' : '') + '</div>' +
@@ -2196,7 +2276,7 @@
         '<div class="disp nowrap" style="font-size:16px;font-weight:800;color:var(--magenta-dark);">' + rp(angka(x.harga)) + '</div></div>';
     });
     var pt = K.paketTriple;
-    body += '<div class="card stack g10" style="border:1.6px solid var(--magenta);">' +
+    if (promoKlinik() === 'alrasha') body += '<div class="card stack g10" style="border:1.6px solid var(--magenta);">' +
       '<div class="row mid g8"><span class="disp" style="font-size:15px;font-weight:800;">' + h(pt.nama) + '</span>' +
       '<span class="chip mag" style="padding:2px 8px;font-size:9.5px;">HEMAT</span></div>' +
       pt.isi.map(function (i) { return '<div class="row mid g8">' + ic('checkc', 15) + '<span class="small" style="color:var(--ink-2);">' + h(i) + '</span></div>'; }).join('') +
@@ -2239,19 +2319,28 @@
           '<div class="disp" style="width:24px;height:24px;border-radius:50%;background:var(--teal);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0;">' + (i + 1) + '</div>' +
           '<span class="small" style="color:var(--ink-2);line-height:1.55;padding-top:2px;">' + h(s) + '</span></div>';
       }).join('') + '</div>';
-    body += '<div class="card stack g4"><div class="sect-title" style="margin-bottom:6px;">Dokter vaksinasi</div>' +
-      K.dokter.map(function (d) {
+    var aktifK = klinikAktif();
+    var dokK = dokterKlinik();
+    if (dokK.length) body += '<div class="card stack g4"><div class="sect-title" style="margin-bottom:6px;">Dokter vaksinasi · ' + h(namaPendek(aktifK)) + '</div>' +
+      dokK.map(function (d) {
         return '<div class="row mid g12" style="padding:9px 0;border-top:1px solid var(--line);">' +
           '<div class="avatar" style="width:36px;height:36px;font-size:12px;">' + h(d[2]) + '</div>' +
           '<div class="grow"><div class="small" style="font-weight:700;">' + h(d[0]) + '</div>' +
           '<div class="tiny muted">' + h(d[1]) + '</div></div></div>';
       }).join('') + '</div>';
-    body += '<div class="card stack g4"><div class="sect-title" style="margin-bottom:6px;">Lokasi klinik</div>' +
-      K.klinik.map(function (kl) {
-        return '<div class="row g12" style="align-items:flex-start;padding:10px 0;border-top:1px solid var(--line);">' +
-          '<div class="icon-sq mag" style="width:32px;height:32px;border-radius:9px;">' + ic('pin', 16) + '</div>' +
-          '<div class="grow"><div class="small" style="font-weight:700;">' + h(kl[0]) + '</div>' +
-          '<div class="tiny muted" style="line-height:1.5;">' + h(kl[1]) + '</div></div></div>';
+    body += '<div class="card stack g4"><div class="sect-title" style="margin-bottom:2px;">Klinik mitra VaksinKu</div>' +
+      '<div class="tiny muted" style="margin-bottom:6px;">Harga, ketersediaan vaksin, dan promo mengikuti klinik yang dipilih.</div>' +
+      K.mitra.map(function (m) {
+        return '<div class="tiny" style="font-weight:800;color:var(--ink-3);text-transform:uppercase;letter-spacing:.05em;padding-top:8px;">' + h(m.kota) + '</div>' +
+          m.klinik.map(function (kl) {
+            var on = aktifK && aktifK.id === kl.id;
+            return '<div class="row g12" style="align-items:flex-start;padding:10px 0;border-top:1px solid var(--line);">' +
+              ikonKotak('klinik', on ? 'aktif' : '', 34) +
+              '<div class="grow"><div class="small" style="font-weight:700;">' + h(kl.nama) + '</div>' +
+              '<div class="tiny muted" style="line-height:1.5;">' + h(kl.alamat || 'Alamat menyusul') + '</div></div>' +
+              (on ? '<span class="chip mag" style="font-size:10px;">Dipilih</span>'
+                : '<button class="linkbtn tiny" data-act="pilih-klinik" data-arg="' + kl.id + '">Pilih</button>') + '</div>';
+          }).join('');
       }).join('') + '</div>';
     body += '<div class="card stack g12" style="background:var(--teal-dark);border-color:transparent;color:#fff;">' +
       '<div class="row mid g12"><div class="icon-sq" style="background:rgba(255,255,255,.16);color:#fff;border-radius:50%;">' + ic('wa', 19) + '</div>' +
@@ -2866,40 +2955,45 @@
        alt    isi gambar dalam satu kalimat, dibacakan pembaca layar.
               Banner bergambar yang sudah memuat tulisan sendiri cukup
               diisi gambar + alt; mata/judul/teks/ajak dikosongkan.
+       klinik daftar id klinik mitra yang menampilkan banner ini (promo
+              berlaku per klinik); kosongkan agar tampil di semua klinik
        act    'go' pindah layar, atau 'wa-umum' membuka WhatsApp klinik
        arg    tujuan untuk 'go' — mis. 'harga', 'internasional', 'booking'
 
      Banner yang sudah lewat masanya cukup dihapus barisnya. Kosongkan
      seluruh daftar dan bagian ini hilang dari Beranda dengan sendirinya. */
-  var BANNER = [
+  var ALRASHA = ['alrasha-hcc', 'alrasha-ibumas'];
+  var BANNER_SEMUA = [
     {
       gambar: 'banner/bundling-hpv.webp',
       alt: 'Bundling HPV 3 dosis: HPV 4 Rp1,7 juta, HPV 9 Rp6,8 juta. Konsultasi sekarang.',
-      act: 'go', arg: 'chat-baru'
+      act: 'go', arg: 'chat-baru', klinik: ALRASHA
     },
     {
       gambar: 'banner/hpv4-diperpanjang.webp',
       alt: 'Promo diperpanjang: vaksin HPV 4 Rp650 ribu per dosis, diskon 50%.',
-      act: 'go', arg: 'booking'
+      act: 'go', arg: 'booking', klinik: ALRASHA
     },
     {
       gambar: 'banner/little-protection.webp',
       alt: 'Little Protection Package: PCV, Rotavirus, dan Infanrix Hexa Rp2.825.000.',
-      act: 'go', arg: 'booking'
+      act: 'go', arg: 'booking', klinik: ALRASHA
     },
     {
       gambar: 'banner/influenza-bareng.webp',
       alt: 'Vaksin influenza bareng: 1 vaksin Rp345.000, duo Rp670.000, triple Rp1.000.000.',
-      act: 'go', arg: 'booking'
+      act: 'go', arg: 'booking', klinik: ALRASHA
     },
     {
       gambar: 'banner/vaksin-dewasa.webp',
       alt: 'Vaksin dewasa: Hepatitis B Rp900.000, HPV 9 Rp6.800.000, HPV 4 Rp1.800.000 untuk 3 dosis.',
-      act: 'go', arg: 'booking'
+      act: 'go', arg: 'booking', klinik: ALRASHA
     }
   ];
 
   function bannerHTML() {
+    var kl = klinikAktif();
+    var BANNER = BANNER_SEMUA.filter(function (b) { return !b.klinik || (kl && b.klinik.indexOf(kl.id) >= 0); });
     if (!BANNER.length) return '';
     return '<div class="promo">' +
       '<div class="promo-rel" id="promo-rel">' +
@@ -3051,7 +3145,15 @@
       case 'pilih-pasien': S.ui.pasienAktif = arg; simpan(); render(); return;
       case 'pasien-jadwal': S.ui.pasienAktif = arg; simpan(); location.hash = '#/jadwal'; return;
       case 'set-layanan': d.layanan = arg; simpan(); render(); return;
-      case 'set-klinik': d.klinikIdx = parseInt(arg, 10); simpan(); render(); return;
+      case 'buka-lokasi': sheetHTML = sheetLokasi(); render(); return;
+      case 'pilih-klinik': {
+        var kp = klinikById(arg);
+        if (!kp) return;
+        S.lokasi = { kota: kp.kota, klinik: kp.id };
+        simpan(); sheetHTML = ''; render();
+        toast(kp.nama + ' dipilih. ' + (kp.harga ? 'Harga mengikuti price list klinik ini.' : 'Harga dikonfirmasi klinik saat reservasi.'));
+        return;
+      }
       case 'set-alamat': d.alamatId = arg; simpan(); render(); return;
       case 'set-dokter': d.dokter = arg; simpan(); render(); return;
       case 'set-jam': d.jam = arg; simpan(); render(); return;

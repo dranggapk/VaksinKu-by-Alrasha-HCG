@@ -39,8 +39,13 @@ tautan, atau ditambahkan ke layar utama ponsel lewat menu "Add to Home screen".
 | **Paket promo haji & umrah** | Kartu harga coret dari price list di Beranda |
 | **Profil pendaftar** | Nama & nomor HP, dipakai sebagai kontak reservasi |
 | **Data pasien** | Tambah/ubah/hapus anggota keluarga; usia dihitung dari tanggal lahir |
-| **Jadwal vaksin personal** | Ceklis otomatis menyesuaikan usia: anak mengikuti **IDAI 2024**, dewasa mengikuti **PAPDI 2025** (rentang usia dipilih otomatis) |
-| **Kelengkapan vaksinasi** | Persentase dihitung dari vaksin yang sudah jatuh tempo vs yang sudah dicatat |
+| **Mitra klinik per kota** | Pengguna memilih kota lalu klinik mitra: **Kota Bandung** (Klinik Utama Jasmine MQ Medika) dan **Kota Tanjungpinang** (Klinik Alrasha Health Care Center, Klinik Utama Alrasha Ibumas). Harga, ketersediaan, dokter, banner promo, dan paket haji/umrah mengikuti klinik terpilih |
+| **Jadwal anak: IDAI atau Buku KIA** | Tiap anak bisa mengikuti **IDAI 2024** (rekomendasi lengkap) atau **Buku KIA 2024** (program pemerintah + BIAS sekolah) dan berganti kapan saja — dosis yang sudah dicatat langsung terbaca di jadwal baru. Dewasa mengikuti **PAPDI 2025** |
+| **Tabel ceklis + No. Batch** | Tabel meniru Buku KIA (baris dosis × kolom usia, warna tepat/boleh/kejar/tidak boleh) dan tabel IDAI per jenis vaksin. Tiap dosis dicatat dengan tanggal, tempat, fasilitas, merek, **No. Batch**, dan foto label (opsional) |
+| **Gratis di Puskesmas** | Dosis program pemerintah ditandai; orang tua bisa merencanakan dosis tertentu (atau semuanya) di Puskesmas, vaksin lain dibooking di klinik |
+| **Batas usia & imunisasi kejar** | Dosis yang lewat batas usia (mis. rotavirus) tampil "terlewat" dan tidak dihitung kurang; flu tahunan & tifoid 3-tahunan dihitung dari dosis terakhir; lewat batas program KIA dialihkan ke batas kejar IDAI |
+| **Kondisi khusus & BIAS** | Peringatan dari catatan IDAI (berat lahir <2.000 g, ibu HBsAg+, ibu TB aktif, gangguan imun, alergi berat); kartu jadwal BIAS di dashboard sekolah; layar perbandingan IDAI vs KIA |
+| **Kelengkapan vaksinasi** | Persentase dihitung dari dosis yang sudah waktunya dan masih boleh diberikan vs yang sudah dicatat |
 | **Reservasi** | Form tervalidasi: layanan, lokasi, pasien, dokter, vaksin, tanggal & jam |
 | **Biaya nyata** | Total dihitung dari price list resmi; ganti dokter umum ↔ spesialis mengubah total seketika |
 | **Kirim ke WhatsApp** | Ringkasan reservasi dikirim ke CS **0811-7744-74** dengan satu ketukan, disertai kode data yang dibaca dashboard klinik |
@@ -49,7 +54,7 @@ tautan, atau ditambahkan ke layar utama ponsel lewat menu "Add to Home screen".
 | **Ekspor ke kalender** | Unduh `.ics` berisi jadwal vaksin & reservasi lengkap dengan alarm H-7 dan H-1, agar pengingat tetap berbunyi walau aplikasi tertutup |
 | **Rekam medis** | Riwayat vaksinasi per pasien, otomatis terisi saat reservasi ditandai selesai |
 | **Tumbuh kembang** | Catat berat, tinggi, lingkar kepala; grafik berat badan terhadap usia |
-| **Daftar harga** | 17 kategori vaksin, dengan pencarian dan pilihan tarif dokter |
+| **Daftar harga** | 17 kategori vaksin sesuai klinik terpilih, dengan pencarian, pilihan tarif dokter, dan tanda *Gratis di Puskesmas (anak)* |
 | **Vaksin internasional** | Vaksin wajib haji/umrah, rekomendasi WHO, harga & paket promo, e-ICV |
 | **Korporat / Sekolah** | Dashboard vaksinasi massal: daftar peserta per kelas/divisi, cakupan terhitung, booking massal ke WhatsApp, estimasi biaya, dan rekap `.csv` |
 | **Poin Sehat** | +10 poin setiap vaksinasi selesai |
@@ -131,6 +136,16 @@ ditanam — semua dihitung dari data yang dimasukkan petugas.
   disesuaikan bila Dinas Kesehatan meminta templat tertentu. Yang ditampilkan
   adalah *estimasi* biaya dari price list; invoice resmi tetap terbit dari klinik.
 - **Slot waktu belum terhubung ketersediaan riil**; jadwal final dikonfirmasi CS.
+- **Price list Klinik Utama Jasmine MQ Medika belum diterima**, begitu pula alamatnya.
+  Saat klinik ini dipilih, harga dan ketersediaan tampil "dikonfirmasi klinik". Isi
+  `harga` dan `alamat` klinik tersebut di `MITRA` pada `src/data_katalog.py` bila
+  datanya sudah ada. Kedua klinik Alrasha memakai price list katalog yang sama.
+- **Klinik Ibumas (Jl. D.I. Panjaitan) tidak lagi ditampilkan** — mitra Tanjungpinang
+  sesuai daftar: Alrasha Health Care Center dan Klinik Utama Alrasha Ibumas.
+- **Jadwal kejar bukan resep.** Aplikasi menandai dosis yang perlu dikejar dan batas
+  usianya, tetapi jumlah dosis kejar (mis. PCV yang dimulai terlambat) ditentukan dokter.
+- Foto label vaksin disimpan di perangkat; penyimpanan browser terbatas (±5 MB),
+  sehingga foto dikecilkan otomatis dan ditolak bila penyimpanan penuh.
 - Grafik pertumbuhan menampilkan data pasien sendiri, belum dibandingkan dengan
   kurva WHO (butuh tabel standar WHO yang resmi).
 
@@ -140,7 +155,8 @@ Harga, jadwal vaksin, layanan, dokter, dan lokasi klinik diambil dari katalog
 resmi VaksinKu by Alrasha Ibumas (16 halaman) dan disimpan terpusat di
 `src/data_katalog.py` — perbarui di satu berkas itu lalu build ulang.
 
-Rujukan yang dipakai: jadwal anak **IDAI 2024**, jadwal dewasa **PAPDI 2025**,
+Rujukan yang dipakai: jadwal anak **IDAI 2024** dan **Buku KIA 2024** (Kemenkes, termasuk BIAS) —
+per dosis di `src/jadwal_anak.py` —, jadwal dewasa **PAPDI 2025**,
 vaksin haji & umrah sesuai regulasi Arab Saudi dengan tambahan rekomendasi WHO.
 
 ## Struktur repositori
@@ -160,10 +176,11 @@ admin/                     Sumber dashboard manajemen
   styles.css               Design system dashboard (sidebar, tabel, grafik)
   app.js                   Modul booking s.d. transaksi, grafik, dan panel
 src/
-  data_katalog.py          Isi katalog (harga, jadwal, layanan, dokter, klinik)
+  data_katalog.py          Isi katalog (harga, jadwal dewasa, layanan, dokter, mitra klinik)
+  jadwal_anak.py           Jadwal anak per dosis: IDAI 2024 & Buku KIA 2024
   build_bundle.py          Merakit aplikasi pasien + font & logo jadi satu berkas
   build_admin.py           Merakit dashboard manajemen jadi satu berkas
-  uji_app.py               Uji fungsional aplikasi pasien (101 uji)
+  uji_app.py               Uji fungsional aplikasi pasien (125 uji)
   uji_admin.py             Uji fungsional dashboard (78 uji)
   tangkap_layar.py         Tangkap layar aplikasi pasien
   tangkap_dashboard.py     Tangkap layar dashboard
@@ -182,7 +199,7 @@ cd src
 python3 build_bundle.py       # → VaksinKu-App.html (font tertanam, siap offline)
 python3 build_admin.py        # → VaksinKu-Dashboard.html
 python3 build_bundle.py --tanpa-font   # lebih cepat, font dari Google Fonts
-python3 uji_app.py            # 101 uji fungsional aplikasi pasien
+python3 uji_app.py            # 125 uji fungsional aplikasi pasien
 python3 uji_admin.py          # 78 uji fungsional dashboard
 python3 tangkap_layar.py      # tangkap layar aplikasi pasien
 python3 tangkap_dashboard.py  # tangkap layar dashboard

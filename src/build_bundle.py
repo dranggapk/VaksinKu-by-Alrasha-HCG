@@ -119,6 +119,7 @@ def katalog_js():
         "internasionalTambahan": D.VAKSIN_INTERNASIONAL_TAMBAHAN,
         "dokter": D.DOKTER,
         "klinik": D.KLINIK,
+        "mitra": D.MITRA,
         "alurReservasi": D.ALUR_RESERVASI,
         "logoMark": "data:image/png;base64," + b64_file(os.path.join(HERE, "vaksinku-logo-mark.png")),
         "logoFull": "data:image/png;base64," + b64_file(os.path.join(HERE, "vaksinku-logo.png")),

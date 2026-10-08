@@ -101,6 +101,24 @@ TEST_JS = r"""
     ok('bottom nav tampil', document.querySelectorAll('.navitem').length === 4);
     ok('rekomendasi sesuai kebutuhan tampil', document.body.textContent.indexOf('Sesuai kebutuhan Anda') > 0);
 
+    /* 1d. mitra klinik: pilih kota & klinik */
+    ok('pengguna baru diminta memilih kota & klinik', document.body.textContent.indexOf('Pilih kota & klinik mitra') > 0);
+    ok('belum pilih klinik: banner promo klinik tidak tampil', !document.getElementById('promo-rel'));
+    klik('[data-act="buka-lokasi"]');
+    ok('lembar lokasi memuat dua kota', document.body.textContent.indexOf('Kota Bandung') > 0 &&
+       document.body.textContent.indexOf('Kota Tanjungpinang') > 0 && document.querySelectorAll('[data-act="pilih-klinik"]').length === 3);
+    klik('[data-act="pilih-klinik"][data-arg="jasmine-mq"]');
+    ok('klinik Bandung dipilih', (st().lokasi || {}).kota === 'bandung');
+    ganti('#/harga');
+    var layarHarga = document.querySelector('.scroll').textContent;
+    ok('klinik tanpa price list: harga dikonfirmasi klinik', layarHarga.indexOf('sedang disiapkan') > 0 &&
+       layarHarga.indexOf('Dikonfirmasi klinik') > 0 && !/Rp\d/.test(layarHarga));
+    ganti('#/beranda');
+    ok('banner promo Alrasha tidak tampil di klinik Bandung', !document.getElementById('promo-rel'));
+    klik('[data-act="buka-lokasi"]');
+    klik('[data-act="pilih-klinik"][data-arg="alrasha-hcc"]');
+    ok('klinik Tanjungpinang dipilih', (st().lokasi || {}).klinik === 'alrasha-hcc');
+
     /* 1e. banner promo di bawah tombol booking (daftar BANNER di app.js) */
     var pita = document.getElementById('promo-rel');
     var slide = document.querySelectorAll('.promo-kartu');
@@ -173,8 +191,9 @@ TEST_JS = r"""
 
     /* 5. booking: isi lengkap */
     klik('[data-act="set-layanan"][data-arg="klinik"]');
-    ok('klinik tampil', document.querySelectorAll('[data-act="set-klinik"]').length === window.KATALOG.klinik.length);
-    klik('[data-act="set-klinik"]', 0);
+    ok('klinik mitra di kota terpilih tampil', document.querySelectorAll('.checkrow[data-act="pilih-klinik"]').length === 2,
+       document.querySelectorAll('.checkrow[data-act="pilih-klinik"]').length + ' klinik');
+    klik('.checkrow[data-act="pilih-klinik"]', 0);
     klik('[data-act="toggle-pasien"]');
     klik('[data-act="buka-vaksin"]');
     ok('daftar vaksin terbuka', !!document.querySelector('.sheet'));
@@ -218,6 +237,7 @@ TEST_JS = r"""
       isiKd = JSON.parse(decodeURIComponent(escape(atob(b64))));
     } catch (e) {}
     ok('pesan reservasi memuat kode data', !!kd, kd ? kd[0].length + ' karakter' : pesanBk.slice(-60));
+    ok('pesan reservasi menyebut klinik mitra', pesanBk.indexOf('Klinik mitra: Klinik Alrasha Health Care Center (Kota Tanjungpinang)') >= 0);
     ok('kode data sesuai reservasi', !!isiKd && isiKd.k === b.kode && isiKd.t === b.tanggal && isiKd.j === b.jam &&
        JSON.stringify(isiKd.v) === JSON.stringify(b.vaksinIds), isiKd ? isiKd.k + ' · ' + isiKd.v.length + ' vaksin' : '-');
     var pk = st().pasien.filter(function (x) { return x.id === b.pasienIds[0]; })[0] || {};
