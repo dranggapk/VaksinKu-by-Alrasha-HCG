@@ -143,10 +143,12 @@ ditanam — semua dihitung dari data yang dimasukkan petugas.
   datanya sudah ada. Kedua klinik Alrasha memakai price list katalog yang sama.
 - **Klinik Ibumas (Jl. D.I. Panjaitan) tidak lagi ditampilkan** — mitra Tanjungpinang
   sesuai daftar: Alrasha Health Care Center dan Klinik Utama Alrasha Ibumas.
-- **Foto kemasan merek belum terpasang.** Foto di buku sumber milik penerbitnya dan
-  bertanda air, sehingga tidak disalin. Letakkan foto kemasan dari stok klinik atau
-  foto resmi distributor di `app/merek/` (daftar nama berkas ada di
-  `app/merek/README.md`), lalu build ulang; merek tanpa foto memakai ilustrasi vial.
+- **Gambar merek berupa ilustrasi kemasan, bukan foto.** Bentuk dan warna kemasan
+  tiap merek digambar ulang dengan Buku Vaksin Indonesia sebagai acuan (`GAYA_MEREK`
+  di `src/panduan_vaksin.py`); foto di buku itu milik penerbitnya dan bertanda air,
+  sehingga tidak disalin. Foto kemasan asli dari stok klinik atau distributor dapat
+  diletakkan di `app/merek/` (nama berkas di `app/merek/README.md`) dan otomatis
+  menggantikan ilustrasinya saat build.
 - **Jadwal kejar bukan resep.** Aplikasi menandai dosis yang perlu dikejar dan batas
   usianya, tetapi jumlah dosis kejar (mis. PCV yang dimulai terlambat) ditentukan dokter.
 - Foto label vaksin disimpan di perangkat; penyimpanan browser terbatas (±5 MB),

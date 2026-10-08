@@ -27,6 +27,7 @@ LAYAR = {
     "booking-detail": "#/booking-detail/b1",
     "notifikasi": "#/notifikasi",
     "panduan": "#/panduan", "panduan-hepb": "#/panduan/hepb", "panduan-hamil": "#/panduan-jadwal/hamil",
+    "panduan-polio": "#/panduan/polio", "panduan-flu": "#/panduan/flu",
     "splash": "#/splash", "onboarding": "#/onboarding", "masuk": "#/masuk",
     "korporat": "#/korporat", "korporat-peserta": "#/korporat",
     "korporat-laporan": "#/korporat",

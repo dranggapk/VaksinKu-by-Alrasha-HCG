@@ -3,7 +3,8 @@
 Panduan Vaksinasi menampilkan foto kemasan tiap merek. Letakkan foto di folder ini
 dengan nama berkas persis seperti tabel di bawah (`.webp`, `.jpg`, atau `.png`), lalu
 jalankan `python3 src/build_bundle.py` — foto ditanam ke `VaksinKu-App.html`.
-Merek yang belum punya foto otomatis memakai ilustrasi vial bertuliskan namanya.
+Merek yang belum punya foto otomatis memakai ilustrasi kemasan (bentuk & warna khas
+kemasannya, diatur di `GAYA_MEREK` pada `src/panduan_vaksin.py`).
 
 Gunakan foto kemasan dari stok klinik sendiri atau foto resmi dari distributor/produsen.
 Jangan memakai foto dari publikasi pihak lain. Ukuran anjuran 600×400 px, latar terang,

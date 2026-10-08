@@ -2112,15 +2112,56 @@
   function fotoMerek(m, w, hgt) {
     var url = (K.fotoMerek || {})[m.foto];
     if (url) return '<img class="pd-foto" src="' + url + '" alt="Kemasan ' + h(m.nama) + '" style="width:' + w + 'px;height:' + hgt + 'px;">';
-    // ilustrasi vial netral bertuliskan nama merek, dipakai sampai foto kemasan tersedia
-    var warna = ['#56C3C7', '#E8488C', '#C8890F', '#2E9BA0', '#A81260'][m.nama.length % 5];
-    return '<svg class="pd-foto" width="' + w + '" height="' + hgt + '" viewBox="0 0 120 80" role="img" aria-label="Ilustrasi ' + h(m.nama) + '">' +
-      '<rect width="120" height="80" rx="12" fill="#F4FAFA"/>' +
-      '<rect x="44" y="10" width="32" height="9" rx="2.5" fill="' + warna + '"/><rect x="47" y="18" width="26" height="5" fill="#C9D5D7"/>' +
-      '<path d="M43 23h34v41a6 6 0 0 1-6 6H49a6 6 0 0 1-6-6z" fill="#fff" stroke="#1E3A4C" stroke-width="2"/>' +
-      '<rect x="43" y="38" width="34" height="18" fill="' + warna + '" opacity=".18"/>' +
-      '<text x="60" y="50" text-anchor="middle" font-family="Plus Jakarta Sans,Arial,sans-serif" font-size="' + (m.nama.length > 10 ? 6.5 : 8) + '" font-weight="800" fill="#1E3A4C">' +
-      h(m.nama.length > 14 ? m.nama.slice(0, 13) + '…' : m.nama) + '</text></svg>';
+    return ilustrasiKemasan(m, w, hgt);
+  }
+  // Ilustrasi kemasan per merek (src/panduan_vaksin.py GAYA_MEREK): bentuk & warna
+  // khas kemasan digambar ulang sebagai SVG — bukan foto produk.
+  function ilustrasiKemasan(m, w, hgt) {
+    var g = m.gaya || ['kotak', '#56C3C7', '#E8488C'], bentuk = g[0], c1 = g[1], c2 = g[2];
+    var nama = m.nama.replace(/\s*\(.*\)$/, ''), fs = nama.length > 12 ? 6.6 : nama.length > 9 ? 7.6 : 8.8;
+    var teks = function (x, y, ukuran, warna, anchor) {
+      return '<text x="' + x + '" y="' + y + '" font-family="Plus Jakarta Sans,Arial,sans-serif" font-size="' + ukuran +
+        '" font-weight="800" fill="' + (warna || '#1E3A4C') + '"' + (anchor ? ' text-anchor="' + anchor + '"' : '') + '>' + h(nama) + '</text>';
+    };
+    var isi = '<rect width="120" height="80" rx="12" fill="#F4FAFA"/><ellipse cx="60" cy="72" rx="46" ry="3.5" fill="#000" opacity=".07"/>';
+    function kotak(dx, dy) {
+      return '<g transform="translate(' + dx + ' ' + dy + ')">' +
+        '<path d="M8 18 20 10h78l-12 8z" fill="#F3F6F7" stroke="#D5DCDF" stroke-width=".8"/>' +
+        '<path d="M86 18 98 10v48l-12 8z" fill="#E6EBED" stroke="#D5DCDF" stroke-width=".8"/>' +
+        '<path d="M86 18 98 10v10l-12 8z" fill="' + c1 + '" opacity=".75"/>' +
+        '<rect x="8" y="18" width="78" height="48" fill="#fff" stroke="#D5DCDF" stroke-width=".8"/>' +
+        '<rect x="8" y="18" width="78" height="11" fill="' + c1 + '"/>' +
+        '<rect x="8" y="58" width="78" height="4" fill="' + c2 + '"/>' +
+        '<rect x="14" y="48" width="34" height="2.2" rx="1" fill="#C9D2D6"/><rect x="14" y="52" width="24" height="2.2" rx="1" fill="#DDE3E6"/>' +
+        teks(14, 42, fs) + '</g>';
+    }
+    if (bentuk === 'vial') {
+      [0, 1, 2].forEach(function (i) {
+        var x = 26 + i * 25, tinggi = i === 1 ? 0 : 4;
+        isi += '<rect x="' + x + '" y="' + (13 + tinggi) + '" width="17" height="7" rx="1.5" fill="' + c1 + '"/>' +
+          '<rect x="' + (x + 3) + '" y="' + (20 + tinggi) + '" width="11" height="4" fill="#C9D2D6"/>' +
+          '<rect x="' + (x - 1) + '" y="' + (24 + tinggi) + '" width="19" height="' + (44 - tinggi) + '" rx="4" fill="#fff" stroke="#B8C2C6" stroke-width=".9"/>' +
+          '<rect x="' + (x - 1) + '" y="' + (37 + tinggi) + '" width="19" height="17" fill="' + c2 + '"/>' +
+          '<rect x="' + (x + 2) + '" y="' + (41 + tinggi) + '" width="13" height="2" rx="1" fill="' + c1 + '" opacity=".8"/>';
+      });
+      isi += '<rect x="22" y="58" width="76" height="11" rx="3" fill="#fff" opacity=".92"/>' + teks(60, 66.5, Math.min(fs, 7.6), '#1E3A4C', 'middle');
+    } else if (bentuk === 'tube') {
+      isi += '<rect x="9" y="25" width="102" height="30" rx="7" fill="' + c2 + '" stroke="#B8C2C6" stroke-width=".8"/>' +
+        '<rect x="9" y="25" width="26" height="30" rx="7" fill="' + c1 + '"/><rect x="28" y="25" width="7" height="30" fill="' + c1 + '"/>' +
+        '<path d="M100 27v26M104 27v26" stroke="#fff" stroke-width="1.4" opacity=".7"/>' +
+        '<circle cx="22" cy="40" r="6" fill="#fff" opacity=".85"/>' + teks(42, 43.5, fs);
+    } else {
+      var spuit = bentuk === 'kotak-spuit';
+      isi += kotak(spuit ? 2 : 4, spuit ? -4 : 0);
+      if (spuit) {
+        isi += '<g transform="translate(30 63) rotate(-6)">' +
+          '<rect x="-12" y="0" width="3" height="9" rx="1" fill="#AEB8BC"/><rect x="-10" y="3" width="11" height="3" fill="#C9D2D6"/>' +
+          '<rect x="0" y="0.5" width="50" height="8" rx="2.5" fill="#fff" stroke="#9AA6AB" stroke-width=".9"/>' +
+          '<rect x="16" y="2.5" width="30" height="4" rx="1" fill="' + c2 + '" opacity=".55"/>' +
+          '<rect x="50" y="1.5" width="20" height="6" rx="2.5" fill="' + c1 + '"/></g>';
+      }
+    }
+    return '<svg class="pd-foto" width="' + w + '" height="' + hgt + '" viewBox="0 0 120 80" role="img" aria-label="Ilustrasi kemasan ' + h(m.nama) + '">' + isi + '</svg>';
   }
   var PANDUAN_JADWAL = [
     ['pasien', 'Anak · IDAI 2024', '0–18 tahun', 'panduan-jadwal/idai'],

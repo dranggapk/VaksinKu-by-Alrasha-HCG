@@ -513,3 +513,37 @@ JADWAL_HAMIL = [
     ["RSV", "1 dosis setiap kehamilan, usia kandungan 32–36 minggu",
      "Vaksin RSV bivalen berbasis protein F prefusi (Abrysvo), minimal 14 hari sebelum persalinan agar antibodi sempat berpindah ke janin. (Bukti 1++, Grade A)"],
 ]
+
+# Ilustrasi kemasan per merek, digambar aplikasi (bukan foto). Bentuk dan warna
+# khas kemasan mengacu pada foto di Buku Vaksin Indonesia sebagai referensi;
+# tidak ada foto, logo, atau tanda air yang disalin.
+#   bentuk: kotak | kotak-spuit (kotak + spuit siap pakai) | vial (deret vial) | tube (tube oral)
+#   warna:  [warna utama, warna aksen]
+GAYA_MEREK = {
+    "engerix-b": ["kotak-spuit", "#2F5DA8", "#E7ECF6"], "vecon": ["kotak", "#3E9B47", "#1F5FA8"],
+    "euvax-b": ["kotak", "#2C8FCB", "#E07B2C"], "twinrix": ["kotak-spuit", "#3C6FB6", "#F2D34A"],
+    "bopv": ["kotak", "#C8332B", "#1F3F7A"], "ipv": ["vial", "#D7578A", "#F3D9E4"],
+    "bcg-biofarma": ["vial", "#2D5FA6", "#DDE6F2"], "infanrix-hexa": ["kotak", "#2A7BC0", "#C8A23C"],
+    "hexaxim": ["kotak", "#1E73BE", "#7FB3E0"], "pentabio": ["vial", "#7A4AA0", "#E9E0F2"],
+    "tetraxim": ["kotak-spuit", "#2A8FC8", "#C8332B"], "boostrix": ["kotak", "#7B4FA3", "#B9D24A"],
+    "adacel": ["kotak", "#5B3E96", "#F2C23A"], "bio-td": ["kotak", "#1F9AAE", "#E04E3A"],
+    "prevenar-13": ["kotak", "#7A5BA8", "#C33A6A"], "prevenar-20": ["kotak", "#14707F", "#0F3E5E"],
+    "synflorix": ["kotak-spuit", "#3D9A4A", "#E5734A"], "pneumovax-23": ["kotak-spuit", "#1E5FAE", "#7A8AA0"],
+    "rotateq": ["tube", "#6B3F9A", "#B79AD6"], "rotarix": ["tube", "#D23B3B", "#F4C6C6"],
+    "vaxigrip-tetra": ["kotak-spuit", "#2063B0", "#9BC4EA"], "fluarix-tetra": ["kotak", "#2E8C4A", "#E28A2B"],
+    "influvac-tetra": ["kotak", "#E0782C", "#2D5FA6"], "flubio": ["kotak", "#1E9AAE", "#5DBF6A"],
+    "mr-biofarma": ["vial", "#7B4AA0", "#C98A3A"], "mmr-ii": ["kotak", "#1E8F9A", "#2D5FA6"],
+    "imojev": ["kotak", "#4AA3D8", "#1F5FA8"], "varicella-biofarma": ["kotak", "#8B5AB8", "#3FA7D6"],
+    "varivax": ["kotak-spuit", "#1E5FAE", "#46A0C8"], "varilrix": ["kotak-spuit", "#E57AA6", "#2D5FA6"],
+    "avaxim": ["kotak-spuit", "#2D5FA6", "#D23B3B"], "havrix": ["kotak-spuit", "#F2C33A", "#2D5FA6"],
+    "healive": ["kotak", "#E88AA8", "#8A1F4A"], "typhim-vi": ["kotak-spuit", "#2E9C5A", "#1F5FA8"],
+    "gardasil": ["kotak", "#2A6DB5", "#D23B3B"], "gardasil-9": ["kotak", "#1E8FC8", "#D23B3B"],
+    "cervarix": ["kotak-spuit", "#E2668E", "#F3A43A"], "qdenga": ["kotak-spuit", "#7A4AA0", "#3A6FB5"],
+    "menactra": ["kotak", "#6B4A9E", "#2D5FA6"], "menivax": ["vial", "#3E9B47", "#E8F2DF"],
+    "menquadfi": ["kotak", "#2E9C5A", "#2D5FA6"], "verorab": ["kotak", "#C8332B", "#2D5FA6"],
+    "stamaril": ["kotak", "#F2C33A", "#C8332B"], "shingrix": ["kotak", "#E8642C", "#C8332B"],
+    "arexvy": ["vial", "#F2B33A", "#2D5FA6"], "abrysvo": ["kotak", "#3E4FA0", "#D74A8A"],
+}
+for _v in VAKSIN:
+    for _m in _v["merek"]:
+        _m["gaya"] = GAYA_MEREK.get(_m["foto"], ["kotak", "#56C3C7", "#E8488C"])
