@@ -109,6 +109,10 @@ ditanam — semua dihitung dari data yang dimasukkan petugas.
 
 ## Batasan yang perlu diketahui
 
+- **Backend Supabase baru tahap fondasi.** Struktur database, aturan akses, dan fungsi
+  booking–stok–pelayanan–tagihan sudah ada di `supabase/` dan teruji, tetapi aplikasi
+  dan dashboard di bawah ini masih menyimpan data di perangkat.
+
 - **Data tersimpan di perangkat**, bukan di server. Membersihkan data browser
   akan menghapusnya — gunakan menu *Cadangkan data* sebelum berganti perangkat.
 - **Reservasi belum otomatis masuk sistem klinik.** Aplikasi menyusun ringkasan
@@ -191,12 +195,15 @@ src/
   build_admin.py           Merakit dashboard manajemen jadi satu berkas
   uji_app.py               Uji fungsional aplikasi pasien (133 uji)
   uji_admin.py             Uji fungsional dashboard (78 uji)
+  buat_seed_supabase.py    Membuat supabase/seed.sql dari katalog
+  uji_supabase.py          Uji hak akses backend Supabase di PostgreSQL lokal (52 uji)
   tangkap_layar.py         Tangkap layar aplikasi pasien
   tangkap_dashboard.py     Tangkap layar dashboard
   ambil_desain.py          Ekspor isi kanvas Claude Design ke folder design/
   build_index.py           Merakit index.html dari design/
   gen.py                   Design system generator mockup statis (versi lama)
   build_app.py             Generator prototipe klik (versi lama)
+supabase/            Backend tahap fondasi: migrasi tabel + RLS + fungsi, seed (lihat supabase/README.md)
 mockup/              Artboard statis (.dc.html) untuk kanvas desain
 katalog/             Halaman katalog hasil koreksi (lihat katalog/README.md)
 ```
@@ -210,6 +217,7 @@ python3 build_admin.py        # → VaksinKu-Dashboard.html
 python3 build_bundle.py --tanpa-font   # lebih cepat, font dari Google Fonts
 python3 uji_app.py            # 133 uji fungsional aplikasi pasien
 python3 uji_admin.py          # 78 uji fungsional dashboard
+python3 uji_supabase.py       # 52 uji hak akses backend (butuh PostgreSQL lokal)
 python3 tangkap_layar.py      # tangkap layar aplikasi pasien
 python3 tangkap_dashboard.py  # tangkap layar dashboard
 python3 build_index.py        # → index.html dari folder design/
