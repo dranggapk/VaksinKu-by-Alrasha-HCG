@@ -1262,13 +1262,18 @@
   function vaksinFokus() {
     var dipilih = S.onboarding.fokus || [];
     if (!dipilih.length) return [];
-    var kat = [];
-    dipilih.forEach(function (id) {
-      var f = fokusById(id);
-      if (f) f.kat.forEach(function (k) { if (kat.indexOf(k) < 0) kat.push(k); });
-    });
+    // Sediaan khusus usia (mis. Engerix-B Anak / Dewasa) hanya cocok untuk
+    // kelompoknya: sediaan anak tidak direkomendasikan untuk kebutuhan dewasa,
+    // dan sebaliknya.
+    function sediaanCocok(f, v) {
+      var nama = (v.sediaan || '') + ' ' + (v.merk || '');
+      return f.id === 'anak' ? !/\bDewasa\b/i.test(nama) : !/\bAnak\b/i.test(nama);
+    }
     return K.harga.filter(function (v) {
-      return kat.some(function (k) { return v.kategori.indexOf(k) >= 0; });
+      return dipilih.some(function (id) {
+        var f = fokusById(id);
+        return f && sediaanCocok(f, v) && f.kat.some(function (k) { return v.kategori.indexOf(k) >= 0; });
+      });
     });
   }
   // Vaksin yang dianjurkan untuk kebutuhan terpilih tetapi belum ada di price list.

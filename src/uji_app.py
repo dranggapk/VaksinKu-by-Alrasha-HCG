@@ -71,6 +71,14 @@ TEST_JS = r"""
     ok('pilihan Internasional, Pranikah, Ibu Hamil tersedia', ['internasional', 'pranikah', 'hamil'].every(function (id) {
       return !!document.querySelector('[data-act="toggle-fokus"][data-arg="' + id + '"]'); }));
     ok('kartu kebutuhan memakai ikon berwarna', document.querySelectorAll('[data-act="toggle-fokus"] .pick-ic svg.icm').length === 7);
+    function jmlCocok() { return +((document.querySelector('.onb-isi').textContent.match(/(\d+) jenis vaksin cocok/) || [])[1]); }
+    klik('[data-act="toggle-fokus"][data-arg="dewasa"]');
+    var jmlDewasa = jmlCocok();
+    ok('rekomendasi dewasa tanpa sediaan anak (Engerix-B Anak, Avaxim Anak)', jmlDewasa === 15, jmlDewasa + ' vaksin');
+    klik('[data-act="toggle-fokus"][data-arg="anak"]');
+    ok('anak + dewasa: sediaan anak dan dewasa sama-sama masuk', jmlCocok() === 28, jmlCocok() + ' vaksin');
+    klik('[data-act="toggle-fokus"][data-arg="anak"]');
+    klik('[data-act="toggle-fokus"][data-arg="dewasa"]');
     klik('[data-act="toggle-fokus"][data-arg="hamil"]');
     ok('Ibu Hamil menganjurkan RSV meski belum ada di price list', /Juga dianjurkan:\s*RSV/.test(document.body.textContent) &&
        !!document.querySelector('.onb-isi [data-arg="panduan/rsv"]'));
