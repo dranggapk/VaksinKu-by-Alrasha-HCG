@@ -3306,8 +3306,14 @@
 
   function bannerHTML() {
     var kl = klinikAktif();
-    var BANNER = BANNER_SEMUA.filter(function (b) { return !b.klinik || (kl && b.klinik.indexOf(kl.id) >= 0); });
+    // Belum pilih klinik: semua promo tetap tampil sebagai etalase, tetapi
+    // ketukan membuka pilihan klinik dulu karena promo berlaku per klinik.
+    var BANNER = BANNER_SEMUA.filter(function (b) { return !b.klinik || !kl || b.klinik.indexOf(kl.id) >= 0; });
     if (!BANNER.length) return '';
+    var klinikPromo = [];
+    if (!kl) BANNER.forEach(function (b) {
+      (b.klinik || []).forEach(function (id) { if (klinikPromo.indexOf(id) < 0) klinikPromo.push(id); });
+    });
     return '<div class="promo">' +
       '<div class="promo-rel" id="promo-rel">' +
       BANNER.map(function (b) {
@@ -3315,7 +3321,7 @@
           ? ''
           : 'background:linear-gradient(115deg,' + b.warna[0] + ' 0%,' + b.warna[1] + ' 100%);';
         return '<button class="promo-kartu" style="' + latar + '"' +
-          ' data-act="' + h(b.act) + '" data-arg="' + h(b.arg || '') + '"' +
+          (!kl && b.klinik ? ' data-act="buka-lokasi" data-arg=""' : ' data-act="' + h(b.act) + '" data-arg="' + h(b.arg || '') + '"') +
           (b.alt ? ' aria-label="' + h(b.alt) + '"' : '') + '>' +
           (b.gambar ? '<img src="' + h(b.gambar) + '" alt="" loading="lazy">' : '') +
           // tirai gelap hanya perlu bila aplikasi menulis teks di atas gambar
@@ -3331,6 +3337,12 @@
         ? '<div class="promo-titik" id="promo-titik">' +
             BANNER.map(function (_, i) { return '<i' + (i === 0 ? ' class="on"' : '') + '></i>'; }).join('') +
             '</div>'
+        : '') +
+      (klinikPromo.length
+        ? '<button class="linkbtn tiny promo-catatan" data-act="buka-lokasi">' + ic('pin', 13) + ' Promo klinik mitra di ' +
+            h(semuaKlinik().filter(function (k) { return klinikPromo.indexOf(k.id) >= 0; })
+              .map(function (k) { return k.kotaNama.replace('Kota ', ''); })
+              .filter(function (n, i, a) { return a.indexOf(n) === i; }).join(' & ')) + ' · pilih klinik untuk memesan</button>'
         : '') +
       '</div>';
   }

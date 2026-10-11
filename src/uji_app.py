@@ -111,7 +111,13 @@ TEST_JS = r"""
 
     /* 1d. mitra klinik: pilih kota & klinik */
     ok('pengguna baru diminta memilih kota & klinik', document.body.textContent.indexOf('Pilih kota & klinik mitra') > 0);
-    ok('belum pilih klinik: banner promo klinik tidak tampil', !document.getElementById('promo-rel'));
+    ok('belum pilih klinik: banner promo tetap tampil', !!document.getElementById('promo-rel') &&
+       document.querySelectorAll('#promo-rel .promo-kartu').length === 5);
+    ok('belum pilih klinik: banner diberi keterangan klinik promo', /Promo klinik mitra di Tanjungpinang/.test((document.querySelector('.promo-catatan') || {}).textContent || ''),
+       (document.querySelector('.promo-catatan') || {}).textContent);
+    klik('#promo-rel .promo-kartu');
+    ok('belum pilih klinik: ketuk banner membuka pilihan klinik', document.querySelectorAll('[data-act="pilih-klinik"]').length === 3);
+    klik('.sheet [data-act="tutup-sheet"]');
     klik('[data-act="buka-lokasi"]');
     ok('lembar lokasi memuat dua kota', document.body.textContent.indexOf('Kota Bandung') > 0 &&
        document.body.textContent.indexOf('Kota Tanjungpinang') > 0 && document.querySelectorAll('[data-act="pilih-klinik"]').length === 3);
