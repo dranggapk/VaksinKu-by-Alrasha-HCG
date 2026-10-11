@@ -112,6 +112,10 @@ def katalog_js():
             "callCenterLabel": D.BRAND["call_center_label"], "instagram": D.BRAND["instagram"],
             "website": D.BRAND["website"], "group": D.BRAND["group"],
         },
+        "google": {
+            "clientId": os.environ.get("VAKSINKU_GOOGLE_CLIENT_ID", D.GOOGLE["client_id"]).strip(),
+            "situs": D.GOOGLE["situs"],
+        },
         "pilar": D.PILAR,
         "layanan": D.LAYANAN,
         "termasuk": D.TERMASUK,

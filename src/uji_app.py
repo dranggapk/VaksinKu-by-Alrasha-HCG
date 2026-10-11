@@ -93,23 +93,38 @@ TEST_JS = r"""
     ok('langkah 3 menampilkan cara layanan', document.querySelectorAll('[data-act="set-fokus-layanan"]').length === 3);
     klik('[data-act="set-fokus-layanan"][data-arg="klinik"]');
     klik('[data-act="onb-lanjut"]');
-    ok('onboarding selesai menuju layar masuk', location.hash === '#/masuk' && !!document.getElementById('form-masuk'), location.hash);
+    ok('onboarding selesai menuju layar masuk', location.hash === '#/masuk', location.hash);
 
-    /* 1c. masuk sebagai akun lokal */
-    var fm = document.getElementById('form-masuk');
-    fm.elements.nama.value = '';
-    fm.elements.hp.value = '12';
-    kirim(fm);
-    ok('masuk menolak data tidak lengkap', !st().onboarding.selesai && document.querySelectorAll('.errmsg').length === 2,
-       document.querySelectorAll('.errmsg').length + ' pesan galat');
-    ok('tombol Google dinonaktifkan apa adanya', !!document.querySelector('button[disabled]') &&
-       document.body.textContent.indexOf('Masuk dengan Google belum tersedia') > 0);
-    fm = document.getElementById('form-masuk');
-    fm.elements.nama.value = 'Ibu Sari';
-    fm.elements.hp.value = '081234567890';
-    kirim(fm);
-    ok('profil terisi dari layar masuk', st().profil && st().profil.nama === 'Ibu Sari', JSON.stringify(st().profil));
+    /* 1c. masuk hanya dengan Google */
+    ok('layar masuk tanpa formulir nama & nomor HP', !document.getElementById('form-masuk') &&
+       !document.querySelector('.masuk input'));
+    ok('dibuka dari berkas: tombol Google nonaktif + tautan ke situs resmi', !!document.querySelector('.tombol-g[disabled]') &&
+       !!document.querySelector('.masuk a[href="https://vaksinku.app"]'));
+    function jwtUji(isi) {
+      function b64(o) { return btoa(JSON.stringify(o)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); }
+      return b64({ alg: 'RS256' }) + '.' + b64(isi) + '.tanda';
+    }
+    K2.google.clientId = 'uji.apps.googleusercontent.com';
+    var isiG = { iss: 'https://accounts.google.com', aud: 'uji.apps.googleusercontent.com', sub: '1234567890',
+      email: 'sari@gmail.com', email_verified: true, name: 'Ibu Sari', given_name: 'Sari', exp: Math.floor(Date.now() / 1000) + 600 };
+    window.VaksinKuUji.terimaGoogle({ credential: jwtUji(Object.assign({}, isiG, { aud: 'klien-lain' })) });
+    ok('token Google untuk aplikasi lain ditolak', !st().onboarding.selesai && location.hash === '#/masuk');
+    window.VaksinKuUji.terimaGoogle({ credential: jwtUji(Object.assign({}, isiG, { exp: 1000 })) });
+    ok('token Google kedaluwarsa ditolak', !st().onboarding.selesai);
+    window.VaksinKuUji.terimaGoogle({ credential: jwtUji(isiG) });
+    ok('masuk Google: akun & nama tersimpan', st().akun.metode === 'google' && st().akun.email === 'sari@gmail.com' &&
+       st().profil.nama === 'Ibu Sari', JSON.stringify(st().akun));
     ok('masuk mengantar ke beranda', location.hash === '#/beranda', location.hash);
+    ok('nomor HP belum ada: diminta di Profil', document.body.textContent.indexOf('Lengkapi nomor HP di Profil') >= 0);
+    ganti('#/profil');
+    ok('profil menampilkan akun Google & tombol keluar', document.body.textContent.indexOf('sari@gmail.com') > 0 &&
+       !!document.querySelector('[data-act="keluar-akun"]'));
+    var hpIn = document.querySelector('[data-field="profil.hp"]');
+    hpIn.value = '081234567890';
+    hpIn.dispatchEvent(new Event('input', { bubbles: true }));
+    hpIn.dispatchEvent(new Event('change', { bubbles: true }));
+    ok('nomor HP diisi di Profil', st().profil.hp === '081234567890', st().profil.hp);
+    ganti('#/beranda');
     ok('layanan pilihan onboarding jadi bawaan booking', (st().draft || {}).layanan === 'klinik', (st().draft || {}).layanan);
 
     /* 1d. beranda */

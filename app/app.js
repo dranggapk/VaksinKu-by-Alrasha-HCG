@@ -1290,7 +1290,7 @@
   }
   function selesaikanOnboarding(metode) {
     S.onboarding.selesai = true;
-    S.akun.masuk = metode === 'hp';
+    S.akun.masuk = metode === 'google';
     S.akun.metode = metode;
     if (S.onboarding.layanan && S.onboarding.layanan !== 'korporat') draft().layanan = S.onboarding.layanan;
     simpan();
@@ -1389,38 +1389,97 @@
     return { body: body, foot: foot, penuh: true };
   }
 
+  /* ============================ masuk dengan Google ============================
+     Satu-satunya cara mendaftar. Google Identity Services hanya berjalan di
+     situs https yang terdaftar pada Client ID (vaksinku.app), tidak di berkas
+     yang dibuka langsung dari perangkat. Nomor HP diminta setelah masuk, di
+     Profil, karena dibutuhkan untuk reservasi dan tidak diberikan Google. */
+  var LOGO_G = '<svg width="19" height="19" viewBox="0 0 48 48" aria-hidden="true">' +
+    '<path fill="#EA4335" d="M24 9.5c3.4 0 6.4 1.2 8.8 3.5l6.5-6.5C35.3 2.6 30 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.6 5.9C12.1 13 17.5 9.5 24 9.5z"/>' +
+    '<path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.2-.4-4.7H24v9h12.7c-.5 3-2.2 5.5-4.7 7.2l7.3 5.7c4.3-4 6.8-9.9 6.8-17.2z"/>' +
+    '<path fill="#FBBC05" d="M10.2 19.1a14.5 14.5 0 0 0 0 9.8l-7.6 5.9a24 24 0 0 1 0-21.6l7.6 5.9z"/>' +
+    '<path fill="#34A853" d="M24 48c6 0 11.3-2 15-5.4l-7.3-5.7c-2 1.4-4.7 2.2-7.7 2.2-6.5 0-12-4.4-13.8-10.3l-7.6 5.9C6.5 42.6 14.6 48 24 48z"/></svg>';
+  // '' = siap; 'luar' = dibuka bukan dari situs https; 'belum' = Client ID belum diisi
+  function kendalaGoogle() {
+    var lokal = /^(localhost|127\.0\.0\.1)$/.test(location.hostname);
+    if (location.protocol !== 'https:' && !lokal) return 'luar';
+    if (!(K.google && K.google.clientId)) return 'belum';
+    return '';
+  }
+  var kredensialGoogle = '';   // ID token terakhir, untuk diverifikasi server saat backend aktif
+  function bacaJwt(token) {
+    try {
+      var b = String(token).split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+      while (b.length % 4) b += '=';
+      return JSON.parse(decodeURIComponent(escape(atob(b))));
+    } catch (e) { return null; }
+  }
+  function terimaGoogle(resp) {
+    var d = bacaJwt(resp && resp.credential);
+    var sah = d && d.aud === K.google.clientId && /^(https:\/\/)?accounts\.google\.com$/.test(d.iss) &&
+      d.exp * 1000 > Date.now() && d.email && d.email_verified !== false;
+    if (!sah) { toast('Gagal masuk dengan Google. Silakan coba lagi.'); return; }
+    kredensialGoogle = resp.credential;
+    S.akun = { masuk: true, metode: 'google', email: d.email, sub: d.sub, nama: d.name || '', foto: d.picture || '' };
+    if (!String(S.profil.nama).trim()) S.profil.nama = d.name || '';
+    S.profil.email = d.email;
+    selesaikanOnboarding('google');
+    location.hash = '#/beranda';
+    toast('Selamat datang, ' + (d.given_name || String(d.name || '').split(' ')[0] || d.email) + '.' +
+      (String(S.profil.hp).trim() ? '' : ' Lengkapi nomor HP di Profil untuk reservasi.'));
+  }
+  var gisDimuat = false;
+  function pasangTombolGoogle() {
+    var el = document.getElementById('tombol-google');
+    if (!el || kendalaGoogle()) return;
+    function gambar() {
+      if (!window.google || !google.accounts || !document.getElementById('tombol-google')) return;
+      google.accounts.id.initialize({ client_id: K.google.clientId, callback: terimaGoogle, ux_mode: 'popup' });
+      google.accounts.id.renderButton(document.getElementById('tombol-google'), {
+        theme: 'outline', size: 'large', shape: 'pill', text: 'continue_with', locale: 'id',
+        width: Math.min(400, document.getElementById('tombol-google').offsetWidth || 320)
+      });
+    }
+    if (window.google && google.accounts) { gambar(); return; }
+    if (gisDimuat) return;
+    gisDimuat = true;
+    var sc = document.createElement('script');
+    sc.src = 'https://accounts.google.com/gsi/client';
+    sc.async = true;
+    sc.onload = gambar;
+    sc.onerror = function () {
+      gisDimuat = false;
+      var t = document.getElementById('tombol-google');
+      if (t) t.innerHTML = '<div class="tiny center" style="color:var(--danger,#B42318);">Tidak dapat memuat layanan Google. Periksa koneksi internet lalu muat ulang.</div>';
+    };
+    document.head.appendChild(sc);
+  }
+
   function scMasuk() {
+    var kendala = kendalaGoogle();
+    var tombol = kendala
+      ? '<button class="btn block tombol-g" disabled>' + LOGO_G + ' Lanjutkan dengan Google</button>' +
+        '<div class="tiny muted center" style="margin-top:8px;line-height:1.6;">' + (kendala === 'luar'
+          ? 'Masuk dengan Google hanya bisa di situs resmi VaksinKu, bukan dari berkas yang dibuka langsung di perangkat.'
+          : 'Masuk dengan Google sedang disiapkan. Sementara itu Anda bisa melihat-lihat dulu.') + '</div>' +
+        (kendala === 'luar' ? '<a class="btn primary block" style="margin-top:12px;" href="' + h(K.google.situs) + '">Buka ' +
+          h(K.google.situs.replace(/^https?:\/\//, '')) + '</a>' : '')
+      : '<div id="tombol-google" class="tombol-google"><div class="tiny muted center">Memuat tombol Google…</div></div>';
     var body = '<div class="masuk">' +
       '<div class="stack g8" style="align-items:center;">' +
       '<img src="' + K.logoMark + '" alt="VaksinKu" style="height:46px;width:auto;">' +
       '<div class="disp center" style="font-size:21px;font-weight:800;margin-top:26px;">Masuk untuk mulai vaksinasi</div>' +
-      '<div class="small muted center" style="line-height:1.6;">Kelola jadwal, rekam medis, dan keluarga Anda dalam satu akun VaksinKu.</div>' +
+      '<div class="small muted center" style="line-height:1.6;">Daftar dan masuk cukup dengan akun Google — tanpa kata sandi baru.</div>' +
       '</div>' +
-      '<form id="form-masuk" class="stack g12" style="margin-top:30px;">' +
-      '<div><label class="lbl">Nama lengkap<span class="req">*</span></label>' +
-      '<input class="input' + (formErr.nama ? ' err' : '') + '" name="nama" value="' + h(S.profil.nama) + '" placeholder="Nama sesuai identitas" autocomplete="name">' +
-      (formErr.nama ? '<div class="errmsg">' + h(formErr.nama) + '</div>' : '') + '</div>' +
-      '<div><label class="lbl">Nomor HP / WhatsApp<span class="req">*</span></label>' +
-      '<input class="input' + (formErr.hp ? ' err' : '') + '" type="tel" inputmode="tel" name="hp" value="' + h(S.profil.hp) + '" placeholder="08xxxxxxxxxx" autocomplete="tel">' +
-      (formErr.hp ? '<div class="errmsg">' + h(formErr.hp) + '</div>' : '') + '</div>' +
-      '<button type="submit" class="btn primary block">' + ic('wa', 17) + ' Lanjutkan dengan Nomor HP</button>' +
-      '</form>' +
-      '<button class="btn block" style="background:#fff;border:1.4px solid var(--line-2);color:var(--ink-4);margin-top:12px;" disabled>' +
-      '<svg width="19" height="19" viewBox="0 0 48 48" aria-hidden="true"><path fill="#BDBDBD" d="M24 9.5c3.4 0 6.4 1.2 8.8 3.5l6.5-6.5C35.3 2.6 30 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.6 5.9C12.1 13 17.5 9.5 24 9.5z"/>' +
-      '<path fill="#D6D6D6" d="M46.5 24.5c0-1.6-.1-3.2-.4-4.7H24v9h12.7c-.5 3-2.2 5.5-4.7 7.2l7.3 5.7c4.3-4 6.8-9.9 6.8-17.2z"/>' +
-      '<path fill="#CFCFCF" d="M10.2 19.1a14.5 14.5 0 0 0 0 9.8l-7.6 5.9a24 24 0 0 1 0-21.6l7.6 5.9z"/>' +
-      '<path fill="#C9C9C9" d="M24 48c6 0 11.3-2 15-5.4l-7.3-5.7c-2 1.4-4.7 2.2-7.7 2.2-6.5 0-12-4.4-13.8-10.3l-7.6 5.9C6.5 42.6 14.6 48 24 48z"/></svg>' +
-      ' Lanjutkan dengan Google</button>' +
-      '<div class="tiny muted center" style="margin-top:8px;line-height:1.6;">Masuk dengan Google belum tersedia: perlu server untuk memverifikasi akun, ' +
-      'sedangkan aplikasi ini berjalan sebagai satu berkas di perangkat Anda.</div>' +
-      '<div class="card flat" style="margin-top:16px;background:#F6F6F5;border-color:transparent;">' +
-      '<div class="tiny" style="line-height:1.65;color:var(--ink-2);">Tidak ada kode OTP dan tidak ada data yang dikirim ke server. ' +
-      'Nama dan nomor di atas disimpan di perangkat ini saja, lalu dipakai sebagai kontak pada reservasi dan konsultasi.</div></div>' +
-      '<button class="btn ghost block" style="margin-top:4px;" data-act="masuk-tamu">Lihat-lihat dulu tanpa mengisi</button>' +
+      '<div style="margin-top:30px;">' + tombol + '</div>' +
+      '<div class="card flat" style="margin-top:18px;background:#F6F6F5;border-color:transparent;">' +
+      '<div class="tiny" style="line-height:1.65;color:var(--ink-2);">VaksinKu hanya menerima <b>nama, email, dan foto profil</b> dari akun Google Anda. ' +
+      'Nomor HP/WhatsApp diisi setelah masuk, di menu Profil, untuk kontak reservasi dan konsultasi.</div></div>' +
+      '<button class="btn ghost block" style="margin-top:4px;" data-act="masuk-tamu">Lihat-lihat dulu tanpa masuk</button>' +
       '<div class="stack g6" style="align-items:center;margin-top:18px;">' +
       '<div class="tiny muted">Butuh bantuan? WhatsApp ' +
       '<a href="https://wa.me/' + WA + '" target="_blank" rel="noopener" style="font-weight:700;">' + h(K.brand.callCenter) + '</a></div>' +
-      '<div class="tiny" style="color:var(--ink-4);">Versi 1.0</div></div></div>';
+      '<div class="tiny" style="color:var(--ink-4);">Versi 1.1</div></div></div>';
     return { body: body, penuh: true };
   }
 
@@ -2670,6 +2729,16 @@
   function scProfil() {
     var body = topbar('Profil', 'Data pendaftar & pengaturan');
     body += '<div class="pad stack g14">';
+    body += S.akun.masuk && S.akun.metode === 'google'
+      ? '<div class="card row mid g12">' +
+        (S.akun.foto ? '<img src="' + h(S.akun.foto) + '" alt="" referrerpolicy="no-referrer" style="width:40px;height:40px;border-radius:50%;">'
+          : '<span class="icon-sq">' + LOGO_G + '</span>') +
+        '<div class="grow" style="min-width:0;"><div class="tiny muted">Masuk dengan Google</div>' +
+        '<div class="small" style="font-weight:700;overflow:hidden;text-overflow:ellipsis;">' + h(S.akun.email) + '</div></div>' +
+        '<button class="btn outline sm" data-act="keluar-akun">Keluar</button></div>'
+      : '<div class="card stack g8"><div class="small" style="font-weight:700;">Belum masuk</div>' +
+        '<div class="tiny muted" style="line-height:1.6;">Masuk dengan akun Google untuk menyimpan akun VaksinKu Anda.</div>' +
+        '<button class="btn outline sm" data-act="go" data-arg="masuk">' + LOGO_G + ' Masuk dengan Google</button></div>';
     body += '<div class="card stack g10"><div class="sect-title">Data pendaftar</div>' +
       '<div class="hint">Dipakai sebagai penerima invoice dan kontak yang dihubungi CS.</div>' +
       '<div><label class="lbl">Nama lengkap<span class="req">*</span></label>' +
@@ -3245,6 +3314,7 @@
     var s = document.getElementById('cari-vaksin');
     if (s) { s.focus(); s.setSelectionRange(s.value.length, s.value.length); }
     pasangBanner();
+    if (route.name === 'masuk') pasangTombolGoogle();
     // tabel KIA lebar: gulir otomatis ke kolom usia anak saat ini
     var gulir = document.querySelector(".kia-gulir"), kini = gulir && gulir.querySelector("th.kini");
     if (kini) gulir.scrollLeft = Math.max(0, kini.offsetLeft - 190);
@@ -3257,6 +3327,9 @@
     }
   }
   var jedaSplash = 0;
+  // Dipakai uji otomatis untuk mensimulasikan balasan Google; tidak memberi
+  // akses lebih dari yang sudah dimiliki skrip apa pun di halaman ini.
+  window.VaksinKuUji = { terimaGoogle: terimaGoogle };
 
   /* ====================== banner promo beranda ======================
      Dokter tinggal menambah atau mengurangi baris di sini. Tiap baris:
@@ -3472,6 +3545,12 @@
         window.open('https://wa.me/' + WA + '?text=' + encodeURIComponent(pesanKorporat()), '_blank');
         return;
       }
+      case 'keluar-akun':
+        if (!konfirmasi('Keluar dari akun Google ' + S.akun.email + '? Data di perangkat ini tetap tersimpan.')) return;
+        if (window.google && google.accounts) google.accounts.id.disableAutoSelect();
+        kredensialGoogle = '';
+        S.akun = { masuk: false, metode: '' };
+        simpan(); location.hash = '#/masuk'; return;
       case 'masuk-tamu': selesaikanOnboarding('tamu'); location.hash = '#/beranda';
         toast('Nama dan nomor bisa diisi kapan saja lewat Profil.'); return;
       case 'mulai-booking': d.layanan = arg; simpan(); location.hash = '#/booking'; return;
@@ -3887,18 +3966,6 @@
       simpan(); location.hash = '#/pasien'; toast(id ? 'Data pasien diperbarui.' : 'Pasien ditambahkan.');
       return;
     }
-    if (formId === 'form-masuk') {
-      var nm = get('nama'), hp = get('hp'), digit = hp.replace(/\D/g, '');
-      if (!nm) formErr.nama = 'Nama wajib diisi.';
-      if (!hp) formErr.hp = 'Nomor HP wajib diisi.';
-      else if (digit.length < 9 || digit.length > 15) formErr.hp = 'Nomor HP tidak valid — isi 9–15 digit, contoh 081234567890.';
-      if (Object.keys(formErr).length) { render(); return; }
-      S.profil.nama = nm; S.profil.hp = hp;
-      selesaikanOnboarding('hp');
-      location.hash = '#/beranda';
-      toast('Selamat datang, ' + nm.split(' ')[0] + '.');
-      return;
-    }
     if (formId === 'form-korporat') {
       if (!S.korporat.jenis) formErr.jenis = 'Pilih sekolah atau perusahaan.';
       if (!get('nama')) formErr.nama = 'Nama institusi wajib diisi.';
@@ -3985,7 +4052,7 @@
     S = JSON.parse(JSON.stringify(kosong));
     S.profil = { nama: 'Contoh Pengguna', hp: '0812xxxxxxx', jenisKelamin: 'Perempuan' };
     S.onboarding = { selesai: true, langkah: 2, fokus: ['anak'], layanan: 'homecare' };
-    S.akun = { masuk: true, metode: 'hp' };
+    S.akun = { masuk: false, metode: 'contoh' };
     var anak = { id: uid(), nama: 'Nadia Contoh', tglLahir: (thn - 5) + '-05-12', jenisKelamin: 'Perempuan', hubungan: 'Anak' };
     var ayah = { id: uid(), nama: 'Bayu Contoh', tglLahir: (thn - 34) + '-02-08', jenisKelamin: 'Laki-laki', hubungan: 'Ayah' };
     S.pasien = [anak, ayah];

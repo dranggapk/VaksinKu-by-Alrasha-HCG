@@ -13,6 +13,15 @@ BRAND = {
     "group": "Alrasha Ibumas Group",
 }
 
+# Masuk dengan Google. Client ID dibuat di Google Cloud Console (Credentials →
+# OAuth client ID → Web application) dengan Authorized JavaScript origin
+# https://vaksinku.app. Client ID bukan rahasia; boleh juga diisi lewat
+# variabel lingkungan VAKSINKU_GOOGLE_CLIENT_ID saat build.
+GOOGLE = {
+    "client_id": "",
+    "situs": "https://vaksinku.app",
+}
+
 # Tiga pilar positioning (slide "Kenapa harus di VaksinKu")
 PILAR = [
     ("shield", "Aman", [
