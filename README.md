@@ -208,6 +208,7 @@ src/
   gen.py                   Design system generator mockup statis (versi lama)
   build_app.py             Generator prototipe klik (versi lama)
 situs/               Halaman situs vaksinku.app (privasi.html = Kebijakan Privasi)
+deploy/              Pemasangan di VPS bersama (lihat deploy/README.md)
 supabase/            Backend tahap fondasi: migrasi tabel + RLS + fungsi, seed (lihat supabase/README.md)
 mockup/              Artboard statis (.dc.html) untuk kanvas desain
 katalog/             Halaman katalog hasil koreksi (lihat katalog/README.md)

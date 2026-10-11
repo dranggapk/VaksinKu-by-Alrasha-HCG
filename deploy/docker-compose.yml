@@ -1,0 +1,22 @@
+# VaksinKu di VPS bersama — tahap 1: halaman web statis (aplikasi + Kebijakan Privasi).
+# Berdiri sendiri di /opt/vaksinku, terpisah dari sih-deployment. Satu-satunya
+# sambungan ke luar adalah jaringan "vaksinku-edge", tempat Caddy milik
+# sih-deployment meneruskan permintaan vaksinku.app ke wadah vaksinku-web.
+name: vaksinku
+
+services:
+  web:
+    image: caddy:2-alpine
+    container_name: vaksinku-web
+    restart: unless-stopped
+    volumes:
+      - ./web/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./situs:/srv:ro
+    networks: [edge]
+    mem_limit: 128m
+    cpus: 0.5
+
+networks:
+  edge:
+    name: vaksinku-edge
+    external: true

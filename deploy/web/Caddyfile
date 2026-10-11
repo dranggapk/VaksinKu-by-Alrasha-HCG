@@ -1,0 +1,19 @@
+# Server web di dalam wadah vaksinku-web. HTTPS diurus Caddy sih-deployment
+# di depan, jadi di sini cukup HTTP biasa pada port 80 jaringan internal.
+{
+	admin off
+	auto_https off
+}
+
+:80 {
+	root * /srv
+	file_server
+	header {
+		X-Content-Type-Options nosniff
+		Referrer-Policy strict-origin-when-cross-origin
+		-Server
+	}
+	# halaman selalu diperiksa ulang agar versi baru langsung terpakai
+	@halaman path / /index.html /privasi.html
+	header @halaman Cache-Control "no-cache"
+}
