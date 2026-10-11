@@ -1967,7 +1967,8 @@ i.pkm{display:inline-block;font-style:normal;font-size:8.5px;font-weight:800;col
       '<div style="margin-top:30px;">' + tombol + '</div>' +
       '<div class="card flat" style="margin-top:18px;background:#F6F6F5;border-color:transparent;">' +
       '<div class="tiny" style="line-height:1.65;color:var(--ink-2);">VaksinKu hanya menerima <b>nama, email, dan foto profil</b> dari akun Google Anda. ' +
-      'Nomor HP/WhatsApp diisi setelah masuk, di menu Profil, untuk kontak reservasi dan konsultasi.</div></div>' +
+      'Nomor HP/WhatsApp diisi setelah masuk, di menu Profil, untuk kontak reservasi dan konsultasi. ' +
+      'Dengan masuk, Anda menyetujui <a href="' + h(K.google.situs) + '/privasi.html" target="_blank" rel="noopener">Kebijakan Privasi</a> VaksinKu.</div></div>' +
       '<button class="btn ghost block" style="margin-top:4px;" data-act="masuk-tamu">Lihat-lihat dulu tanpa masuk</button>' +
       '<div class="stack g6" style="align-items:center;margin-top:18px;">' +
       '<div class="tiny muted">Butuh bantuan? WhatsApp ' +
@@ -3278,6 +3279,7 @@ i.pkm{display:inline-block;font-style:normal;font-size:8.5px;font-weight:800;col
       '<button class="btn outline sm" data-act="impor">' + ic('upload', 16) + ' Pulihkan dari cadangan</button>' +
       (S.pasien.length ? '' : '<button class="btn outline sm" data-act="contoh">Muat data contoh</button>') +
       '<button class="btn danger sm" data-act="reset">Hapus semua data</button>' +
+      '<a class="tiny" href="' + h(K.google.situs) + '/privasi.html" target="_blank" rel="noopener">Kebijakan Privasi</a>' +
       '<input type="file" id="file-impor" accept="application/json,.json" class="hide"></div>';
 
     if (!storageOk) {

@@ -100,6 +100,7 @@ TEST_JS = r"""
        !document.querySelector('.masuk input'));
     ok('dibuka dari berkas: tombol Google nonaktif + tautan ke situs resmi', !!document.querySelector('.tombol-g[disabled]') &&
        !!document.querySelector('.masuk a[href="https://vaksinku.app"]'));
+    ok('layar masuk menautkan Kebijakan Privasi', !!document.querySelector('.masuk a[href="https://vaksinku.app/privasi.html"]'));
     function jwtUji(isi) {
       function b64(o) { return btoa(JSON.stringify(o)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); }
       return b64({ alg: 'RS256' }) + '.' + b64(isi) + '.tanda';
