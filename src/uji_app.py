@@ -70,6 +70,11 @@ TEST_JS = r"""
        document.querySelectorAll('[data-act="toggle-fokus"]').length + ' pilihan');
     ok('pilihan Internasional, Pranikah, Ibu Hamil tersedia', ['internasional', 'pranikah', 'hamil'].every(function (id) {
       return !!document.querySelector('[data-act="toggle-fokus"][data-arg="' + id + '"]'); }));
+    ok('kartu kebutuhan memakai ikon berwarna', document.querySelectorAll('[data-act="toggle-fokus"] .pick-ic svg.icm').length === 7);
+    klik('[data-act="toggle-fokus"][data-arg="hamil"]');
+    ok('Ibu Hamil menganjurkan RSV meski belum ada di price list', /Juga dianjurkan:\s*RSV/.test(document.body.textContent) &&
+       !!document.querySelector('.onb-isi [data-arg="panduan/rsv"]'));
+    klik('[data-act="toggle-fokus"][data-arg="hamil"]');
     klik('[data-act="onb-lanjut"]');
     ok('lanjut ditolak sebelum memilih kebutuhan', (st().onboarding || {}).langkah === 1, 'langkah ' + (st().onboarding || {}).langkah);
     klik('[data-act="toggle-fokus"][data-arg="anak"]');

@@ -124,7 +124,7 @@ def contoh_korporat(tab="ringkasan"):
 
 def state_baru():
     """Perangkat yang belum pernah dipakai — untuk layar splash/onboarding/masuk."""
-    return {"versi": 1, "onboarding": {"selesai": False, "langkah": 1, "fokus": ["anak"], "layanan": ""}}
+    return {"versi": 1, "onboarding": {"selesai": False, "langkah": 1, "fokus": ["anak", "hamil"], "layanan": ""}}
 
 
 def seed_js(nama, tujuan):

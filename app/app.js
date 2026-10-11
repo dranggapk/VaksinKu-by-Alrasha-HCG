@@ -24,9 +24,6 @@
     building: '<rect x="5" y="4" width="14" height="17" rx="1.4"/><path d="M9 8h1.6M13.4 8H15M9 12h1.6M13.4 12h1.6M9 16h1.6M13.4 16h1.6"/>',
     syringe: '<path d="M13.5 4.5 19.5 10.5"/><path d="M16.5 3 21 7.5"/><path d="M15 7 7.5 14.5 6 19.5l5-1.5L18.5 10.5 15 7Z"/><path d="M10.5 9.5 12.5 11.5M8.5 11.5l2 2"/><path d="M6 19.5 3.5 22"/>',
     tag: '<path d="M11.4 3.6H20v8.6l-8.7 8.7a1.4 1.4 0 0 1-2 0l-6.6-6.6a1.4 1.4 0 0 1 0-2l8.7-8.7Z"/><circle cx="16.2" cy="7.8" r="1.4"/>',
-    pesawat: '<path d="M10.2 13.8 4 12.3l-1-1.5 1.3-.6 7.4.9 4.6-4.6c.9-.9 2.5-1.3 3.3-.5.8.8.4 2.4-.5 3.3l-4.6 4.6.9 7.4-.6 1.3-1.5-1-1.5-6.2Z"/><path d="M6.5 17.5 4 20M8 14.5l-3.5.5 1.5 1.5"/>',
-    cincin: '<circle cx="9" cy="14.5" r="5"/><circle cx="15" cy="14.5" r="5"/><path d="m9.5 3.5 1-1.2h3l1 1.2L12 6.5Z"/>',
-    hamil: '<circle cx="11" cy="4.6" r="2"/><path d="M9 21v-5.5l-1.2-2.6c-.5-1.2.1-2.6 1.3-3.3l1.4-.8c1.2-.7 2.6 0 3 1.2l.2.8c2.5.6 3.8 2.3 3.6 4.4-.2 1.9-1.8 3-3.8 3H13V21"/>',
     globe: '<circle cx="12" cy="12" r="8.6"/><path d="M3.6 12h16.8"/><path d="M12 3.4c2.2 2.4 3.4 5.4 3.4 8.6S14.2 18.2 12 20.6c-2.2-2.4-3.4-5.4-3.4-8.6S9.8 5.8 12 3.4Z"/>',
     wa: '<path d="M7 17.5 4.5 20l1-3.6A8 8 0 1 1 12 20a8 8 0 0 1-5-1.7Z"/><path d="M8.8 8.6c.2-.5.6-.5.9-.5h.6c.2 0 .5 0 .7.5s.8 1.9.9 2 .2.3 0 .6-.3.4-.5.6-.4.4-.2.8a6 6 0 0 0 2.8 2.5c.4.2.6.1.8-.1s.8-.9 1-1.2.4-.2.7-.1 1.8.8 2.1 1 .5.3.5.5-.1 1-.6 1.6-1.5 1.2-2.2 1.2c-1.9 0-4.4-1.4-5.9-3.4S8.4 9.3 8.8 8.6Z"/>',
     family: '<circle cx="8" cy="7.5" r="2.6"/><circle cx="16" cy="7.5" r="2.6"/><circle cx="12" cy="9.5" r="2"/><path d="M3.5 20c.6-2.7 2.2-4.3 4.5-4.3s3.6 1.3 4 3M12 20c.4-1.7 1.5-3 3-3.4M15.5 15.7c2.3 0 3.9 1.6 4.5 4.3"/>',
@@ -165,6 +162,47 @@
 
   // Varian warna sesuai lembar ikon: 'aktif' (dipilih) berubah pink,
   // 'nonaktif' jadi abu-abu. Warna diganti sekali jalan agar tidak bertumpuk.
+  /* Ikon kebutuhan vaksinasi (onboarding), gaya sama dengan ikon menu Alternatif 2. */
+  IKON_MENU['fokus-anak'] =
+    '<circle cx="11.5" cy="27" r="2.8" fill="#fff"/><circle cx="36.5" cy="27" r="2.8" fill="#fff"/>' +
+    '<circle cx="24" cy="26.5" r="12.5" fill="#fff"/>' +
+    '<path d="M11.8 24.5C12.5 17.6 17.6 14 24 14s11.5 3.6 12.2 10.5c-3.4-.6-6.4-2.6-8-5.3-2.4 2.6-6.4 4.3-10.6 4.3-2.2 0-4 .4-5.8 1z" fill="' + IM.p + '"/>' +
+    '<path d="M24 14.2 20.6 11.4v4.2zM24 14.2l3.4-2.8v4.2z" fill="' + IM.o + '" stroke-width="1.4"/>' +
+    '<circle cx="19.3" cy="28" r="1.5" fill="' + IM.o + '" stroke="none"/><circle cx="28.7" cy="28" r="1.5" fill="' + IM.o + '" stroke="none"/>' +
+    '<path d="M20.6 32.6c2 2 4.8 2 6.8 0" stroke="' + IM.p + '" stroke-width="2.2"/>';
+  IKON_MENU['fokus-dewasa'] =
+    '<path d="M8.5 43v-5.5C8.5 31 13 27 19 27h10c6 0 10.5 4 10.5 10.5V43z" fill="' + IM.t + '"/>' +
+    '<path d="M19.5 27.2c1.2 2.4 2.8 3.6 4.5 3.6s3.3-1.2 4.5-3.6" fill="#fff"/>' +
+    '<circle cx="24" cy="15.5" r="8" fill="#fff"/>' +
+    '<path d="M16 15c0-5.6 3.6-8.6 8-8.6s8 3 8 8.6c-3.2-.6-5.6-2.2-7-4.4-2 2.4-5.2 3.9-9 4.4z" fill="' + IM.p + '"/>';
+  IKON_MENU['fokus-pranikah'] =
+    '<circle cx="18" cy="29.5" r="9.5" stroke="' + IM.t + '" stroke-width="3.4"/>' +
+    '<circle cx="30" cy="29.5" r="9.5" stroke="' + IM.p + '" stroke-width="3.4"/>' +
+    '<path d="M24 16.5s-5.6-3.4-5.6-7a2.9 2.9 0 0 1 5.6-1.2 2.9 2.9 0 0 1 5.6 1.2c0 3.6-5.6 7-5.6 7z" fill="' + IM.p + '" stroke="' + IM.p + '" stroke-width="1.4"/>';
+  IKON_MENU['fokus-hamil'] =
+    '<path d="M17.5 12.5c-1.5 5-3 10-2.6 15.5" stroke="' + IM.t + '" stroke-width="4.4"/>' +
+    '<circle cx="22.5" cy="10" r="6" fill="#fff"/>' +
+    '<path d="M16.4 10.2c-.3-4.4 2.5-7 6.2-7 3.2 0 5.6 2 6 5.4-2.6-.2-5-1.4-6.4-3.2-1.2 2.4-3.2 4-5.8 4.8z" fill="' + IM.p + '"/>' +
+    '<path d="M18.5 19.5c-2 3.6-2.6 8-1.5 12.5.8 3.1 2 5.4 2 8.5V44h10v-3c5.4-.4 8.5-3.8 8.5-8.5 0-5-3.6-8.2-8-8.6-1.6-.2-2.6-1.7-2.9-3.8l-.4-2.1z" fill="' + IM.t + '"/>' +
+    '<path d="M22.5 23c-1.4 4.4-.4 8 3.4 9.6 2.6 1 5.4.6 7.4-.8" stroke-width="2"/>' +
+    '<path d="M32 38.4s-3.4-2-3.4-4.2a1.75 1.75 0 0 1 3.4-.7 1.75 1.75 0 0 1 3.4.7c0 2.2-3.4 4.2-3.4 4.2z" fill="' + IM.p + '" stroke="' + IM.p + '" stroke-width="1"/>';
+  IKON_MENU['fokus-haji'] =
+    '<path d="M24 6.5 41 11.5v24.5L24 41.5 7 36V11.5z" fill="' + IM.t + '"/>' +
+    '<path d="M7 11.5 24 6.5l17 5-17 5z" fill="' + IM.tm + '"/>' +
+    '<path d="M7 11.5l17 5 17-5v5l-17 5-17-5z" fill="' + IM.p + '"/>' +
+    '<path d="M7 16.5l17 5 17-5v3.4l-17 5-17-5z" fill="#fff"/>' +
+    '<path d="M24 16.5v25"/>';
+  IKON_MENU['fokus-internasional'] =
+    '<g transform="translate(3.5 1.5) scale(1.75)" stroke-width="1.25">' +
+    '<path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z" fill="' + IM.t + '"/></g>' +
+    '<path d="M4 41.5l4.5-2.5M9.5 45l4-2.2" stroke="' + IM.t + '" stroke-width="2.6"/>';
+  IKON_MENU['fokus-lansia'] =
+    '<path d="M7.5 43v-5C7.5 31.5 12 27.5 18 27.5h8.5c5.6 0 9 3.5 9 9.5v6z" fill="' + IM.t + '"/>' +
+    '<circle cx="22" cy="15.5" r="8.5" fill="#fff"/>' +
+    '<circle cx="18.6" cy="15.6" r="2.7" stroke="' + IM.t + '" stroke-width="2"/><circle cx="25.4" cy="15.6" r="2.7" stroke="' + IM.t + '" stroke-width="2"/>' +
+    '<path d="M21.3 15.6h1.4" stroke="' + IM.t + '" stroke-width="2"/>' +
+    '<path d="M19.6 20.6c1.4 1 3.4 1 4.8 0" stroke-width="1.8"/>' +
+    '<path d="M36.5 44V31.5c0-2.2 1.4-3.8 3.2-3.8s3.2 1.6 3.2 3.8" stroke="' + IM.p + '" stroke-width="3"/>';
   var VARIAN_IKON = {
     aktif: { '#1E3A4C': '#A81260', '#56C3C7': '#E8488C', '#C9EEEF': '#FAD0E0' },
     nonaktif: { '#1E3A4C': '#A3A8AD', '#56C3C7': '#C9CDD1', '#C9EEEF': '#E6E8EA', '#E8488C': '#BFC3C7',
@@ -1200,19 +1238,21 @@
      rekomendasi WHO, lansia dari halaman "Vaksinasi Lansia" katalog. Tiap entri
      dicocokkan sebagai potongan nama kategori pada price list. */
   var FOKUS = [
-    { id: 'anak', label: 'Vaksin Anak', sub: 'Imunisasi dasar & lanjutan', icon: 'family', sumber: 'Jadwal IDAI 2024',
+    { id: 'anak', label: 'Vaksin Anak', sub: 'Imunisasi dasar & lanjutan', icon: 'fokus-anak', sumber: 'Jadwal IDAI 2024',
       kat: ['BCG', 'Polio', 'DPT', 'Rotavirus', 'Pneumococcus', 'Campak', 'Varicella', 'Hepatitis B', 'Hepatitis A', 'Influenza', 'Typhoid', 'Japanese Encephalitis', 'Flu Singapura'] },
-    { id: 'dewasa', label: 'Vaksin Dewasa', sub: 'HPV, flu, tifoid, dll', icon: 'user', sumber: 'Jadwal PAPDI 2025',
+    { id: 'dewasa', label: 'Vaksin Dewasa', sub: 'HPV, flu, tifoid, dll', icon: 'fokus-dewasa', sumber: 'Jadwal PAPDI 2025',
       kat: ['Influenza', 'Pneumococcus', 'Demam Berdarah', 'HPV', 'Typhoid', 'Hepatitis A', 'Hepatitis B', 'Varicella', 'Campak', 'Tetanus'] },
-    { id: 'pranikah', label: 'Pranikah', sub: 'HPV, MMR, tetanus', icon: 'cincin', sumber: 'Jadwal pranikah katalog',
+    { id: 'pranikah', label: 'Pranikah', sub: 'HPV, MMR, tetanus', icon: 'fokus-pranikah', sumber: 'Jadwal pranikah katalog',
       kat: ['HPV', 'Campak', 'Tetanus'] },
-    { id: 'hamil', label: 'Ibu Hamil', sub: 'Flu & Tdap tiap kehamilan', icon: 'hamil', sumber: 'Rekomendasi POGI 2026',
-      kat: ['Influenza', 'Tetanus'] },
-    { id: 'haji', label: 'Umroh & Haji', sub: 'Meningitis wajib jamaah', icon: 'globe', sumber: 'Regulasi Arab Saudi + WHO',
+    { id: 'hamil', label: 'Ibu Hamil', sub: 'Flu, Tdap & RSV', icon: 'fokus-hamil', sumber: 'Rekomendasi POGI 2026',
+      kat: ['Influenza', 'Tetanus'],
+      // dianjurkan tetapi belum ada di price list klinik mitra
+      luar: [['RSV', 'Abrysvo · 1 dosis tiap kehamilan, usia kandungan 32–36 minggu']] },
+    { id: 'haji', label: 'Umroh & Haji', sub: 'Meningitis wajib jamaah', icon: 'fokus-haji', sumber: 'Regulasi Arab Saudi + WHO',
       kat: ['Meningitis', 'Polio', 'Influenza', 'Pneumococcus'] },
-    { id: 'internasional', label: 'Internasional', sub: 'Studi, kerja & wisata', icon: 'pesawat', sumber: 'Rekomendasi WHO bagi pelancong',
+    { id: 'internasional', label: 'Internasional', sub: 'Studi, kerja & wisata', icon: 'fokus-internasional', sumber: 'Rekomendasi WHO bagi pelancong',
       kat: ['Meningitis', 'Polio', 'Typhoid', 'Hepatitis A', 'Hepatitis B', 'Influenza', 'Japanese Encephalitis', 'Tetanus', 'Campak'] },
-    { id: 'lansia', label: 'Lansia', sub: 'Influenza, pneumonia', icon: 'shield', sumber: 'Halaman lansia katalog',
+    { id: 'lansia', label: 'Lansia', sub: 'Influenza, pneumonia', icon: 'fokus-lansia', sumber: 'Halaman lansia katalog',
       kat: ['Influenza', 'Pneumococcus'] }
   ];
   function fokusById(id) {
@@ -1230,6 +1270,15 @@
     return K.harga.filter(function (v) {
       return kat.some(function (k) { return v.kategori.indexOf(k) >= 0; });
     });
+  }
+  // Vaksin yang dianjurkan untuk kebutuhan terpilih tetapi belum ada di price list.
+  function vaksinFokusLuar() {
+    var hasil = [];
+    (S.onboarding.fokus || []).forEach(function (id) {
+      var f = fokusById(id);
+      ((f && f.luar) || []).forEach(function (v) { if (!hasil.some(function (x) { return x[0] === v[0]; })) hasil.push(v); });
+    });
+    return hasil;
   }
   function perluOnboarding() {
     return !S.onboarding.selesai && !S.profil.nama && !S.pasien.length;
@@ -1268,6 +1317,12 @@
       '<img src="' + K.logoFull + '" alt="VaksinKu by Alrasha Ibumas" style="width:72%;max-width:280px;height:auto;position:relative;">' +
       '</div>';
   }
+  function luarFokusHTML() {
+    return vaksinFokusLuar().map(function (v) {
+      return '<div class="tiny" style="margin-top:8px;line-height:1.6;color:var(--ink-2);">Juga dianjurkan: <b>' + tautPanduan(v[0]) + '</b> (' +
+        h(v[1]) + '). Belum ada di price list klinik — ketersediaan dikonfirmasi saat reservasi.</div>';
+    }).join('');
+  }
   function scOnboarding() {
     var n = Math.min(2, Math.max(0, S.onboarding.langkah || 0)), t = ONB[n];
     var isi = '';
@@ -1287,7 +1342,7 @@
         var on = dipilih.indexOf(f.id) >= 0;
         return '<button class="pick' + (on ? ' on' : '') + '" data-act="toggle-fokus" data-arg="' + f.id + '">' +
           (on ? '<span class="pick-ck">' + ic('checkc', 16) + '</span>' : '') +
-          '<span class="pick-ic">' + ic(f.icon, 21) + '</span>' +
+          '<span class="pick-ic">' + icm(f.icon, 38) + '</span>' +
           '<span><span class="pick-j">' + h(f.label) + '</span>' +
           '<span class="pick-s">' + h(f.sub) + '</span></span></button>';
       }).join('') + '</div>';
@@ -1297,7 +1352,7 @@
           '<div class="small" style="font-weight:700;color:var(--teal-dark);">' + cocok.length + ' jenis vaksin cocok dengan pilihan Anda</div>' +
           '<div class="tiny muted" style="margin-top:4px;line-height:1.6;">Daftarnya muncul di beranda dan bisa difilter di menu Daftar Harga. Dasar: ' +
           h((S.onboarding.fokus || []).map(function (id) { var f = fokusById(id); return f ? f.sumber : ''; })
-            .filter(Boolean).join(' · ')) + '.</div></div>';
+            .filter(Boolean).join(' · ')) + '.</div>' + luarFokusHTML() + '</div>';
       }
     } else {
       var pilihan = [
@@ -1460,6 +1515,9 @@
           return '<tr><td><div style="font-weight:600;">' + tautPanduan(v.kategori) + '</div>' +
             '<div class="tiny muted">' + h(v.merk) + '</div></td>' +
             '<td class="p">' + (hrg ? rp(hrg) : '<span class="muted" style="font-weight:600;">' + (punyaHarga() ? 'Hubungi CS' : 'Dikonfirmasi klinik') + '</span>') + '</td></tr>';
+        }).join('') + vaksinFokusLuar().map(function (v) {
+          return '<tr><td><div style="font-weight:600;">' + tautPanduan(v[0]) + '</div><div class="tiny muted">' + h(v[1]) + '</div></td>' +
+            '<td class="p"><span class="muted" style="font-weight:600;">Dikonfirmasi klinik</span></td></tr>';
         }).join('') + '</table>' +
         '<button class="btn outline sm" data-act="ubah-fokus">Ubah kebutuhan vaksinasi</button></div>';
     }
