@@ -64,9 +64,12 @@ TEST_JS = r"""
     klik('.splash');
     ok('splash lanjut ke onboarding', location.hash === '#/onboarding' && !!document.querySelector('.onb'), location.hash);
     ok('onboarding mulai dari langkah 1', document.body.textContent.indexOf('Satu aplikasi untuk vaksinasi keluarga') > 0);
+    ok('langkah 1 menampilkan logo VaksinKu', !!document.querySelector('.onb-art img[alt^="VaksinKu"]') && !document.querySelector('.onb-art svg'));
     klik('[data-act="onb-lanjut"]');
-    ok('langkah 2 menampilkan pilihan kebutuhan', document.querySelectorAll('[data-act="toggle-fokus"]').length === 4,
+    ok('langkah 2 menampilkan pilihan kebutuhan', document.querySelectorAll('[data-act="toggle-fokus"]').length === 7,
        document.querySelectorAll('[data-act="toggle-fokus"]').length + ' pilihan');
+    ok('pilihan Internasional, Pranikah, Ibu Hamil tersedia', ['internasional', 'pranikah', 'hamil'].every(function (id) {
+      return !!document.querySelector('[data-act="toggle-fokus"][data-arg="' + id + '"]'); }));
     klik('[data-act="onb-lanjut"]');
     ok('lanjut ditolak sebelum memilih kebutuhan', (st().onboarding || {}).langkah === 1, 'langkah ' + (st().onboarding || {}).langkah);
     klik('[data-act="toggle-fokus"][data-arg="anak"]');

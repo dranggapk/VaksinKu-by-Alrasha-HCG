@@ -24,6 +24,9 @@
     building: '<rect x="5" y="4" width="14" height="17" rx="1.4"/><path d="M9 8h1.6M13.4 8H15M9 12h1.6M13.4 12h1.6M9 16h1.6M13.4 16h1.6"/>',
     syringe: '<path d="M13.5 4.5 19.5 10.5"/><path d="M16.5 3 21 7.5"/><path d="M15 7 7.5 14.5 6 19.5l5-1.5L18.5 10.5 15 7Z"/><path d="M10.5 9.5 12.5 11.5M8.5 11.5l2 2"/><path d="M6 19.5 3.5 22"/>',
     tag: '<path d="M11.4 3.6H20v8.6l-8.7 8.7a1.4 1.4 0 0 1-2 0l-6.6-6.6a1.4 1.4 0 0 1 0-2l8.7-8.7Z"/><circle cx="16.2" cy="7.8" r="1.4"/>',
+    pesawat: '<path d="M10.2 13.8 4 12.3l-1-1.5 1.3-.6 7.4.9 4.6-4.6c.9-.9 2.5-1.3 3.3-.5.8.8.4 2.4-.5 3.3l-4.6 4.6.9 7.4-.6 1.3-1.5-1-1.5-6.2Z"/><path d="M6.5 17.5 4 20M8 14.5l-3.5.5 1.5 1.5"/>',
+    cincin: '<circle cx="9" cy="14.5" r="5"/><circle cx="15" cy="14.5" r="5"/><path d="m9.5 3.5 1-1.2h3l1 1.2L12 6.5Z"/>',
+    hamil: '<circle cx="11" cy="4.6" r="2"/><path d="M9 21v-5.5l-1.2-2.6c-.5-1.2.1-2.6 1.3-3.3l1.4-.8c1.2-.7 2.6 0 3 1.2l.2.8c2.5.6 3.8 2.3 3.6 4.4-.2 1.9-1.8 3-3.8 3H13V21"/>',
     globe: '<circle cx="12" cy="12" r="8.6"/><path d="M3.6 12h16.8"/><path d="M12 3.4c2.2 2.4 3.4 5.4 3.4 8.6S14.2 18.2 12 20.6c-2.2-2.4-3.4-5.4-3.4-8.6S9.8 5.8 12 3.4Z"/>',
     wa: '<path d="M7 17.5 4.5 20l1-3.6A8 8 0 1 1 12 20a8 8 0 0 1-5-1.7Z"/><path d="M8.8 8.6c.2-.5.6-.5.9-.5h.6c.2 0 .5 0 .7.5s.8 1.9.9 2 .2.3 0 .6-.3.4-.5.6-.4.4-.2.8a6 6 0 0 0 2.8 2.5c.4.2.6.1.8-.1s.8-.9 1-1.2.4-.2.7-.1 1.8.8 2.1 1 .5.3.5.5-.1 1-.6 1.6-1.5 1.2-2.2 1.2c-1.9 0-4.4-1.4-5.9-3.4S8.4 9.3 8.8 8.6Z"/>',
     family: '<circle cx="8" cy="7.5" r="2.6"/><circle cx="16" cy="7.5" r="2.6"/><circle cx="12" cy="9.5" r="2"/><path d="M3.5 20c.6-2.7 2.2-4.3 4.5-4.3s3.6 1.3 4 3M12 20c.4-1.7 1.5-3 3-3.4M15.5 15.7c2.3 0 3.9 1.6 4.5 4.3"/>',
@@ -1201,8 +1204,14 @@
       kat: ['BCG', 'Polio', 'DPT', 'Rotavirus', 'Pneumococcus', 'Campak', 'Varicella', 'Hepatitis B', 'Hepatitis A', 'Influenza', 'Typhoid', 'Japanese Encephalitis', 'Flu Singapura'] },
     { id: 'dewasa', label: 'Vaksin Dewasa', sub: 'HPV, flu, tifoid, dll', icon: 'user', sumber: 'Jadwal PAPDI 2025',
       kat: ['Influenza', 'Pneumococcus', 'Demam Berdarah', 'HPV', 'Typhoid', 'Hepatitis A', 'Hepatitis B', 'Varicella', 'Campak', 'Tetanus'] },
+    { id: 'pranikah', label: 'Pranikah', sub: 'HPV, MMR, tetanus', icon: 'cincin', sumber: 'Jadwal pranikah katalog',
+      kat: ['HPV', 'Campak', 'Tetanus'] },
+    { id: 'hamil', label: 'Ibu Hamil', sub: 'Flu & Tdap tiap kehamilan', icon: 'hamil', sumber: 'Rekomendasi POGI 2026',
+      kat: ['Influenza', 'Tetanus'] },
     { id: 'haji', label: 'Umroh & Haji', sub: 'Meningitis wajib jamaah', icon: 'globe', sumber: 'Regulasi Arab Saudi + WHO',
       kat: ['Meningitis', 'Polio', 'Influenza', 'Pneumococcus'] },
+    { id: 'internasional', label: 'Internasional', sub: 'Studi, kerja & wisata', icon: 'pesawat', sumber: 'Rekomendasi WHO bagi pelancong',
+      kat: ['Meningitis', 'Polio', 'Typhoid', 'Hepatitis A', 'Hepatitis B', 'Influenza', 'Japanese Encephalitis', 'Tetanus', 'Campak'] },
     { id: 'lansia', label: 'Lansia', sub: 'Influenza, pneumonia', icon: 'shield', sumber: 'Halaman lansia katalog',
       kat: ['Influenza', 'Pneumococcus'] }
   ];
@@ -1256,13 +1265,8 @@
   function ilustrasiOnb() {
     return '<div class="onb-art">' +
       '<i class="bulat a"></i><i class="bulat b"></i>' +
-      '<svg width="180" height="150" viewBox="0 0 180 150" fill="none" aria-hidden="true">' +
-      '<circle cx="60" cy="46" r="22" fill="#56C3C7"/>' +
-      '<circle cx="120" cy="46" r="22" fill="#D11972" opacity=".85"/>' +
-      '<circle cx="90" cy="60" r="17" fill="#2E9BA0"/>' +
-      '<path d="M20 140c8-34 30-52 55-52s45 16 52 52" stroke="#56C3C7" stroke-width="6" fill="none" stroke-linecap="round"/>' +
-      '<path d="M95 140c6-24 20-36 40-36s32 12 38 36" stroke="#D11972" stroke-width="6" fill="none" stroke-linecap="round" opacity=".85"/>' +
-      '</svg></div>';
+      '<img src="' + K.logoFull + '" alt="VaksinKu by Alrasha Ibumas" style="width:72%;max-width:280px;height:auto;position:relative;">' +
+      '</div>';
   }
   function scOnboarding() {
     var n = Math.min(2, Math.max(0, S.onboarding.langkah || 0)), t = ONB[n];

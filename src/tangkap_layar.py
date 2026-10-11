@@ -28,13 +28,13 @@ LAYAR = {
     "notifikasi": "#/notifikasi",
     "panduan": "#/panduan", "panduan-hepb": "#/panduan/hepb", "panduan-hamil": "#/panduan-jadwal/hamil",
     "panduan-polio": "#/panduan/polio", "panduan-flu": "#/panduan/flu",
-    "splash": "#/splash", "onboarding": "#/onboarding", "masuk": "#/masuk",
+    "splash": "#/splash", "onboarding-awal": "#/onboarding", "onboarding": "#/onboarding", "masuk": "#/masuk",
     "korporat": "#/korporat", "korporat-peserta": "#/korporat",
     "korporat-laporan": "#/korporat",
 }
 
 # layar pembuka hanya muncul sebelum pengguna mengisi apa pun
-BARU = {"splash", "onboarding", "masuk"}
+BARU = {"splash", "onboarding-awal", "onboarding", "masuk"}
 
 TANDA_APP = "<script>/*APP-MULAI*/"
 
@@ -130,6 +130,8 @@ def state_baru():
 def seed_js(nama, tujuan):
     if nama in BARU:
         data = state_baru()
+        if nama == "onboarding-awal":
+            data["onboarding"]["langkah"] = 0
     else:
         data = contoh_state()
         if nama == "korporat-peserta":
