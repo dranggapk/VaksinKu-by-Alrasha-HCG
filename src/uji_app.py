@@ -129,7 +129,16 @@ TEST_JS = r"""
     ok('masuk mengantar ke beranda', location.hash === '#/beranda', location.hash);
     ok('nomor HP belum ada: diminta di Profil', document.body.textContent.indexOf('Lengkapi nomor HP di Profil') >= 0);
     ganti('#/profil');
+    ok('profil: kartu sinkron data keluarga dengan tombol Sinkronkan', !!document.querySelector('[data-act="sinkron-sekarang"]') &&
+       document.body.textContent.indexOf('Foto label vaksin tetap di perangkat ini') > 0);
     ok('profil menandai akun tersambung ke server', document.body.textContent.indexOf('Tersambung ke server VaksinKu') > 0);
+    var stAsli = JSON.parse(JSON.stringify(st()));
+    window.VaksinKuUji.aturState(function (S) { S.sinkron = { akunId: 'akun-lain-0000' }; });
+    ganti('#/beranda'); ganti('#/profil');
+    ok('profil: data perangkat milik akun lain tidak disinkron, ada pilihan ganti', !!document.querySelector('[data-act="pakai-data-akun"]') &&
+       !document.querySelector('[data-act="sinkron-sekarang"]'));
+    window.VaksinKuUji.aturState(function (S) { S.sinkron = stAsli.sinkron || {}; });
+    ganti('#/beranda'); ganti('#/profil');
     ok('profil menampilkan akun Google & tombol keluar', document.body.textContent.indexOf('sari@gmail.com') > 0 &&
        !!document.querySelector('[data-act="keluar-akun"]'));
     var hpIn = document.querySelector('[data-field="profil.hp"]');

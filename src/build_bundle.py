@@ -203,6 +203,9 @@ def main():
         css = f.read()
     with open(os.path.join(APP, "app.js"), encoding="utf-8") as f:
         js = f.read()
+    # modul sinkronisasi (juga dipakai langsung oleh src/uji_backend.mjs)
+    with open(os.path.join(APP, "sinkron.js"), encoding="utf-8") as f:
+        js = f.read() + "\n" + js
 
     if tanpa_font:
         fonts = ('<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>'

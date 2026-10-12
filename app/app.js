@@ -297,10 +297,12 @@
       return d;
     } catch (e) { storageOk = false; return salin(kosong); }
   }
-  function simpan() {
+  function simpanLokal() {
     try { localStorage.setItem(KEY, JSON.stringify(S)); }
     catch (e) { storageOk = false; }
   }
+  // setiap perubahan disimpan di perangkat, lalu dikirim ke server bila sesi aktif
+  function simpan() { simpanLokal(); jadwalkanSinkron(); }
   S = baca();
   migrasiRiwayat();
   migrasiLokasi();
@@ -1427,6 +1429,66 @@
     var s = S.akun && S.akun.sesi;
     return !!(s && s.token && s.exp * 1000 > Date.now());
   }
+  /* ---------------- sinkronisasi data dengan server (app/sinkron.js) ---------------- */
+  var sinkronStatus = '', sinkronJeda = 0, sinkronBerjalan = false, sinkronLagi = false;
+  function akunLain() {
+    return !!(sesiAktif() && S.sinkron && S.sinkron.akunId && S.sinkron.akunId !== S.akun.sesi.id);
+  }
+  function jadwalkanSinkron() {
+    if (!sesiAktif() || akunLain() || !window.VaksinKuSinkron) return;
+    clearTimeout(sinkronJeda);
+    sinkronJeda = setTimeout(jalankanSinkron, 2500);
+  }
+  function jalankanSinkron(manual) {
+    if (!sesiAktif() || akunLain() || !window.VaksinKuSinkron) return;
+    if (sinkronBerjalan) { sinkronLagi = true; return; }
+    sinkronBerjalan = true; sinkronStatus = 'jalan';
+    if (manual) render();
+    window.VaksinKuSinkron.sinkron(S, { api: '/api', token: S.akun.sesi.token, akunId: S.akun.sesi.id })
+      .then(function (r) {
+        sinkronStatus = 'ok';
+        simpanLokal();
+        var sedangMengetik = document.activeElement && /INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName);
+        if (manual || (r.diterima && !sedangMengetik)) render();
+        if (manual) toast('Data tersinkron' + (r.diterima ? ' · ' + r.diterima + ' perubahan diterima' : '') + '.');
+      })
+      .catch(function (e) {
+        S.sinkron = S.sinkron || {};
+        if (e && e.status === 401) {
+          S.akun.sesi = null; sinkronStatus = 'sesi';
+          S.sinkron.galat = 'Sesi berakhir — masuk lagi dengan Google untuk melanjutkan sinkron.';
+        } else {
+          sinkronStatus = 'galat';
+          S.sinkron.galat = navigator.onLine === false ? 'Tidak ada koneksi internet.' : 'Server belum dapat dihubungi.';
+        }
+        simpanLokal();
+        if (manual) { render(); toast(S.sinkron.galat); }
+      })
+      .then(function () {
+        sinkronBerjalan = false;
+        if (sinkronLagi) { sinkronLagi = false; jadwalkanSinkron(); }
+      });
+  }
+  window.addEventListener('online', function () { jalankanSinkron(); });
+  function statusSinkronHTML() {
+    if (!sesiAktif()) return '';
+    if (akunLain()) {
+      return '<div class="card warn stack g8"><div class="small" style="font-weight:700;color:#8A6A21;">Data di perangkat ini milik akun lain</div>' +
+        '<div class="tiny" style="line-height:1.6;color:#8A6A21;">Data keluarga di perangkat ini pernah disinkronkan dengan akun Google lain, jadi tidak dikirim ke akun ' +
+        h(S.akun.email) + '. Pilih ganti untuk menghapus data di perangkat ini dan memuat data akun yang sedang masuk.</div>' +
+        '<button class="btn outline sm" data-act="pakai-data-akun">Ganti dengan data akun ini</button></div>';
+    }
+    var st = S.sinkron || {}, teksSt;
+    if (sinkronStatus === 'jalan') teksSt = 'Menyinkronkan…';
+    else if (st.galat && sinkronStatus !== 'ok') teksSt = st.galat;
+    else if (st.terakhir) teksSt = 'Tersinkron ' + new Date(st.terakhir).toLocaleString('id-ID', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+    else teksSt = 'Belum pernah disinkronkan';
+    return '<div class="card stack g8"><div class="row mid g8"><div class="grow"><div class="small" style="font-weight:700;">Sinkron data keluarga</div>' +
+      '<div class="tiny muted" id="status-sinkron">' + h(teksSt) + '</div></div>' +
+      '<button class="btn outline sm" data-act="sinkron-sekarang"' + (sinkronStatus === 'jalan' ? ' disabled' : '') + '>Sinkronkan</button></div>' +
+      '<div class="hint">Keluarga, riwayat vaksin, dan profil tersimpan di server VaksinKu sehingga tetap ada saat ganti HP. Foto label vaksin tetap di perangkat ini.</div></div>';
+  }
+
   function terimaGoogle(resp, tukar) {
     var d = bacaJwt(resp && resp.credential);
     var sah = d && d.aud === K.google.clientId && /^(https:\/\/)?accounts\.google\.com$/.test(d.iss) &&
@@ -1445,6 +1507,7 @@
       S.profil.email = d.email;
       selesaikanOnboarding('google');
       location.hash = '#/beranda';
+      if (sesi) jalankanSinkron();
       toast('Selamat datang, ' + (d.given_name || String(d.name || '').split(' ')[0] || d.email) + '.' +
         (String(S.profil.hp).trim() ? '' : ' Lengkapi nomor HP di Profil untuk reservasi.') +
         (sesi ? '' : ' Server VaksinKu belum terjangkau; data disimpan di perangkat ini.'));
@@ -2132,6 +2195,14 @@
       html += '<button class="btn ' + (x.pkm ? 'outline' : 'teal') + ' sm" data-act="pkm-dosis" data-arg="' + p.id + '|' + d.id + '">' +
         (x.pkm ? 'Batalkan rencana di Puskesmas' : 'Rencanakan gratis di Puskesmas') + '</button>';
     }
+    if (cat && cat.sumber === 'klinik') {
+      return html + '<div class="card tint stack g6" style="border-top:1px solid var(--line);">' +
+        '<div class="row mid g6"><span class="chip teal">' + ic('checkc', 14) + ' Terverifikasi klinik</span></div>' +
+        '<div class="small" style="line-height:1.7;color:var(--ink-2);">' + h(tgl(cat.tanggal)) + ' · ' + h(cat.faskes || cat.tempat || 'Klinik') +
+        (cat.merek ? '<br>Merek: <b>' + h(cat.merek) + '</b>' : '') + (cat.batch ? '<br>No. Batch: <b>' + h(cat.batch) + '</b>' : '') + '</div>' +
+        '<div class="tiny muted">Dicatat petugas klinik saat vaksinasi, jadi tidak dapat diubah dari aplikasi. Hubungi klinik bila ada yang keliru.</div>' +
+        '</div></div></div></div>';
+    }
     html += '<form id="form-dosis" class="stack g10" style="border-top:1px solid var(--line);padding-top:12px;">' +
       '<div class="sect-title" style="font-size:14px;">' + (cat ? 'Catatan pemberian' : 'Catat sudah diberikan') + '</div>' +
       '<input type="hidden" name="pid" value="' + p.id + '"><input type="hidden" name="dosis" value="' + d.id + '">' +
@@ -2764,6 +2835,7 @@
       : '<div class="card stack g8"><div class="small" style="font-weight:700;">Belum masuk</div>' +
         '<div class="tiny muted" style="line-height:1.6;">Masuk dengan akun Google untuk menyimpan akun VaksinKu Anda.</div>' +
         '<button class="btn outline sm" data-act="go" data-arg="masuk">' + LOGO_G + ' Masuk dengan Google</button></div>';
+    body += statusSinkronHTML();
     body += '<div class="card stack g10"><div class="sect-title">Data pendaftar</div>' +
       '<div class="hint">Dipakai sebagai penerima invoice dan kontak yang dihubungi CS.</div>' +
       '<div><label class="lbl">Nama lengkap<span class="req">*</span></label>' +
@@ -3355,7 +3427,7 @@
   var jedaSplash = 0;
   // Dipakai uji otomatis untuk mensimulasikan balasan Google; tidak memberi
   // akses lebih dari yang sudah dimiliki skrip apa pun di halaman ini.
-  window.VaksinKuUji = { terimaGoogle: terimaGoogle };
+  window.VaksinKuUji = { terimaGoogle: terimaGoogle, aturState: function (f) { f(S); simpanLokal(); } };
 
   /* ====================== banner promo beranda ======================
      Dokter tinggal menambah atau mengurangi baris di sini. Tiap baris:
@@ -3571,6 +3643,13 @@
         window.open('https://wa.me/' + WA + '?text=' + encodeURIComponent(pesanKorporat()), '_blank');
         return;
       }
+      case 'sinkron-sekarang': jalankanSinkron(true); return;
+      case 'pakai-data-akun':
+        if (!konfirmasi('Hapus data keluarga di perangkat ini lalu muat data akun ' + S.akun.email + ' dari server?')) return;
+        S.pasien = []; S.riwayat = []; S.ui.pasienAktif = '';
+        S.sinkron = { akunId: S.akun.sesi.id, dikenal: {} };
+        S.profil.hp = '';
+        simpanLokal(); jalankanSinkron(true); return;
       case 'keluar-akun':
         if (!konfirmasi('Keluar dari akun Google ' + S.akun.email + '? Data di perangkat ini tetap tersimpan.')) return;
         if (window.google && google.accounts) google.accounts.id.disableAutoSelect();
@@ -3655,7 +3734,7 @@
         var hd = cariDosis.apply(null, arg.split('|'));
         if (!hd || !konfirmasi('Hapus catatan ' + hd.x.d.label + '?')) return;
         S.riwayat = S.riwayat.filter(function (r) {
-          if (r.pasienId !== hd.p.id || !r.kunci) return true;
+          if (r.pasienId !== hd.p.id || !r.kunci || r.sumber === 'klinik') return true;
           r.kunci = r.kunci.filter(function (k) { return hd.x.d.kunci.indexOf(k) < 0; });
           return r.kunci.length > 0;
         });
@@ -4107,6 +4186,8 @@
   });
   bacaRoute();
   render();
+  // aplikasi dibuka kembali: ambil perubahan dari perangkat lain
+  jalankanSinkron();
   // pengingat penting ditampilkan sebagai notifikasi browser saat aplikasi dibuka,
   // lalu diperiksa ulang tiap 30 menit selama aplikasi tetap terbuka
   setTimeout(tampilkanNotifBrowser, 1200);

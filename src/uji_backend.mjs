@@ -13,6 +13,7 @@ import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createRequire } from 'node:module';
 
 const ROOT = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const PGURL = process.env.PGURL || 'postgresql://postgres@127.0.0.1:54329';
@@ -85,9 +86,10 @@ const auth = jalankan('node', [path.join(ROOT, 'deploy/backend/auth/server.mjs')
   API_URL: `http://127.0.0.1:${PORT_API}`, PGRST_JWT_SECRET: SECRET, BATAS_PER_MENIT: '100',
 });
 
-let web = null;
+let web = null, webRoot = '';
 if (CADDY) {
   const tmp = fs.mkdtempSync('/tmp/vaksinku-web-');
+  webRoot = tmp;
   fs.writeFileSync(path.join(tmp, 'index.html'), '<title>VaksinKu</title>');
   const cf = fs.readFileSync(path.join(ROOT, 'deploy/web/Caddyfile'), 'utf8')
     .replace(':80 {', `:${PORT_WEB} {`).replace('root * /srv', `root * ${tmp}`)
@@ -199,6 +201,95 @@ try {
   const curi = await panggil('/pasien', b.data.token, { method: 'POST',
     body: JSON.stringify({ profil_id: a.data.akun.id, nama: 'Titipan', tgl_lahir: '2020-01-01' }) });
   ok('akun lain: tidak bisa menambah pasien atas nama Ibu Sari', curi.status === 403 || curi.status === 401, String(curi.status));
+
+  // ---- sinkronisasi dua perangkat (app/sinkron.js terhadap PostgREST sungguhan)
+  {
+    const { sinkron } = createRequire(import.meta.url)(path.join(ROOT, 'app/sinkron.js'));
+    const m = await masuk(tokenGoogle({ sub: '4004', email: 'dewi@gmail.com', name: 'Dewi' }));
+    const opsi = { api: API, token: m.data.token, akunId: m.data.akun.id, fetch };
+    const kosong = () => ({ profil: { nama: '', hp: '' }, pasien: [], riwayat: [] });
+    const A = kosong(), B = kosong();
+    A.profil = { nama: 'Dewi', hp: '081111' };
+    A.pasien.push({ id: 'a1', nama: 'Rafa', tglLahir: '2023-02-01', jenisKelamin: 'Laki-laki', hubungan: 'Anak', kondisi: { alergi: true } });
+    A.pasien.push({ id: 'a2', nama: 'Tanpa Tanggal' });   // belum lengkap: tidak dikirim
+    A.riwayat.push({ id: 'r1', pasienId: 'a1', label: 'Hepatitis B 0', kunci: ['hepb:0'], tanggal: '2023-02-01', sumber: 'jadwal', batch: 'HB-01', foto: 'data:image/jpeg;base64,xxx' });
+    A.riwayat.push({ id: 'r2', pasienId: 'a1', label: 'BCG', kunci: ['bcg:1'], tanggal: '2023-03-01', sumber: 'jadwal' });
+
+    const h1 = await sinkron(A, opsi);
+    ok('sinkron A: pasien & riwayat terkirim', h1.dikirim >= 3, JSON.stringify(h1));
+    const nP = psql(DB, '-c', `select count(*) from pasien where profil_id = '${m.data.akun.id}'`).trim();
+    const nR = psql(DB, '-c', `select count(*) from riwayat_dosis r join pasien p on p.id = r.pasien_id where p.profil_id = '${m.data.akun.id}'`).trim();
+    ok('sinkron A: pasien tanpa tanggal lahir tidak dikirim', nP === '1' && nR === '2', `pasien ${nP}, riwayat ${nR}`);
+    const fotoSrv = psql(DB, '-c', `select count(*) from riwayat_dosis where foto_path <> '' or label = 'xxx'`).trim();
+    ok('sinkron A: foto label tetap di perangkat', fotoSrv === '0');
+    const h1b = await sinkron(A, opsi);
+    ok('sinkron A ulang tanpa perubahan: tidak ada kiriman', h1b.dikirim === 0 && h1b.diterima === 0 && h1b.dihapus === 0, JSON.stringify(h1b));
+
+    B.profil = { nama: 'Dewi', hp: '' };
+    const h2 = await sinkron(B, opsi);
+    const rafa = B.pasien.find((p) => p.nama === 'Rafa');
+    ok('perangkat B: menerima keluarga & riwayat', !!rafa && B.riwayat.length === 2 && rafa.kondisi.alergi === true &&
+      B.riwayat.some((r) => r.batch === 'HB-01' && r.pasienId === rafa.id), JSON.stringify(h2));
+    ok('perangkat B: HP kosong tidak menimpa HP di server', B.profil.hp === '081111', B.profil.hp);
+
+    rafa.nama = 'Rafa Pratama';
+    B.riwayat = B.riwayat.filter((r) => r.label !== 'BCG');
+    B.riwayat.push({ id: 'b1', pasienId: rafa.id, label: 'Polio 1', kunci: ['polio:1'], tanggal: '2023-04-01', sumber: 'jadwal' });
+    await sinkron(B, opsi);
+    const h3 = await sinkron(A, opsi);
+    ok('perangkat A: menerima perubahan nama, hapus, dan catatan baru dari B',
+      A.pasien[0].nama === 'Rafa Pratama' && !A.riwayat.some((r) => r.label === 'BCG') && A.riwayat.some((r) => r.label === 'Polio 1') &&
+      A.riwayat.find((r) => r.label === 'Hepatitis B 0').foto === 'data:image/jpeg;base64,xxx', JSON.stringify(h3));
+
+    // catatan klinik (terverifikasi) dibuat petugas di server
+    const sidRafa = A.pasien[0].sid;
+    psql(DB, '-c', `insert into riwayat_dosis (pasien_id, kunci, label, tanggal, tempat, faskes, merek, no_batch, sumber, klinik_id, diverifikasi)
+      values ('${sidRafa}', '{dtp:1,hib:1,hepb:1}', 'DPT Combo — Pentabio', '2023-04-02', 'Klinik', 'Klinik Alrasha Health Care Center', 'Pentabio', 'PB-777', 'klinik', 'alrasha-hcc', true)`);
+    await sinkron(A, opsi);
+    const kl = A.riwayat.find((r) => r.sumber === 'klinik');
+    ok('perangkat A: menerima catatan klinik terverifikasi + No. Batch', !!kl && kl.diverifikasi && kl.batch === 'PB-777' && kl.pasienId === A.pasien[0].id);
+    kl.batch = 'DIUBAH';
+    await sinkron(A, opsi);
+    const batchSrv = psql(DB, '-c', `select no_batch from riwayat_dosis where sumber = 'klinik' and pasien_id = '${sidRafa}'`).trim();
+    ok('catatan klinik yang diubah di perangkat tidak dikirim ke server', batchSrv === 'PB-777', batchSrv);
+
+    A.pasien = A.pasien.filter((p) => p.sid !== sidRafa);
+    A.riwayat = A.riwayat.filter((r) => r.pasienId !== 'a1');
+    await sinkron(A, opsi);
+    const sisaP = psql(DB, '-c', `select count(*) from pasien where id = '${sidRafa}'`).trim();
+    await sinkron(B, opsi);
+    ok('hapus anggota keluarga di A: terhapus di server dan di B', sisaP === '0' && !B.pasien.some((p) => p.sid === sidRafa) &&
+      !B.riwayat.some((r) => r.pasienId === rafa.id), `server ${sisaP}`);
+
+    const lain = await masuk(tokenGoogle({ sub: '5005', email: 'eko@gmail.com', name: 'Eko' }));
+    const C = kosong();
+    await sinkron(C, { api: API, token: lain.data.token, akunId: lain.data.akun.id, fetch });
+    ok('akun lain tidak menerima data keluarga Dewi', C.pasien.length === 0 && C.riwayat.length === 0);
+    let ditolak = false;
+    try { await sinkron({ profil: {}, pasien: [], riwayat: [] }, { ...opsi, token: lain.data.token }); } catch (e) { ditolak = true; }
+    const profilDewi = psql(DB, '-c', `select hp from profil where id = '${m.data.akun.id}'`).trim();
+    ok('sinkron dengan akunId orang lain tidak mengubah profilnya', profilDewi === '081111', `${ditolak} ${profilDewi}`);
+  }
+
+  // ---- aplikasi sungguhan di browser: data keluarga terkirim saat aplikasi dibuka
+  if (web && process.env.CHROME) {
+    const m = await masuk(tokenGoogle({ sub: '6006', email: 'fitri@gmail.com', name: 'Fitri' }));
+    const state = {
+      versi: 1, onboarding: { selesai: true, langkah: 2, fokus: ['anak'], layanan: 'klinik' },
+      akun: { masuk: true, metode: 'google', email: 'fitri@gmail.com', sesi: { token: m.data.token, exp: m.data.exp, id: m.data.akun.id } },
+      profil: { nama: 'Fitri', hp: '082222' },
+      pasien: [{ id: 'p1', nama: 'Bima', tglLahir: '2024-01-10', jenisKelamin: 'Laki-laki', hubungan: 'Anak' }],
+      riwayat: [{ id: 'q1', pasienId: 'p1', label: 'Hepatitis B 0', kunci: ['hepb:0'], tanggal: '2024-01-10', sumber: 'jadwal', batch: 'X1' }],
+    };
+    const html = fs.readFileSync(path.join(ROOT, 'VaksinKu-App.html'), 'utf8').replace('<script>/*APP-MULAI*/',
+      `<script>localStorage.setItem('vaksinku.v1', ${JSON.stringify(JSON.stringify(state))});location.hash='#/beranda';</script><script>/*APP-MULAI*/`);
+    fs.writeFileSync(path.join(webRoot, 'index.html'), html);
+    execFileSync(process.env.CHROME, ['--headless=new', '--no-sandbox', '--disable-gpu', '--virtual-time-budget=8000',
+      '--dump-dom', `http://127.0.0.1:${PORT_WEB}/`], { encoding: 'utf8', timeout: 60000, maxBuffer: 64 * 1024 * 1024 });
+    const nama = psql(DB, '-c', `select p.nama || '|' || count(r.id) || '|' || pr.hp from pasien p join profil pr on pr.id = p.profil_id
+      left join riwayat_dosis r on r.pasien_id = p.id where p.profil_id = '${m.data.akun.id}' group by p.nama, pr.hp`).trim();
+    ok('aplikasi di browser: keluarga, riwayat, dan HP terkirim ke server saat dibuka', nama === 'Bima|1|082222', nama || '(kosong)');
+  }
 
   // ---- pemalsuan sesi & peran
   const rpc = await panggil('/rpc/masuk_google', S, { method: 'POST', body: JSON.stringify({ p_sub: '9', p_email: 'x@y', p_nama: '', p_foto: '' }) });

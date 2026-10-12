@@ -145,6 +145,16 @@ cd /opt/vaksinku && docker compose down      # data database tetap tersimpan di 
 
 ## Memperbarui aplikasi
 
+Aplikasi saja (tanpa perubahan database), dari laptop:
+
+```powershell
+scp "$env:USERPROFILE\Downloads\VaksinKu-App.html" root@187.77.147.232:/opt/vaksinku/situs/index.html
+```
+
+Sinkronisasi: setelah masuk dengan Google, profil, anggota keluarga, dan riwayat dosis
+dikirim ke `/api` (lihat `app/sinkron.js`); foto label vaksin tetap di perangkat. Catatan
+dosis dari klinik hanya diterima, tidak bisa diubah dari aplikasi.
+
 Cukup ulangi Langkah 2 dengan berkas baru; tidak perlu restart apa pun.
 
 ## Bila sih-deployment dibuat ulang
