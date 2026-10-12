@@ -145,6 +145,21 @@ cd /opt/vaksinku && docker compose down      # data database tetap tersimpan di 
 
 ## Memperbarui aplikasi
 
+### Otomatis dari GitHub (disarankan)
+
+`perbarui-situs.sh` mengambil repositori ke `/opt/vaksinku/sumber` setiap 15 menit dan
+menyalin `VaksinKu-App.html` → `situs/index.html` serta `situs/privasi.html` bila berubah
+(diperiksa ukuran & penandanya, diganti secara atomik). Tidak ada kode dari repositori
+yang dijalankan; backend & database tetap diperbarui manual lewat `pasang.sh`.
+
+```bash
+apt-get install -y git        # bila belum ada
+(crontab -l 2>/dev/null; echo "*/15 * * * * /opt/vaksinku/perbarui-situs.sh") | crontab -
+/opt/vaksinku/perbarui-situs.sh && cat /opt/vaksinku/perbarui-situs.log
+```
+
+### Manual
+
 Aplikasi saja (tanpa perubahan database), dari laptop:
 
 ```powershell
