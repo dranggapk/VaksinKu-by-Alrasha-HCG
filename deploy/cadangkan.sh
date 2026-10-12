@@ -1,6 +1,6 @@
 #!/bin/sh
 # Cadangan harian database VaksinKu ke /opt/vaksinku/cadangan (14 terakhir disimpan).
-# Jadwalkan:  (crontab -l 2>/dev/null; echo "15 2 * * * /opt/vaksinku/cadangkan.sh") | crontab -
+# Jam server memakai UTC: 19.15 UTC = 02.15 WIB. Jadwalkan:  (crontab -l 2>/dev/null; echo "15 19 * * * /opt/vaksinku/cadangkan.sh") | crontab -
 set -eu
 cd "$(dirname "$0")"
 umask 077

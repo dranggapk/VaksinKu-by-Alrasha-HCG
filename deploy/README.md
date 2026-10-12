@@ -126,7 +126,7 @@ lalu unggah ulang aplikasi yang dibangun dengan Client ID tersebut.
 Cadangan harian database:
 
 ```bash
-(crontab -l 2>/dev/null; echo "15 2 * * * /opt/vaksinku/cadangkan.sh") | crontab -
+(crontab -l 2>/dev/null; echo "15 19 * * * /opt/vaksinku/cadangkan.sh") | crontab -
 ```
 
 Uji di komputer pengembang: `node src/uji_backend.mjs` (PostgreSQL + PostgREST + layanan
