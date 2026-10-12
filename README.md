@@ -197,10 +197,12 @@ src/
   panduan_vaksin.py        Isi Panduan Vaksinasi: profil 21 vaksin & jadwal ibu hamil
   build_bundle.py          Merakit aplikasi pasien + font & logo jadi satu berkas
   build_admin.py           Merakit dashboard manajemen jadi satu berkas
-  uji_app.py               Uji fungsional aplikasi pasien (147 uji)
+  uji_app.py               Uji fungsional aplikasi pasien (151 uji)
   uji_admin.py             Uji fungsional dashboard (78 uji)
   buat_seed_supabase.py    Membuat supabase/seed.sql dari katalog
   uji_supabase.py          Uji hak akses backend Supabase di PostgreSQL lokal (52 uji)
+  uji_backend.mjs          Uji ujung-ke-ujung backend VPS: PostgreSQL + PostgREST + masuk Google (27 uji)
+  buat_paket_vps.py        Merakit dist/vaksinku-vps.tar.gz untuk /opt/vaksinku
   tangkap_layar.py         Tangkap layar aplikasi pasien
   tangkap_dashboard.py     Tangkap layar dashboard
   ambil_desain.py          Ekspor isi kanvas Claude Design ke folder design/
@@ -221,7 +223,7 @@ cd src
 python3 build_bundle.py       # → VaksinKu-App.html (font tertanam, siap offline)
 python3 build_admin.py        # → VaksinKu-Dashboard.html
 python3 build_bundle.py --tanpa-font   # lebih cepat, font dari Google Fonts
-python3 uji_app.py            # 147 uji fungsional aplikasi pasien
+python3 uji_app.py            # 151 uji fungsional aplikasi pasien
 python3 uji_admin.py          # 78 uji fungsional dashboard
 python3 uji_supabase.py       # 52 uji hak akses backend (butuh PostgreSQL lokal)
 python3 tangkap_layar.py      # tangkap layar aplikasi pasien

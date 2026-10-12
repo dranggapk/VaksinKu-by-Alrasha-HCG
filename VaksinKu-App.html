@@ -1899,7 +1899,6 @@ i.pkm{display:inline-block;font-style:normal;font-size:8.5px;font-weight:800;col
     if (!(K.google && K.google.clientId)) return 'belum';
     return '';
   }
-  var kredensialGoogle = '';   // ID token terakhir, untuk diverifikasi server saat backend aktif
   function bacaJwt(token) {
     try {
       var b = String(token).split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
@@ -1907,19 +1906,42 @@ i.pkm{display:inline-block;font-style:normal;font-size:8.5px;font-weight:800;col
       return JSON.parse(decodeURIComponent(escape(atob(b))));
     } catch (e) { return null; }
   }
-  function terimaGoogle(resp) {
+  // Token Google ditukar dengan sesi VaksinKu di server (deploy/backend/auth), yang
+  // memverifikasi tanda tangan token. selesai(status, data): status 0 = server tak terjangkau.
+  function tukarSesiServer(credential, selesai) {
+    fetch('/auth/google', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ credential: credential })
+    }).then(function (r) {
+      return r.json().catch(function () { return {}; }).then(function (d) { selesai(r.status, d); });
+    }).catch(function () { selesai(0, {}); });
+  }
+  function sesiAktif() {
+    var s = S.akun && S.akun.sesi;
+    return !!(s && s.token && s.exp * 1000 > Date.now());
+  }
+  function terimaGoogle(resp, tukar) {
     var d = bacaJwt(resp && resp.credential);
     var sah = d && d.aud === K.google.clientId && /^(https:\/\/)?accounts\.google\.com$/.test(d.iss) &&
       d.exp * 1000 > Date.now() && d.email && d.email_verified !== false;
     if (!sah) { toast('Gagal masuk dengan Google. Silakan coba lagi.'); return; }
-    kredensialGoogle = resp.credential;
-    S.akun = { masuk: true, metode: 'google', email: d.email, sub: d.sub, nama: d.name || '', foto: d.picture || '' };
-    if (!String(S.profil.nama).trim()) S.profil.nama = d.name || '';
-    S.profil.email = d.email;
-    selesaikanOnboarding('google');
-    location.hash = '#/beranda';
-    toast('Selamat datang, ' + (d.given_name || String(d.name || '').split(' ')[0] || d.email) + '.' +
-      (String(S.profil.hp).trim() ? '' : ' Lengkapi nomor HP di Profil untuk reservasi.'));
+    (tukar || tukarSesiServer)(resp.credential, function (status, data) {
+      // server menolak = tidak boleh masuk; server belum terjangkau = tetap masuk, data di perangkat
+      if (status === 400 || status === 401 || status === 403) {
+        toast('Akun Google tidak dapat diverifikasi oleh server VaksinKu.'); return;
+      }
+      if (status === 429) { toast('Terlalu banyak percobaan masuk. Coba lagi sebentar.'); return; }
+      var sesi = status === 200 && data && data.token
+        ? { token: data.token, exp: data.exp, id: (data.akun || {}).id || '' } : null;
+      S.akun = { masuk: true, metode: 'google', email: d.email, sub: d.sub, nama: d.name || '', foto: d.picture || '', sesi: sesi };
+      if (!String(S.profil.nama).trim()) S.profil.nama = d.name || '';
+      S.profil.email = d.email;
+      selesaikanOnboarding('google');
+      location.hash = '#/beranda';
+      toast('Selamat datang, ' + (d.given_name || String(d.name || '').split(' ')[0] || d.email) + '.' +
+        (String(S.profil.hp).trim() ? '' : ' Lengkapi nomor HP di Profil untuk reservasi.') +
+        (sesi ? '' : ' Server VaksinKu belum terjangkau; data disimpan di perangkat ini.'));
+    });
   }
   var gisDimuat = false;
   function pasangTombolGoogle() {
@@ -3228,7 +3250,9 @@ i.pkm{display:inline-block;font-style:normal;font-size:8.5px;font-weight:800;col
         (S.akun.foto ? '<img src="' + h(S.akun.foto) + '" alt="" referrerpolicy="no-referrer" style="width:40px;height:40px;border-radius:50%;">'
           : '<span class="icon-sq">' + LOGO_G + '</span>') +
         '<div class="grow" style="min-width:0;"><div class="tiny muted">Masuk dengan Google</div>' +
-        '<div class="small" style="font-weight:700;overflow:hidden;text-overflow:ellipsis;">' + h(S.akun.email) + '</div></div>' +
+        '<div class="small" style="font-weight:700;overflow:hidden;text-overflow:ellipsis;">' + h(S.akun.email) + '</div>' +
+        '<div class="tiny" style="margin-top:2px;color:' + (sesiAktif() ? 'var(--teal-dark)">Tersambung ke server VaksinKu'
+          : 'var(--ink-3)">Belum tersambung ke server — data di perangkat ini') + '</div></div>' +
         '<button class="btn outline sm" data-act="keluar-akun">Keluar</button></div>'
       : '<div class="card stack g8"><div class="small" style="font-weight:700;">Belum masuk</div>' +
         '<div class="tiny muted" style="line-height:1.6;">Masuk dengan akun Google untuk menyimpan akun VaksinKu Anda.</div>' +
@@ -4043,7 +4067,6 @@ i.pkm{display:inline-block;font-style:normal;font-size:8.5px;font-weight:800;col
       case 'keluar-akun':
         if (!konfirmasi('Keluar dari akun Google ' + S.akun.email + '? Data di perangkat ini tetap tersimpan.')) return;
         if (window.google && google.accounts) google.accounts.id.disableAutoSelect();
-        kredensialGoogle = '';
         S.akun = { masuk: false, metode: '' };
         simpan(); location.hash = '#/masuk'; return;
       case 'masuk-tamu': selesaikanOnboarding('tamu'); location.hash = '#/beranda';

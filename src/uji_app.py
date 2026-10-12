@@ -108,16 +108,28 @@ TEST_JS = r"""
     K2.google.clientId = 'uji.apps.googleusercontent.com';
     var isiG = { iss: 'https://accounts.google.com', aud: 'uji.apps.googleusercontent.com', sub: '1234567890',
       email: 'sari@gmail.com', email_verified: true, name: 'Ibu Sari', given_name: 'Sari', exp: Math.floor(Date.now() / 1000) + 600 };
-    window.VaksinKuUji.terimaGoogle({ credential: jwtUji(Object.assign({}, isiG, { aud: 'klien-lain' })) });
+    var dipanggilServer = 0;
+    function serverUji(status, data) {
+      return function (cred, selesai) { dipanggilServer++; selesai(status, data || {}); };
+    }
+    window.VaksinKuUji.terimaGoogle({ credential: jwtUji(Object.assign({}, isiG, { aud: 'klien-lain' })) }, serverUji(200));
     ok('token Google untuk aplikasi lain ditolak', !st().onboarding.selesai && location.hash === '#/masuk');
-    window.VaksinKuUji.terimaGoogle({ credential: jwtUji(Object.assign({}, isiG, { exp: 1000 })) });
+    window.VaksinKuUji.terimaGoogle({ credential: jwtUji(Object.assign({}, isiG, { exp: 1000 })) }, serverUji(200));
+    ok('token yang gagal diperiksa di perangkat tidak dikirim ke server', dipanggilServer === 0);
+    window.VaksinKuUji.terimaGoogle({ credential: jwtUji(isiG) }, serverUji(401, { pesan: 'Akun Google tidak dapat diverifikasi.' }));
+    ok('server menolak token Google → tidak masuk', !st().onboarding.selesai && location.hash === '#/masuk' && dipanggilServer === 1);
     ok('token Google kedaluwarsa ditolak', !st().onboarding.selesai);
-    window.VaksinKuUji.terimaGoogle({ credential: jwtUji(isiG) });
+    var expSesi = Math.floor(Date.now() / 1000) + 3600;
+    window.VaksinKuUji.terimaGoogle({ credential: jwtUji(isiG) },
+      serverUji(200, { token: 'sesi.uji.token', exp: expSesi, akun: { id: '11111111-2222-3333-4444-555555555555' } }));
+    ok('server menerima → sesi VaksinKu tersimpan', (st().akun.sesi || {}).token === 'sesi.uji.token' &&
+       st().akun.sesi.id === '11111111-2222-3333-4444-555555555555');
     ok('masuk Google: akun & nama tersimpan', st().akun.metode === 'google' && st().akun.email === 'sari@gmail.com' &&
        st().profil.nama === 'Ibu Sari', JSON.stringify(st().akun));
     ok('masuk mengantar ke beranda', location.hash === '#/beranda', location.hash);
     ok('nomor HP belum ada: diminta di Profil', document.body.textContent.indexOf('Lengkapi nomor HP di Profil') >= 0);
     ganti('#/profil');
+    ok('profil menandai akun tersambung ke server', document.body.textContent.indexOf('Tersambung ke server VaksinKu') > 0);
     ok('profil menampilkan akun Google & tombol keluar', document.body.textContent.indexOf('sari@gmail.com') > 0 &&
        !!document.querySelector('[data-act="keluar-akun"]'));
     var hpIn = document.querySelector('[data-field="profil.hp"]');

@@ -91,6 +91,48 @@ sleep 30; curl -sI https://vaksinku.app | head -1
 Dua baris pertama harus sama seperti sebelum pemasangan. Baris ketiga `HTTP/2 200`
 (sertifikat HTTPS dibuat otomatis; bila belum, tunggu 1–2 menit lalu ulangi).
 
+## Tahap 2 — backend (database, API, masuk dengan Google)
+
+Paket lengkap dirakit `src/buat_paket_vps.py` menjadi `dist/vaksinku-vps.tar.gz`
+(berisi compose, Caddyfile, layanan masuk, SQL database, aplikasi, Kebijakan Privasi).
+Rahasia (`.env`) dibuat di VPS oleh `pasang.sh` dan tidak pernah ada di paket/repositori.
+
+```
+web  (Caddy)  /         → aplikasi & privasi.html
+              /auth/*   → auth  (Node, verifikasi token Google → sesi VaksinKu)
+              /api/*    → api   (PostgREST → PostgreSQL VaksinKu, dibatasi peran + RLS)
+db   (PostgreSQL 16)    data di /opt/vaksinku/data/db, hanya di jaringan internal
+```
+
+Langkah (buat snapshot di hPanel dulu):
+
+```powershell
+# laptop
+scp "$env:USERPROFILE\Downloads\vaksinku-vps.tar.gz" root@187.77.147.232:/tmp/
+```
+```bash
+# VPS
+cd /opt && tar xzf /tmp/vaksinku-vps.tar.gz && cd /opt/vaksinku && ./pasang.sh
+```
+
+`pasang.sh` aman diulang: membuat `.env` hanya bila belum ada, tidak menyentuh data,
+dan tidak mengubah apa pun milik sih-deployment selain memastikan Caddy-nya tersambung
+ke jaringan `vaksinku-edge`. Hasil yang diharapkan di akhir:
+`{"ok":true,"clientId":false}` dan daftar 3 klinik.
+
+Setelah Client ID Google dibuat: `./atur-google.sh <ID>.apps.googleusercontent.com`,
+lalu unggah ulang aplikasi yang dibangun dengan Client ID tersebut.
+
+Cadangan harian database:
+
+```bash
+(crontab -l 2>/dev/null; echo "15 2 * * * /opt/vaksinku/cadangkan.sh") | crontab -
+```
+
+Uji di komputer pengembang: `node src/uji_backend.mjs` (PostgreSQL + PostgREST + layanan
+masuk + Caddyfile, dengan server kunci Google tiruan) dan `python3 src/uji_supabase.py`
+(aturan akses database).
+
 ## Membatalkan semuanya
 
 ```bash
@@ -98,7 +140,7 @@ cd /root/sih-production/sih-deployment
 cat Caddyfile.cadangan-vaksinku > Caddyfile
 docker exec sih-deployment-caddy-1 caddy reload --config /etc/caddy/Caddyfile --adapter caddyfile
 docker network disconnect vaksinku-edge sih-deployment-caddy-1
-cd /opt/vaksinku && docker compose down
+cd /opt/vaksinku && docker compose down      # data database tetap tersimpan di data/db
 ```
 
 ## Memperbarui aplikasi
