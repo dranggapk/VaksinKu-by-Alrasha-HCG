@@ -18,13 +18,15 @@ Catatan pembaruan ada di `Unduhan\VaksinKu-pembaruan.log`.
    ```powershell
    git clone --depth 1 --branch claude/vaksinku-app-continue-3dxaoq https://github.com/dranggapk/VaksinKu-by-Alrasha-HCG.git "$env:USERPROFILE\Downloads\VaksinKu"
    ```
-3. Jadwalkan setiap 30 menit:
+3. Jadwalkan setiap 30 menit (cara ini menghindari masalah tanda kutip `schtasks`):
    ```powershell
-   schtasks /create /f /tn "Perbarui VaksinKu" /sc minute /mo 30 /tr "powershell -NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File \"$env:USERPROFILE\Downloads\VaksinKu\alat\perbarui-vaksinku.ps1\""
+   $aksi = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File `"$env:USERPROFILE\Downloads\VaksinKu\alat\perbarui-vaksinku.ps1`""
+   $pemicu = New-ScheduledTaskTrigger -Once -At (Get-Date) -RepetitionInterval (New-TimeSpan -Minutes 30)
+   Register-ScheduledTask -TaskName "Perbarui VaksinKu" -Action $aksi -Trigger $pemicu -Force
    ```
 
-Perbarui sekarang juga: `schtasks /run /tn "Perbarui VaksinKu"`.
-Hentikan: `schtasks /delete /tn "Perbarui VaksinKu" /f`.
+Perbarui sekarang juga: `Start-ScheduledTask -TaskName "Perbarui VaksinKu"`.
+Hentikan: `Unregister-ScheduledTask -TaskName "Perbarui VaksinKu" -Confirm:$false`.
 
 Setelah pull request digabung ke cabang utama, ganti nama cabang di skrip (`$Cabang`)
 menjadi `main`.
