@@ -170,6 +170,12 @@ Sinkronisasi: setelah masuk dengan Google, profil, anggota keluarga, dan riwayat
 dikirim ke `/api` (lihat `app/sinkron.js`); foto label vaksin tetap di perangkat. Catatan
 dosis dari klinik hanya diterima, tidak bisa diubah dari aplikasi.
 
+Reservasi online: bila pengguna masuk dengan Google dan server terjangkau, tombol *Kirim
+Reservasi* memanggil `/api/rpc/buat_booking` — server memeriksa hari libur, jam layanan, dan
+kuota per jam (kapasitas klinik), lalu membekukan harga dari `harga_klinik` dan memberi kode
+`VK-YYMMDD-nnnn`. Status reservasi ikut diperbarui saat sinkron; pasien bisa membatalkan selama
+status masih `baru`. Tanpa sesi/server, reservasi disimpan di perangkat dan dikirim lewat WhatsApp.
+
 Cukup ulangi Langkah 2 dengan berkas baru; tidak perlu restart apa pun.
 
 ## Bila sih-deployment dibuat ulang

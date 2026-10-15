@@ -55,6 +55,13 @@ TEST_JS = r"""
   function ganti(h) { location.hash = h; window.dispatchEvent(new HashChangeEvent('hashchange')); }
 
   var K2 = window.KATALOG;
+  function isoLokal(d) { return new Date(d.getTime() - d.getTimezoneOffset() * 6e4).toISOString().slice(0, 10); }
+  function hariKerja(n) {   // tanggal ke-n hari kerja (bukan Minggu) dari hari ini
+    var d = new Date();
+    while (n > 0) { d.setDate(d.getDate() + 1); if (d.getDay() !== 0) n--; }
+    return isoLokal(d);
+  }
+  function hariMinggu() { var d = new Date(); do d.setDate(d.getDate() + 1); while (d.getDay() !== 0); return isoLokal(d); }
   try {
     /* 1. boot */
     ok('katalog termuat', !!(window.KATALOG && window.KATALOG.harga.length), (window.KATALOG || {}).harga.length + ' baris harga');
@@ -242,7 +249,10 @@ TEST_JS = r"""
     ok('form kosong ditolak', st().pasien.length === 1 && document.querySelectorAll('.errmsg').length >= 2,
        document.querySelectorAll('.errmsg').length + ' pesan galat');
 
-    /* 4. booking: validasi dulu */
+    /* 4. booking: validasi dulu. Alur 4–6 = reservasi tanpa sesi server (disimpan di perangkat
+       + WhatsApp); reservasi online diuji di bagian akhir (13). */
+    var sesiUji = st().akun.sesi;
+    window.VaksinKuUji.aturState(function (S) { S.akun.sesi = null; });
     ganti('#/booking');
     klik('[data-act="kirim-booking"]');
     ok('booking kosong ditolak', st().booking.length === 0 && document.querySelectorAll('.errmsg').length > 0,
@@ -262,7 +272,16 @@ TEST_JS = r"""
        kartu.length + ' hasil untuk "influenza"');
     klik('[data-act="toggle-vaksin"]', 0);
     klik('[data-act="tutup-sheet"]');
-    var besok = new Date(Date.now() + 864e5).toISOString().slice(0, 10);
+    var besok = hariKerja(1);
+    isi('[data-field="tanggal"]', new Date(Date.now() - 2 * 864e5).toISOString().slice(0, 10));
+    klik('[data-act="set-jam"][data-arg="10:00"]');
+    klik('[data-act="kirim-booking"]');
+    ok('tanggal lampau ditolak', st().booking.length === 0 && document.body.textContent.indexOf('Tanggal tidak boleh di masa lalu') > 0);
+    isi('[data-field="tanggal"]', hariMinggu());
+    klik('[data-act="kirim-booking"]');
+    ok('hari Minggu ditolak (klinik libur)', st().booking.length === 0 && document.body.textContent.indexOf('libur hari Minggu') > 0);
+    ok('slot jam 16:00 tidak ditawarkan (klinik tutup 16:00)', !document.querySelector('[data-act="set-jam"][data-arg="16:00"]'));
+    ok('tanpa sesi server: tidak ada pilihan bagikan riwayat', !document.querySelector('[data-act="toggle-bagikan"]'));
     isi('[data-field="tanggal"]', besok);
     klik('[data-act="set-jam"][data-arg="10:00"]');
 
@@ -280,6 +299,7 @@ TEST_JS = r"""
     klik('[data-act="kirim-booking"]');
     var b = st().booking[0];
     ok('reservasi tersimpan', !!b && b.status === 'menunggu', b ? b.kode + ' · ' + b.total : '-');
+    ok('tanpa sesi: reservasi hanya di perangkat', !!b && !b.serverId && document.body.textContent.indexOf('hanya tersimpan di perangkat') > 0);
     ok('pindah ke detail reservasi', location.hash.indexOf('booking-detail') > 0, location.hash);
     ok('draft dibersihkan', st().draft == null);
 
@@ -608,11 +628,140 @@ TEST_JS = r"""
     hasil.push('GAGAL | pengecualian: ' + e.message + ' @ ' + (e.stack || '').split('\n')[1]);
   }
 
-  if (galat.length) hasil.push('GAGAL | galat konsol: ' + galat.join(' ; '));
-  var out = document.createElement('pre');
-  out.id = 'hasil-uji';
-  out.textContent = hasil.join('\n');
-  document.body.appendChild(out);
+  /* 13. reservasi online: sinkron & server VaksinKu tiruan (alur nyata diuji di uji_backend.mjs) */
+  function tunggu(ms) { return new Promise(function (r) { setTimeout(r, ms || 40); }); }
+  function ujiOnline() {
+    var minta = [], mode = 'ok', besok = hariKerja(1);
+    var srvBooking = [];
+    function jawab(status, isi) {
+      return Promise.resolve({ ok: status < 300, status: status, json: function () { return Promise.resolve(isi); } });
+    }
+    window.VaksinKuSinkron.sinkron = function (S) {
+      S.sinkron.akunId = S.akun.sesi.id; S.sinkron.dikenal = S.sinkron.dikenal || {};
+      S.pasien.forEach(function (p) { if (p.tglLahir) { p.sid = p.sid || 'sid-' + p.id; S.sinkron.dikenal[p.sid] = 'x'; } });
+      return Promise.resolve({ dikirim: 0, diterima: 0, dihapus: 0 });
+    };
+    window.fetch = function (url, opsi) {
+      var isi = opsi && opsi.body ? JSON.parse(opsi.body) : null;
+      minta.push({ url: url, isi: isi, auth: ((opsi || {}).headers || {}).Authorization });
+      if (mode === 'putus') return Promise.reject(new TypeError('Failed to fetch'));
+      if (url === '/api/rpc/buat_booking') {
+        if (mode === 'penuh') return jawab(400, { code: 'P0001', message: 'Slot 10:00 penuh (sisa 0), pilih jam lain' });
+        var bk = { id: 'srv-' + (srvBooking.length + 1), kode: 'VK-261016-000' + (srvBooking.length + 1), status: 'baru',
+          klinik_id: isi.p_klinik, layanan: isi.p_layanan, lokasi: isi.p_lokasi, tanggal: isi.p_tanggal, jam: isi.p_jam + ':00',
+          tarif: isi.p_tarif, catatan: isi.p_catatan, bagikan_riwayat: isi.p_bagikan_riwayat, dibuat_pada: new Date().toISOString(),
+          booking_item: isi.p_item.map(function (it) { return { pasien_id: it.pasien_id, vaksin_id: it.vaksin_id, harga: 400000 }; }) };
+        srvBooking.push(bk);
+        return jawab(200, bk);
+      }
+      if (url === '/api/rpc/ubah_status_booking') {
+        var t = srvBooking.filter(function (x) { return x.id === isi.p_booking; })[0];
+        if (!t || t.status !== 'baru') return jawab(400, { message: 'Booking yang sudah dikonfirmasi hanya bisa diubah oleh klinik' });
+        t.status = isi.p_status; return jawab(200, t);
+      }
+      if (url.indexOf('/api/booking?') === 0) return jawab(200, srvBooking.map(function (x) { return JSON.parse(JSON.stringify(x)); }));
+      return jawab(404, { message: 'tidak ada' });
+    };
+    var draftUji;
+    function isiDraft() { window.VaksinKuUji.aturState(function (S) { S.draft = JSON.parse(JSON.stringify(draftUji)); }); ganti('#/beranda'); ganti('#/booking'); }
+
+    window.VaksinKuUji.aturState(function (S) { S.akun.sesi = sesiUji; S.sinkron = { akunId: sesiUji.id, dikenal: {} }; S.draft = null; });
+    ganti('#/beranda'); ganti('#/booking');
+    ok('online: formulir menyebut reservasi langsung ke klinik', document.body.textContent.indexOf('Reservasi langsung terkirim ke klinik') > 0 &&
+       !!document.querySelector('[data-act="kirim-booking"]') && document.querySelector('[data-act="kirim-booking"]').textContent === 'Kirim Reservasi');
+    klik('[data-act="set-layanan"][data-arg="klinik"]');
+    klik('.checkrow[data-act="pilih-klinik"]', 0);
+    klik('[data-act="toggle-pasien"]');
+    klik('[data-act="buka-vaksin"]'); isi('#cari-vaksin', 'influenza'); klik('[data-act="toggle-vaksin"]', 0); klik('[data-act="tutup-sheet"]');
+    isi('[data-field="tanggal"]', besok);
+    klik('[data-act="set-jam"][data-arg="10:00"]');
+    klik('[data-act="toggle-bagikan"]');
+    draftUji = st().draft;
+    mode = 'penuh';
+    var jmlAwal = st().booking.length;
+    klik('[data-act="kirim-booking"]');
+    return tunggu().then(function () {
+      var m = minta.filter(function (x) { return x.url === '/api/rpc/buat_booking'; })[0] || {};
+      var pas = st().pasien.filter(function (x) { return x.id === draftUji.pasienIds[0]; })[0] || {};
+      ok('online: data dikirim dengan sesi & id pasien server', m.auth === 'Bearer ' + sesiUji.token && !!m.isi &&
+         m.isi.p_klinik === 'alrasha-hcc' && m.isi.p_tanggal === besok && m.isi.p_jam === '10:00' && m.isi.p_tarif === 'umum' &&
+         m.isi.p_item.length === 1 && m.isi.p_item[0].pasien_id === pas.sid && m.isi.p_bagikan_riwayat === true, JSON.stringify(m.isi || {}).slice(0, 120));
+      ok('online: slot penuh ditolak server → pesan tampil, data isian tetap', st().booking.length === jmlAwal && location.hash === '#/booking' &&
+         document.body.textContent.indexOf('Slot 10:00 penuh') > 0 && !!st().draft, location.hash);
+      mode = 'ok';
+      klik('[data-act="set-jam"][data-arg="11:00"]');
+      klik('[data-act="kirim-booking"]');
+      return tunggu();
+    }).then(function () {
+      var b = st().booking[0];
+      ok('online: reservasi diterima server dengan kode server', !!b && b.serverId === 'srv-1' && b.kode === 'VK-261016-0001' &&
+         b.status === 'menunggu' && b.statusServer === 'baru' && b.jam === '11:00', b ? b.kode + ' ' + b.serverId : '-');
+      ok('online: detail menyatakan reservasi diterima sistem klinik', location.hash.indexOf('booking-detail/' + (b || {}).id) > 0 &&
+         document.body.textContent.indexOf('Reservasi online diterima sistem klinik') >= 0, location.hash);
+      var bukaAsli = window.open, u = '';
+      window.open = function (x) { u = x; return null; };
+      klik('[data-act="wa-booking"]');
+      window.open = bukaAsli;
+      ok('online: pesan WhatsApp tetap bisa dikirim & menyebut reservasi online',
+         decodeURIComponent(u.split('text=')[1] || '').indexOf('Reservasi online') > 0);
+      // klinik mengonfirmasi srv-1, dan ada reservasi dari perangkat lain (srv-2)
+      srvBooking[0].status = 'terkonfirmasi';
+      var pas = st().pasien.filter(function (x) { return x.sid; })[0];
+      srvBooking.push({ id: 'srv-2', kode: 'VK-261016-0002', klinik_id: 'alrasha-ibumas', layanan: 'klinik', lokasi: '', tanggal: besok,
+        jam: '09:00:00', tarif: 'umum', status: 'baru', catatan: '', bagikan_riwayat: false, dibuat_pada: new Date().toISOString(),
+        booking_item: [{ pasien_id: pas.sid, vaksin_id: 'v7-11', harga: 400000 }, { pasien_id: pas.sid, vaksin_id: 'v5-9', harga: null }] });
+      klik('[data-act="sinkron-sekarang"]');
+      return tunggu();
+    }).then(function () {
+      var s = st(), b1 = s.booking.filter(function (x) { return x.serverId === 'srv-1'; })[0] || {},
+          b2 = s.booking.filter(function (x) { return x.serverId === 'srv-2'; })[0];
+      ok('online: status dari klinik diperbarui saat sinkron', b1.status === 'terkonfirmasi' && b1.statusServer === 'terkonfirmasi', b1.status);
+      ok('online: detail terkonfirmasi tanpa tombol batal', document.body.textContent.indexOf('Terkonfirmasi klinik') > 0 &&
+         !document.querySelector('[data-act="batal-booking"]') && document.body.textContent.indexOf('hubungi CS') > 0);
+      ok('online: reservasi dari perangkat lain ikut tampil', !!b2 && b2.pasienIds.length === 1 && b2.klinikNama === 'Klinik Utama Alrasha Ibumas' &&
+         b2.total === 400000 && b2.tanpaHarga.length === 1 && b2.jam === '09:00', b2 ? b2.kode + ' ' + b2.total : '-');
+      ganti('#/riwayat-booking');
+      ok('online: riwayat menandai reservasi online & terkonfirmasi', document.body.textContent.indexOf('Online') > 0 &&
+         document.body.textContent.indexOf('Terkonfirmasi') > 0);
+      ganti('#/booking-detail/' + b2.id);
+      window.confirm = function () { return true; };
+      klik('[data-act="batal-booking"]');
+      return tunggu().then(function () { return b2; });
+    }).then(function (b2) {
+      var x = st().booking.filter(function (y) { return y.id === b2.id; })[0] || {};
+      ok('online: pembatalan dikirim ke server', x.status === 'batal' && srvBooking[1].status === 'batal' &&
+         minta.some(function (m) { return m.url === '/api/rpc/ubah_status_booking' && m.isi.p_booking === 'srv-2'; }), x.status);
+      klik('[data-act="hapus-booking"]');
+      ganti('#/profil');
+      klik('[data-act="sinkron-sekarang"]');
+      return tunggu();
+    }).then(function () {
+      ok('online: reservasi yang dihapus dari daftar tidak muncul lagi', !st().booking.some(function (y) { return y.serverId === 'srv-2'; }));
+      // server tak terjangkau: tetap tersimpan di perangkat, konfirmasi lewat WhatsApp
+      isiDraft();
+      mode = 'putus';
+      window.VaksinKuSinkron.sinkron = function () { var e = new Error('jaringan'); e.status = 0; return Promise.reject(e); };
+      var jml = st().booking.length;
+      klik('[data-act="kirim-booking"]');
+      return tunggu().then(function () { return jml; });
+    }).then(function (jml) {
+      var b = st().booking[0];
+      ok('online: server tak terjangkau → reservasi disimpan di perangkat', st().booking.length === jml + 1 && !b.serverId &&
+         document.body.textContent.indexOf('hanya tersimpan di perangkat') > 0, b.kode);
+    });
+  }
+  function tulisHasil() {
+    if (galat.length) hasil.push('GAGAL | galat konsol: ' + galat.join(' ; '));
+    var out = document.createElement('pre');
+    out.id = 'hasil-uji';
+    out.textContent = hasil.join('\n');
+    document.body.appendChild(out);
+  }
+  var ujiJalan;
+  try { ujiJalan = ujiOnline(); } catch (e) { ujiJalan = Promise.reject(e); }
+  ujiJalan.catch(function (e) {
+    hasil.push('GAGAL | pengecualian (online): ' + e.message + ' @ ' + (e.stack || '').split('\n')[1]);
+  }).then(tulisHasil);
 })();
 </script>
 """

@@ -289,6 +289,49 @@ try {
     const nama = psql(DB, '-c', `select p.nama || '|' || count(r.id) || '|' || pr.hp from pasien p join profil pr on pr.id = p.profil_id
       left join riwayat_dosis r on r.pasien_id = p.id where p.profil_id = '${m.data.akun.id}' group by p.nama, pr.hp`).trim();
     ok('aplikasi di browser: keluarga, riwayat, dan HP terkirim ke server saat dibuka', nama === 'Bima|1|082222', nama || '(kosong)');
+
+    // ---- reservasi online dari aplikasi: slot penuh ditolak, slot kosong diterima dengan harga server
+    const tgl = hariKerja();
+    const isiSlot = await masuk(tokenGoogle({ sub: '7007', email: 'rina@gmail.com', name: 'Rina' }));
+    const anakRina = [];
+    for (const n of ['Ana', 'Ani', 'Ari']) {
+      const r = await panggil('/pasien', isiSlot.data.token, { method: 'POST', headers: { Prefer: 'return=representation' },
+        body: JSON.stringify({ profil_id: isiSlot.data.akun.id, nama: n, tgl_lahir: '2022-01-01' }) });
+      anakRina.push(r.data[0].id);
+    }
+    const penuh = await panggil('/rpc/buat_booking', isiSlot.data.token, { method: 'POST', body: JSON.stringify({
+      p_klinik: 'alrasha-hcc', p_layanan: 'klinik', p_lokasi: '', p_tanggal: tgl, p_jam: '13:00', p_tarif: 'umum', p_catatan: '',
+      p_bagikan_riwayat: false, p_item: anakRina.map((id) => ({ pasien_id: id, vaksin_id: 'v7-11' })) }) });
+    ok('slot 13:00 diisi 3 pasien (kapasitas klinik)', penuh.status === 200, String(penuh.status));
+
+    async function bukaAppBooking(sub, email, jam) {
+      const akun = await masuk(tokenGoogle({ sub, email, name: 'Lina' }));
+      const st = {
+        versi: 1, onboarding: { selesai: true, langkah: 2, fokus: ['anak'], layanan: 'klinik' },
+        akun: { masuk: true, metode: 'google', email, sesi: { token: akun.data.token, exp: akun.data.exp, id: akun.data.akun.id } },
+        profil: { nama: 'Lina', hp: '083333' }, lokasi: { kota: 'tanjungpinang', klinik: 'alrasha-hcc' },
+        pasien: [{ id: 'p1', nama: 'Kiki', tglLahir: '2024-03-03', jenisKelamin: 'Perempuan', hubungan: 'Anak' }],
+        draft: { layanan: 'klinik', klinikIdx: 0, alamatId: '', institusi: '', institusiAlamat: '', pasienIds: ['p1'],
+          vaksinIds: ['v7-11'], dokter: 'umum', tanggal: tgl, jam, catatan: 'uji', bagikan: true },
+      };
+      const html = fs.readFileSync(path.join(ROOT, 'VaksinKu-App.html'), 'utf8').replace('<script>/*APP-MULAI*/',
+        `<script>localStorage.setItem('vaksinku.v1', ${JSON.stringify(JSON.stringify(st))});location.hash='#/booking';</script><script>/*APP-MULAI*/`)
+        .replace('</body>', `<script>setTimeout(function () { document.querySelector('[data-act="kirim-booking"]').click(); }, 1500);</script></body>`);
+      fs.writeFileSync(path.join(webRoot, 'index.html'), html);
+      const dom = execFileSync(process.env.CHROME, ['--headless=new', '--no-sandbox', '--disable-gpu', '--virtual-time-budget=8000',
+        '--dump-dom', `http://127.0.0.1:${PORT_WEB}/`], { encoding: 'utf8', timeout: 60000, maxBuffer: 64 * 1024 * 1024 });
+      return { akun, dom };
+    }
+    const g = await bukaAppBooking('8008', 'lina@gmail.com', '13:00');
+    const nG = psql(DB, '-c', `select count(*) from booking where profil_id = '${g.akun.data.akun.id}'`).trim();
+    ok('aplikasi: reservasi di slot penuh ditolak server, pesan tampil', nG === '0' && g.dom.includes('Slot 13:00 penuh'), `${nG} booking`);
+    const y = await bukaAppBooking('9009', 'yuni@gmail.com', '10:00');
+    const bkY = psql(DB, '-c', `select b.kode || '|' || b.status || '|' || b.jam || '|' || b.bagikan_riwayat || '|' || p.nama || '|' || bi.vaksin_id || '|' || bi.harga
+      from booking b join booking_item bi on bi.booking_id = b.id join pasien p on p.id = bi.pasien_id
+      where b.profil_id = '${y.akun.data.akun.id}'`).trim();
+    const kodeY = bkY.split('|')[0];
+    ok('aplikasi: reservasi online tercatat di server dengan harga klinik', /^VK-\d{6}-\d{4}\|baru\|10:00:00\|true\|Kiki\|v7-11\|400000$/.test(bkY), bkY || '(kosong)');
+    ok('aplikasi: detail reservasi menampilkan kode dari server', !!kodeY && y.dom.includes(kodeY) && y.dom.includes('Reservasi online diterima sistem klinik'));
   }
 
   // ---- pemalsuan sesi & peran
