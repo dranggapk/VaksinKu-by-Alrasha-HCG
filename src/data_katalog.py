@@ -18,7 +18,7 @@ BRAND = {
 # https://vaksinku.app. Client ID bukan rahasia; boleh juga diisi lewat
 # variabel lingkungan VAKSINKU_GOOGLE_CLIENT_ID saat build.
 GOOGLE = {
-    "client_id": "",
+    "client_id": "969970859602-3le4bln2e58lcd3d84n6q08uo55jli6h.apps.googleusercontent.com",
     "situs": "https://vaksinku.app",
 }
 
