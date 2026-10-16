@@ -28,7 +28,7 @@ KELUAR = os.path.join(ROOT, "dist", "vaksinku-vps.tar.gz")
 
 def isi_paket():
     migrasi = sorted(glob.glob(os.path.join(ROOT, "supabase", "migrations", "*.sql")))
-    nama_migrasi = ["10_skema.sql", "20_keamanan.sql", "30_fungsi.sql"]
+    nama_migrasi = ["10_skema.sql", "20_keamanan.sql", "30_fungsi.sql", "40_petugas.sql"]
     assert len(migrasi) == len(nama_migrasi), "jumlah migrasi berubah — perbarui nama_migrasi"
     berkas = [
         ("docker-compose.yml", os.path.join(DEP, "docker-compose.yml"), 0o644),
@@ -36,6 +36,8 @@ def isi_paket():
         ("atur-google.sh", os.path.join(DEP, "atur-google.sh"), 0o755),
         ("cadangkan.sh", os.path.join(DEP, "cadangkan.sh"), 0o755),
         ("perbarui-situs.sh", os.path.join(DEP, "perbarui-situs.sh"), 0o755),
+        ("perbarui-backend.sh", os.path.join(DEP, "perbarui-backend.sh"), 0o755),
+        ("jadikan-admin.sh", os.path.join(DEP, "jadikan-admin.sh"), 0o755),
         ("web/Caddyfile", os.path.join(DEP, "web", "Caddyfile"), 0o644),
         ("auth/server.mjs", os.path.join(DEP, "backend", "auth", "server.mjs"), 0o644),
         ("db/init/00_auth.sql", os.path.join(DEP, "backend", "db", "00_auth.sql"), 0o644),
@@ -47,6 +49,7 @@ def isi_paket():
         ("db/init/90_peran.sh", os.path.join(DEP, "backend", "db", "90_peran.sh"), 0o755),
         ("situs/index.html", os.path.join(ROOT, "VaksinKu-App.html"), 0o644),
         ("situs/privasi.html", os.path.join(ROOT, "situs", "privasi.html"), 0o644),
+        ("situs/klinik.html", os.path.join(ROOT, "VaksinKu-Dashboard.html"), 0o644),
     ]
     return berkas
 

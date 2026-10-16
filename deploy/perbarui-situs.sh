@@ -1,11 +1,12 @@
 #!/bin/sh
 # Memperbarui halaman vaksinku.app dari GitHub (dijalankan cron setiap 15 menit).
 #
-# Hanya MENYALIN dua berkas statis ke /opt/vaksinku/situs:
-#   VaksinKu-App.html  → situs/index.html
-#   situs/privasi.html → situs/privasi.html
+# Hanya MENYALIN berkas statis ke /opt/vaksinku/situs:
+#   VaksinKu-App.html       → situs/index.html
+#   VaksinKu-Dashboard.html → situs/klinik.html   (dashboard klinik, wajib masuk petugas)
+#   situs/privasi.html      → situs/privasi.html
 # Tidak menjalankan kode apa pun dari repositori, dan tidak menyentuh backend,
-# database, maupun sekolahibuhamil.id. Perubahan backend tetap lewat pasang.sh.
+# database, maupun sekolahibuhamil.id. Perubahan backend lewat perbarui-backend.sh.
 #
 # Pasang:  (crontab -l 2>/dev/null; echo "*/15 * * * * /opt/vaksinku/perbarui-situs.sh") | crontab -
 set -eu
@@ -40,6 +41,7 @@ pasang() {
 
 pasang "$SUMBER/VaksinKu-App.html" "$SITUS/index.html" 200000 "VaksinKu"
 pasang "$SUMBER/situs/privasi.html" "$SITUS/privasi.html" 5000 "Kebijakan Privasi"
+pasang "$SUMBER/VaksinKu-Dashboard.html" "$SITUS/klinik.html" 200000 "VaksinKuKlinik" || true
 
 # simpan 300 baris log terakhir
 [ -f "$LOG" ] && tail -n 300 "$LOG" > "$LOG.tmp" && mv "$LOG.tmp" "$LOG" || true

@@ -636,8 +636,14 @@ TEST_JS = r"""
     function jawab(status, isi) {
       return Promise.resolve({ ok: status < 300, status: status, json: function () { return Promise.resolve(isi); } });
     }
+    var kirimCatatanKlinik = false;
     window.VaksinKuSinkron.sinkron = function (S) {
       S.sinkron.akunId = S.akun.sesi.id; S.sinkron.dikenal = S.sinkron.dikenal || {};
+      if (kirimCatatanKlinik) {   // catatan dari dashboard klinik: belum membawa kunci dosis
+        kirimCatatanKlinik = false;
+        S.riwayat.push({ id: 'k1', sid: 'rk-1', pasienId: S.pasien[0].id, label: 'Influenza — Vaxigrip Tetra', kunci: [],
+          tanggal: isoLokal(new Date()), merek: 'Vaxigrip Tetra', batch: 'FL-01', sumber: 'klinik', diverifikasi: true });
+      }
       S.pasien.forEach(function (p) { if (p.tglLahir) { p.sid = p.sid || 'sid-' + p.id; S.sinkron.dikenal[p.sid] = 'x'; } });
       return Promise.resolve({ dikirim: 0, diterima: 0, dihapus: 0 });
     };
@@ -710,9 +716,13 @@ TEST_JS = r"""
       srvBooking.push({ id: 'srv-2', kode: 'VK-261016-0002', klinik_id: 'alrasha-ibumas', layanan: 'klinik', lokasi: '', tanggal: besok,
         jam: '09:00:00', tarif: 'umum', status: 'baru', catatan: '', bagikan_riwayat: false, dibuat_pada: new Date().toISOString(),
         booking_item: [{ pasien_id: pas.sid, vaksin_id: 'v7-11', harga: 400000 }, { pasien_id: pas.sid, vaksin_id: 'v5-9', harga: null }] });
+      kirimCatatanKlinik = true;
       klik('[data-act="sinkron-sekarang"]');
       return tunggu();
     }).then(function () {
+      var rk = st().riwayat.filter(function (r) { return r.sid === 'rk-1'; })[0] || {};
+      ok('online: vaksinasi dari dashboard klinik dipetakan ke dosis jadwal', rk.kunciDipetakan && (rk.kunci || []).some(function (k) { return /^flu:/.test(k); }),
+         JSON.stringify(rk.kunci));
       var s = st(), b1 = s.booking.filter(function (x) { return x.serverId === 'srv-1'; })[0] || {},
           b2 = s.booking.filter(function (x) { return x.serverId === 'srv-2'; })[0];
       ok('online: status dari klinik diperbarui saat sinkron', b1.status === 'terkonfirmasi' && b1.statusServer === 'terkonfirmasi', b1.status);

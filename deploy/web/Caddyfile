@@ -35,7 +35,7 @@
 		root * /srv
 		file_server
 		# halaman selalu diperiksa ulang agar versi baru langsung terpakai
-		@halaman path / /index.html /privasi.html
+		@halaman path / /index.html /privasi.html /klinik.html
 		header @halaman Cache-Control "no-cache"
 	}
 }

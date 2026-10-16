@@ -525,6 +525,18 @@
   // Catat dosis dari produk yang diberikan: tiap antigen mengisi dosis
   // berikutnya yang belum tercatat pada jadwal anak tersebut.
   function catatDariProduk(p, vaksinId, tanggal, tambahan) {
+    var kunci = kunciDariProduk(p, vaksinId);
+    if (!kunci) return null;
+    var v = K.harga.filter(function (x) { return x.id === vaksinId; })[0];
+    if (v && /rotarix/i.test(v.merk)) p.rv = 'rv1';
+    var rec = { id: uid(), pasienId: p.id, label: v ? v.kategori + ' — ' + v.merk : 'Vaksin', kunci: kunci, tanggal: tanggal,
+      merek: v ? v.merk : '', sumber: 'booking' };
+    for (var k in (tambahan || {})) rec[k] = tambahan[k];
+    S.riwayat.push(rec);
+    return rec;
+  }
+  // Dosis jadwal anak berikutnya yang dipenuhi satu produk vaksin (null bila tidak ada).
+  function kunciDariProduk(p, vaksinId) {
     var antigen = antigenProduk(vaksinId), bln = umurBulan(p.tglLahir);
     if (!antigen.length || bln == null || bln >= 228) return null;
     var peta = petaRiwayat(p.id), kunci = [];
@@ -540,14 +552,23 @@
         urut.filter(function (k) { return k.split(':')[1] === 't'; })[0];
       if (berikut) kunci.push(berikut);
     });
-    if (!kunci.length) return null;
-    var v = K.harga.filter(function (x) { return x.id === vaksinId; })[0];
-    if (v && /rotarix/i.test(v.merk)) p.rv = 'rv1';
-    var rec = { id: uid(), pasienId: p.id, label: v ? v.kategori + ' — ' + v.merk : 'Vaksin', kunci: kunci, tanggal: tanggal,
-      merek: v ? v.merk : '', sumber: 'booking' };
-    for (var k in (tambahan || {})) rec[k] = tambahan[k];
-    S.riwayat.push(rec);
-    return rec;
+    return kunci.length ? kunci : null;
+  }
+  // Catatan vaksinasi dari dashboard klinik belum membawa kunci dosis; dipetakan sekali
+  // di sini (urut tanggal) agar jadwal anak ikut tercentang, lalu dipertahankan sinkron.
+  function petakanDosisKlinik() {
+    var n = 0;
+    S.riwayat.filter(function (r) { return r.sumber === 'klinik' && !(r.kunci || []).length && !r.kunciDipetakan; })
+      .sort(function (a, b) { return String(a.tanggal).localeCompare(String(b.tanggal)); })
+      .forEach(function (r) {
+        var p = S.pasien.filter(function (x) { return x.id === r.pasienId; })[0];
+        var v = K.harga.filter(function (x) { return x.merk === r.merek; })[0];
+        r.kunciDipetakan = true;
+        var kunci = p && v ? kunciDariProduk(p, v.id) : null;
+        if (kunci) { r.kunci = kunci; n++; }
+        if (p && v && /rotarix/i.test(v.merk)) p.rv = 'rv1';
+      });
+    return n;
   }
   // Riwayat versi lama dicatat per nama baris; terjemahkan ke kunci dosis.
   function migrasiRiwayat() {
@@ -1459,6 +1480,7 @@
     if (manual) render();
     sinkronJanji = window.VaksinKuSinkron.sinkron(S, { api: '/api', token: S.akun.sesi.token, akunId: S.akun.sesi.id })
       .then(function (r) {
+        petakanDosisKlinik();
         return tarikBooking().then(function (n) { r.diterima += n; return r; }, function () { return r; });
       })
       .then(function (r) {

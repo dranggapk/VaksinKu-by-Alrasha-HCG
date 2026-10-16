@@ -81,7 +81,10 @@
   function keLokalRiwayat(b, pasienLokalId, lama) {
     var r = lama || { id: 'srv-' + b.id };
     r.sid = b.id; r.pasienId = pasienLokalId;
-    r.kunci = (b.kunci || []).slice(); r.label = b.label; r.tanggal = b.tanggal;
+    // kunci yang dipetakan aplikasi untuk catatan klinik tanpa kunci tetap dipakai
+    var kunciSrv = (b.kunci || []).slice();
+    r.kunci = kunciSrv.length || !(lama && lama.kunciDipetakan) ? kunciSrv : lama.kunci;
+    r.label = b.label; r.tanggal = b.tanggal;
     r.tempat = b.tempat; r.faskes = b.faskes; r.merek = b.merek; r.batch = b.no_batch;
     if (b.sumber === 'klinik') {
       r.sumber = 'klinik'; r.diverifikasi = !!b.diverifikasi; r.klinikId = b.klinik_id || '';

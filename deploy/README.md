@@ -178,6 +178,31 @@ status masih `baru`. Tanpa sesi/server, reservasi disimpan di perangkat dan diki
 
 Cukup ulangi Langkah 2 dengan berkas baru; tidak perlu restart apa pun.
 
+## Dashboard klinik di server (https://vaksinku.app/klinik.html)
+
+Sekali saja, setelah pembaruan ini ada di GitHub:
+
+```bash
+sh /opt/vaksinku/sumber/deploy/perbarui-backend.sh
+```
+
+Skrip itu mencadangkan database, memasang skrip baru (`perbarui-situs.sh`,
+`jadikan-admin.sh`), menambah `/klinik.html` ke Caddyfile VaksinKu, menjalankan migrasi
+database tambahan (`supabase/migrations/2026101600*`, aman diulang), memuat ulang API
+dan server web VaksinKu (sekolahibuhamil.id tidak disentuh), lalu memasang halaman.
+Pembaruan berikutnya yang mengubah database cukup menjalankan perintah yang sama.
+
+Admin klinik pertama — orangnya membuka https://vaksinku.app/klinik.html dan masuk
+dengan Google sekali (akan tampil "belum terdaftar"), lalu di VPS:
+
+```bash
+/opt/vaksinku/jadikan-admin.sh email@gmail.com alrasha-hcc     # atau: semua
+```
+
+Setelah itu admin menambah petugas sendiri di dashboard: *Pengaturan → Petugas klinik*.
+Admin juga mengatur jam layanan, kapasitas, dan hari libur yang dipakai server untuk
+menerima reservasi online.
+
 ## Bila sih-deployment dibuat ulang
 
 Jika tim sekolahibuhamil.id menjalankan ulang wadahnya (`docker compose up` dengan

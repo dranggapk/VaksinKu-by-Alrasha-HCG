@@ -84,7 +84,20 @@ stok batch yang dipakai, menulis mutasi keluar, mencatat rekam medis, dan
 menerbitkan tagihan dengan harga dari price list resmi. Tidak ada angka yang
 ditanam — semua dihitung dari data yang dimasukkan petugas.
 
-### Batasan dashboard
+### Dua cara pakai
+
+- **Tersambung ke server — https://vaksinku.app/klinik.html (cara utama).** Petugas
+  masuk dengan akun Google yang didaftarkan admin klinik (*Pengaturan → Petugas klinik*;
+  admin pertama didaftarkan dengan `deploy/jadikan-admin.sh`). Reservasi online dari
+  aplikasi pasien langsung muncul; booking, pasien, stok, pelayanan, dan tagihan
+  tersimpan di server (`admin/server.js` → fungsi database yang memeriksa hak petugas,
+  kuota slot, stok, dan harga). Vaksinasi yang dicatat langsung masuk ke riwayat
+  pasien di aplikasi, lengkap dengan No. Batch dan tanda terverifikasi klinik.
+  Beberapa komputer/kasir memakai data yang sama; data diperbarui tiap menit.
+- **Berkas di perangkat (cadangan/demo).** `VaksinKu-Dashboard.html` yang dibuka
+  langsung dari folder tetap bekerja tanpa server dengan batasan di bawah.
+
+### Batasan dashboard (mode berkas di perangkat)
 
 - **Booking dari aplikasi pasien tidak masuk otomatis.** Tanpa server tidak ada
   jalur sinkronisasi; reservasi tiba lewat WhatsApp. Pesan dari aplikasi membawa
@@ -109,15 +122,11 @@ ditanam — semua dihitung dari data yang dimasukkan petugas.
 
 ## Batasan yang perlu diketahui
 
-- **Backend Supabase baru tahap fondasi.** Struktur database, aturan akses, dan fungsi
-  booking–stok–pelayanan–tagihan sudah ada di `supabase/` dan teruji, tetapi aplikasi
-  dan dashboard di bawah ini masih menyimpan data di perangkat.
-
-- **Data tersimpan di perangkat**, bukan di server. Membersihkan data browser
-  akan menghapusnya — gunakan menu *Cadangkan data* sebelum berganti perangkat.
-- **Reservasi belum otomatis masuk sistem klinik.** Aplikasi menyusun ringkasan
-  dan mengirimkannya ke WhatsApp CS untuk dikonfirmasi petugas. Untuk booking
-  yang benar-benar otomatis dibutuhkan server dan integrasi jadwal klinik.
+- **Server VaksinKu (VPS) sudah berjalan** di vaksinku.app: masuk dengan Google,
+  sinkron data keluarga, reservasi online, dan dashboard klinik memakai database
+  yang sama. Tanpa masuk (atau saat server tak terjangkau), aplikasi pasien tetap
+  menyimpan data di perangkat dan reservasi dikirim lewat WhatsApp.
+- Foto label vaksin tetap di perangkat pasien (belum diunggah ke server).
 - **Konsultasi bukan chat real-time.** Tidak ada balasan otomatis dan tidak ada
   jawaban yang dibuat aplikasi. Pertanyaan dikirim lewat WhatsApp ke dokter/CS,
   lalu jawaban yang Anda terima dicatat sendiri ke dalam aplikasi supaya
@@ -188,7 +197,7 @@ app/                       Sumber aplikasi pasien
   merek/                   Foto kemasan vaksin per merek untuk Panduan (lihat README di dalamnya)
   app.js                   Logika: penyimpanan, rute, layar, perhitungan biaya
   sinkron.js               Sinkronisasi profil, keluarga & riwayat dosis dengan server (PostgREST)
-admin/                     Sumber dashboard manajemen
+admin/                     Sumber dashboard manajemen (server.js = penghubung ke server VaksinKu)
   index.html               Kerangka halaman
   styles.css               Design system dashboard (sidebar, tabel, grafik)
   app.js                   Modul booking s.d. transaksi, grafik, dan panel
@@ -198,11 +207,11 @@ src/
   panduan_vaksin.py        Isi Panduan Vaksinasi: profil 21 vaksin & jadwal ibu hamil
   build_bundle.py          Merakit aplikasi pasien + font & logo jadi satu berkas
   build_admin.py           Merakit dashboard manajemen jadi satu berkas
-  uji_app.py               Uji fungsional aplikasi pasien (171 uji)
+  uji_app.py               Uji fungsional aplikasi pasien (172 uji)
   uji_admin.py             Uji fungsional dashboard (78 uji)
   buat_seed_supabase.py    Membuat supabase/seed.sql dari katalog
-  uji_supabase.py          Uji hak akses backend Supabase di PostgreSQL lokal (52 uji)
-  uji_backend.mjs          Uji ujung-ke-ujung backend VPS: PostgreSQL + PostgREST + masuk Google (44 uji, termasuk sinkron dua perangkat & reservasi online dari aplikasi di browser)
+  uji_supabase.py          Uji hak akses backend Supabase di PostgreSQL lokal (63 uji)
+  uji_backend.mjs          Uji ujung-ke-ujung backend VPS: PostgreSQL + PostgREST + masuk Google (63 uji, termasuk sinkron dua perangkat, reservasi online dari aplikasi, dan dashboard klinik di browser)
   buat_paket_vps.py        Merakit dist/vaksinku-vps.tar.gz untuk /opt/vaksinku
   tangkap_layar.py         Tangkap layar aplikasi pasien
   tangkap_dashboard.py     Tangkap layar dashboard
@@ -224,9 +233,9 @@ cd src
 python3 build_bundle.py       # → VaksinKu-App.html (font tertanam, siap offline)
 python3 build_admin.py        # → VaksinKu-Dashboard.html
 python3 build_bundle.py --tanpa-font   # lebih cepat, font dari Google Fonts
-python3 uji_app.py            # 171 uji fungsional aplikasi pasien
+python3 uji_app.py            # 172 uji fungsional aplikasi pasien
 python3 uji_admin.py          # 78 uji fungsional dashboard
-python3 uji_supabase.py       # 52 uji hak akses backend (butuh PostgreSQL lokal)
+python3 uji_supabase.py       # 63 uji hak akses backend (butuh PostgreSQL lokal)
 python3 tangkap_layar.py      # tangkap layar aplikasi pasien
 python3 tangkap_dashboard.py  # tangkap layar dashboard
 python3 build_index.py        # → index.html dari folder design/

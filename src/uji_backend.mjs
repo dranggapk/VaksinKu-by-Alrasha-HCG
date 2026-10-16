@@ -22,6 +22,8 @@ const DB = 'vaksinku_e2e';
 const PORT_API = 3101, PORT_AUTH = 8181, PORT_JWKS = 8282, PORT_WEB = 8099;
 const CADDY = process.env.CADDY || '';   // bila diisi: uji juga lewat deploy/web/Caddyfile
 const CLIENT_ID = 'uji-vaksinku.apps.googleusercontent.com';
+// Client ID di berkas dashboard yang dirakit; diganti CLIENT_ID uji saat dashboard diuji di browser
+const DATA_GOOGLE_ID = '969970859602-3le4bln2e58lcd3d84n6q08uo55jli6h.apps.googleusercontent.com';
 const SECRET = crypto.randomBytes(48).toString('base64');
 const PW_AUTH = crypto.randomBytes(18).toString('hex');
 
@@ -332,6 +334,161 @@ try {
     const kodeY = bkY.split('|')[0];
     ok('aplikasi: reservasi online tercatat di server dengan harga klinik', /^VK-\d{6}-\d{4}\|baru\|10:00:00\|true\|Kiki\|v7-11\|400000$/.test(bkY), bkY || '(kosong)');
     ok('aplikasi: detail reservasi menampilkan kode dari server', !!kodeY && y.dom.includes(kodeY) && y.dom.includes('Reservasi online diterima sistem klinik'));
+
+    // ---- dashboard klinik sungguhan di browser: masuk petugas → stok → hadir → catat vaksinasi → bayar
+    const admin = await masuk(tokenGoogle({ sub: '5005', email: 'admin.hcc@gmail.com', name: 'Admin HCC' }));
+    const sqlAdmin = fs.readFileSync(path.join(ROOT, 'deploy/jadikan-admin.sh'), 'utf8').split("<<'SQL'\n")[1].split('\nSQL')[0];
+    const fAdmin = path.join(fs.mkdtempSync('/tmp/vaksinku-sql-'), 'admin.sql');
+    fs.writeFileSync(fAdmin, sqlAdmin);
+    const jadi = psql(DB, '-v', 'email=admin.hcc@gmail.com', '-v', 'klinik=alrasha-hcc', '-f', fAdmin).trim();
+    ok('jadikan-admin.sh: admin klinik pertama terdaftar', jadi.startsWith('BERHASIL'), jadi);
+    const tokAdmin = tokenGoogle({ sub: '5005', email: 'admin.hcc@gmail.com', name: 'Admin HCC' });
+    const tokBaru = tokenGoogle({ sub: '5006', email: 'baru@gmail.com', name: 'Perawat Baru' });
+    const tglWalk = hariKerja();
+    const ujiKlinik = `<script>
+(function () {
+  var hasil = [], U = window.VaksinKuKlinikUji;
+  function ok(n, c, d) { hasil.push((c ? 'LULUS' : 'GAGAL') + ' | dashboard: ' + n + (d ? ' | ' + d : '')); }
+  function teks() { return document.body.textContent; }
+  function tunggu(syarat, ms) {
+    return new Promise(function (selesai) {
+      var mulai = Date.now();
+      (function cek() { var v = false; try { v = syarat(); } catch (e) {} if (v || Date.now() - mulai > (ms || 8000)) selesai(!!v); else setTimeout(cek, 100); })();
+    });
+  }
+  function klik(sel) { var e = document.querySelector(sel); if (!e) { hasil.push('GAGAL | dashboard: elemen tidak ada ' + sel); return; } e.click(); }
+  function isi(sel, v, ev) { var e = document.querySelector(sel); if (!e) { hasil.push('GAGAL | dashboard: input tidak ada ' + sel); return; } e.value = v; e.dispatchEvent(new Event(ev || 'input', { bubbles: true })); }
+  // pindah layar lewat hashchange asli (panel ditutup saat layar berganti)
+  function ke(h) {
+    return new Promise(function (r) {
+      window.addEventListener('hashchange', function f() { window.removeEventListener('hashchange', f); setTimeout(r, 0); });
+      location.hash = h;
+    });
+  }
+  var st = function () { return JSON.parse(localStorage.getItem('vaksinku.admin.server.v1') || '{}'); };
+  window.confirm = function () { return true; };
+  var toasts = [];
+  new MutationObserver(function () {
+    [].forEach.call(document.querySelectorAll('.toast'), function (t) { if (toasts.indexOf(t.textContent) < 0) toasts.push(t.textContent); });
+  }).observe(document.body, { childList: true });
+  function jejak() { return toasts.slice(-2).join(' / ') + ' ' + [].map.call(document.querySelectorAll('.errmsg'), function (e) { return e.textContent; }).join(' / '); }
+  Promise.resolve().then(function () {
+    ok('situs: wajib masuk, tombol Google tampil', !!document.getElementById('tombol-google') && teks().indexOf('Dashboard Klinik') >= 0);
+    return U.terimaGoogle({ credential: ${JSON.stringify(tokBaru)} });
+  }).then(function () {
+    ok('akun belum terdaftar: tidak bisa membuka data', teks().indexOf('belum terdaftar sebagai petugas') >= 0 && !document.querySelector('.sidebar'));
+    klik('[data-act="keluar-langsung"]');
+    return U.terimaGoogle({ credential: ${JSON.stringify(tokAdmin)} });
+  }).then(function () {
+    return tunggu(function () { return teks().indexOf('Tersambung ke server VaksinKu') >= 0 && (st().booking || []).length; });
+  }).then(function () {
+    var b = (st().booking || []).filter(function (x) { return x.kode === ${JSON.stringify(kodeY)}; })[0];
+    ok('admin masuk: reservasi online dari aplikasi tampil', !!b && b.status === 'baru' && b.sumber === 'aplikasi pasien', b ? b.kode + ' ' + b.status : '-');
+    ok('pasien dari aplikasi tampil dengan nama', (st().pasien || []).some(function (p) { return p.nama === 'Kiki' && p.akun; }));
+    ok('jam layanan dibaca dari server', st().jadwal.buka === '08:00' && st().jadwal.kapasitas === 3);
+    return ke('#/persediaan');
+  }).then(function () {
+    klik('[data-act="form-stok"]');
+    isi('#form-stok [name=vaksinId]', 'v7-11', 'change'); isi('#form-stok [name=batch]', 'FL-01');
+    isi('#form-stok [name=kedaluwarsa]', '2030-01-01'); isi('#form-stok [name=jumlah]', '10'); isi('#form-stok [name=minimum]', '3');
+    klik('[data-act="kirim-form"][data-arg="form-stok"]');
+    return tunggu(function () { return (st().stok || []).length === 1; });
+  }).then(function () {
+    var s0 = st().stok[0] || {};
+    ok('stok masuk tersimpan di server', s0.batch === 'FL-01' && s0.sisa === 10 && s0.minimum === 3, JSON.stringify(s0).slice(0, 90));
+    return ke('#/booking');
+  }).then(function () {
+    var b = st().booking.filter(function (x) { return x.kode === ${JSON.stringify(kodeY)}; })[0];
+    klik('[data-act="buka-booking"][data-arg="' + b.id + '"]');
+    klik('[data-act="aksi-booking"][data-arg="ubah-status/hadir"]');
+    return tunggu(function () { return document.querySelector('[data-act="aksi-booking"][data-arg^="layani/"]'); }).then(function () { return b; });
+  }).then(function (b) {
+    ok('tandai hadir (baru → terkonfirmasi → hadir)', st().booking.filter(function (x) { return x.id === b.id; })[0].statusServer === 'hadir');
+    klik('[data-act="aksi-booking"][data-arg^="layani/"]');
+    isi('[data-pd="kipi"]', '');
+    klik('[data-act="simpan-layanan"]');
+    return tunggu(function () { return (st().transaksi || []).length === 1; }).then(function () { return b; });
+  }).then(function (b) {
+    var s = st(), t = s.transaksi[0] || {}, l = s.layanan[0] || {};
+    ok('catat vaksinasi: stok berkurang, tagihan terbit', s.stok[0].sisa === 9 && t.total === 400000 && t.status === 'terbuka' &&
+       s.booking.filter(function (x) { return x.id === b.id; })[0].status === 'selesai', t.nomor + ' ' + t.total);
+    ok('riwayat pelayanan mencatat batch & vaksinator', l.item && l.item[0].batch === 'FL-01' && !!l.petugas, JSON.stringify(l).slice(0, 100));
+    return ke('#/transaksi');
+  }).then(function () {
+    klik('[data-act="form-bayar"]');
+    klik('[data-act="kirim-form"][data-arg="form-bayar"]');
+    return tunggu(function () { return (st().transaksi[0] || {}).status === 'lunas'; });
+  }).then(function () {
+    ok('pembayaran: tagihan lunas', st().transaksi[0].status === 'lunas' && st().transaksi[0].metode === 'Tunai');
+    return ke('#/pengaturan');
+  }).then(function () {
+    return tunggu(function () { return teks().indexOf('admin.hcc@gmail.com') >= 0 && document.getElementById('email-petugas'); });
+  }).then(function () {
+    isi('#email-petugas', 'baru@gmail.com'); klik('[data-act="tambah-petugas"]');
+    return tunggu(function () { return teks().indexOf('baru@gmail.com') >= 0; });
+  }).then(function () {
+    ok('admin menambah petugas lewat email', teks().indexOf('baru@gmail.com') >= 0);
+    return ke('#/pendaftaran');
+  }).then(function () {
+    klik('[data-act="form-pasien"]');
+    isi('#form-pasien [name=nama]', 'Dodi Walkin'); isi('#form-pasien [name=tglLahir]', '2020-02-02');
+    isi('#form-pasien [name=hp]', '081299990000'); isi('#form-pasien [name=alamat]', 'Jl. Uji 1');
+    klik('[data-act="kirim-form"][data-arg="form-pasien"]');
+    return tunggu(function () { return (st().pasien || []).some(function (p) { return p.nama === 'Dodi Walkin'; }); });
+  }).then(function () {
+    var p = st().pasien.filter(function (x) { return x.nama === 'Dodi Walkin'; })[0] || {};
+    ok('pendaftaran pasien datang langsung', p.klinikPendaftar === 'alrasha-hcc' && !p.akun && p.alamat === 'Jl. Uji 1', JSON.stringify(p).slice(0, 80) + jejak());
+    return ke('#/booking').then(function () { return p; });
+  }).then(function (p) {
+    klik('[data-act="form-booking"]');
+    isi('[data-pd="pasienId"]', p.id, 'input'); isi('[data-pd="tanggal"]', ${JSON.stringify(tglWalk)});
+    klik('[data-act="pd-jam"][data-arg="14:00"]'); isi('[data-act="pd-tambah-vaksin"]', 'v7-11');
+    klik('[data-act="simpan-booking"]');
+    return tunggu(function () { return st().booking.some(function (b) { return b.pasienId === p.id; }); }).then(function () { return p; });
+  }).then(function (p) {
+    var b = st().booking.filter(function (x) { return x.pasienId === p.id; })[0] || {};
+    ok('booking oleh petugas langsung terkonfirmasi', b.status === 'terkonfirmasi' && b.jam === '14:00' && /^VK-/.test(b.kode), b.kode + ' ' + b.status);
+  }).catch(function (e) { hasil.push('GAGAL | dashboard: pengecualian ' + e.message); }).then(function () {
+    var o = document.createElement('pre'); o.id = 'hasil-klinik'; o.textContent = hasil.join('\\n'); document.body.appendChild(o);
+  });
+})();
+</script>`;
+    const htmlK = fs.readFileSync(path.join(ROOT, 'VaksinKu-Dashboard.html'), 'utf8')
+      .split(JSON.stringify(DATA_GOOGLE_ID)).join(JSON.stringify(CLIENT_ID))
+      .replace('<script>/*APP-MULAI*/', '<script>window.google = { accounts: { id: { initialize() {}, renderButton() {}, disableAutoSelect() {} } } };</script><script>/*APP-MULAI*/')
+      .replace('</body>', ujiKlinik + '</body>');
+    fs.writeFileSync(path.join(webRoot, 'klinik.html'), htmlK);
+    const domK = execFileSync(process.env.CHROME, ['--headless=new', '--no-sandbox', '--disable-gpu', '--virtual-time-budget=30000',
+      '--dump-dom', `http://127.0.0.1:${PORT_WEB}/klinik.html`], { encoding: 'utf8', timeout: 120000, maxBuffer: 64 * 1024 * 1024 });
+    const mK = domK.match(/<pre id="hasil-klinik">([\s\S]*?)<\/pre>/);
+    if (!mK) ok('dashboard: uji di browser selesai', false, domK.slice(0, 300));
+    else for (const baris of mK[1].split('\n').filter(Boolean)) hasil.push(baris.replace(/&amp;/g, '&').replace(/&gt;/g, '>').replace(/&lt;/g, '<'));
+
+    // ---- hasil di database & di aplikasi pasien
+    const bkAkhir = psql(DB, '-c', `select status from booking where kode = '${kodeY}'`).trim();
+    const rd = psql(DB, '-c', `select r.no_batch || '|' || r.diverifikasi || '|' || r.faskes from riwayat_dosis r join pasien p on p.id = r.pasien_id
+      where p.nama = 'Kiki' and r.sumber = 'klinik'`).trim();
+    ok('server: booking selesai & riwayat klinik terverifikasi', bkAkhir === 'selesai' && rd === 'FL-01|true|Klinik Alrasha Health Care Center', `${bkAkhir} ${rd}`);
+    const ptg = psql(DB, '-c', `select a.peran from anggota_klinik a join auth.users u on u.id = a.user_id where u.email = 'baru@gmail.com'`).trim();
+    ok('server: petugas baru terdaftar', ptg === 'petugas', ptg);
+    {
+      const { sinkron } = createRequire(import.meta.url)(path.join(ROOT, 'app/sinkron.js'));
+      const Y = { profil: {}, pasien: [], riwayat: [] };
+      await sinkron(Y, { api: API, token: y.akun.data.token, akunId: y.akun.data.akun.id, fetch });
+      const rk = Y.riwayat.filter((r) => r.sumber === 'klinik')[0];
+      ok('aplikasi pasien: menerima catatan vaksinasi dari dashboard klinik', !!rk && rk.batch === 'FL-01' && rk.diverifikasi && rk.merek === 'Vaxigrip Tetra',
+        rk ? `${rk.label} ${rk.batch}` : JSON.stringify(Y.riwayat));
+      if (rk) {
+        rk.kunci = ['flu:1']; rk.kunciDipetakan = true;   // dipetakan aplikasi (petakanDosisKlinik)
+        await sinkron(Y, { api: API, token: y.akun.data.token, akunId: y.akun.data.akun.id, fetch });
+        const rk2 = Y.riwayat.filter((r) => r.sumber === 'klinik')[0];
+        ok('aplikasi pasien: kunci dosis hasil pemetaan bertahan saat sinkron ulang', rk2 === rk && rk2.kunci.join() === 'flu:1', rk2 && rk2.kunci.join());
+      }
+    }
+    // petugas tidak melihat pasien yang tidak pernah berurusan dengan kliniknya
+    const pt = await panggil('/pasien?select=nama', admin.data.token);
+    ok('petugas hanya melihat pasien kliniknya', pt.status === 200 && pt.data.every((p) => ['Kiki', 'Dodi Walkin', 'Nadia', 'Ana', 'Ani', 'Ari'].includes(p.nama)) &&
+      !pt.data.some((p) => p.nama === 'Bima'), pt.data.map((p) => p.nama).join(','));
   }
 
   // ---- pemalsuan sesi & peran

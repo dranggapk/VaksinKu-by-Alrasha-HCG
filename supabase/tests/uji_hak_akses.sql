@@ -259,6 +259,40 @@ select uji.harus_gagal('pasien: tidak bisa mengangkat diri jadi petugas',
 reset role;
 delete from public.anggota_klinik where user_id = '00000000-0000-0000-0000-0000000000b1';
 
+-- Kelola petugas lewat email (dashboard klinik, migrasi 0400).
+update auth.users set email = 'budi@gmail.com' where id = '00000000-0000-0000-0000-0000000000b1';
+update auth.users set email = 'perawat.hcc@gmail.com' where id = '00000000-0000-0000-0000-0000000000c1';
+set role authenticated;
+select uji.sebagai('00000000-0000-0000-0000-0000000000c1');
+select uji.catat('petugas: melihat daftar petugas kliniknya',
+  (select count(*) from public.daftar_petugas('alrasha-hcc')) = 2
+  and exists (select 1 from public.daftar_petugas('alrasha-hcc') where email = 'perawat.hcc@gmail.com' and peran = 'petugas'));
+select uji.harus_gagal('petugas: tidak melihat petugas klinik lain', 'select * from public.daftar_petugas(''alrasha-ibumas'')', 'Hanya petugas');
+select uji.harus_gagal('petugas biasa: tidak bisa menambah petugas',
+  'select public.tambah_petugas(''alrasha-hcc'', ''budi@gmail.com'', ''admin'')', 'Hanya admin');
+select uji.sebagai('00000000-0000-0000-0000-0000000000c2');
+select public.tambah_petugas('alrasha-hcc', ' Budi@Gmail.com ', 'petugas');
+select uji.catat('admin klinik: menambah petugas lewat email',
+  exists (select 1 from public.anggota_klinik where user_id = '00000000-0000-0000-0000-0000000000b1' and klinik_id = 'alrasha-hcc' and peran = 'petugas'));
+select uji.harus_gagal('admin klinik: email yang belum pernah masuk ditolak',
+  'select public.tambah_petugas(''alrasha-hcc'', ''orang.baru@gmail.com'', ''petugas'')', 'belum pernah masuk');
+select uji.harus_gagal('admin klinik: tidak menambah petugas di klinik lain',
+  'select public.tambah_petugas(''alrasha-ibumas'', ''budi@gmail.com'', ''petugas'')', 'Hanya admin');
+select uji.harus_gagal('admin klinik: tidak mencabut diri sendiri',
+  'select public.cabut_petugas(''alrasha-hcc'', ''00000000-0000-0000-0000-0000000000c2'')', 'diri sendiri');
+select public.cabut_petugas('alrasha-hcc', '00000000-0000-0000-0000-0000000000b1');
+select uji.catat('admin klinik: mencabut petugas',
+  not exists (select 1 from public.anggota_klinik where user_id = '00000000-0000-0000-0000-0000000000b1'));
+select uji.sebagai('00000000-0000-0000-0000-0000000000c1');
+with b as (insert into public.pasien (nama, tgl_lahir, klinik_pendaftar) values ('Walk In', '2020-01-01', 'alrasha-hcc') returning nama)
+select uji.catat('petugas: mendaftarkan pasien datang langsung & langsung membaca barisnya', (select nama from b) = 'Walk In');
+select uji.harus_gagal('petugas: tidak mendaftarkan pasien atas nama klinik lain',
+  'insert into public.pasien (nama, tgl_lahir, klinik_pendaftar) values (''X'', ''2020-01-01'', ''alrasha-ibumas'') returning id',
+  'row-level security');
+select uji.sebagai('00000000-0000-0000-0000-0000000000a1');
+select uji.harus_gagal('pasien: tidak bisa membaca daftar petugas', 'select * from public.daftar_petugas(''alrasha-hcc'')', 'Hanya petugas');
+reset role;
+
 -- ============================================================ 9. jejak audit
 set role authenticated;
 select uji.sebagai('00000000-0000-0000-0000-0000000000c1');
