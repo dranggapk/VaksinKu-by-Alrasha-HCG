@@ -1332,13 +1332,13 @@
   }
 
   function scSplash() {
+    // Cover "Perisai Toska" (alternatif B, mockup/cover-alternatif.html)
     var body = '<div class="splash" data-act="go" data-arg="onboarding">' +
-      '<i class="blob a"></i><i class="blob b"></i>' +
       '<div class="splash-isi">' +
-      '<img src="' + K.logoFull + '" alt="VaksinKu" style="width:240px;margin:0 auto;">' +
-      '<div class="disp" style="font-size:25px;font-weight:800;line-height:1.25;">#VaksinKeluargaJadiMudah</div>' +
-      '<div class="small muted" style="max-width:270px;margin:0 auto;line-height:1.6;">' +
-      'Booking, rekam medis, dan konsultasi vaksinasi keluarga dalam satu aplikasi.</div></div>' +
+      '<div class="splash-logo"><img src="' + K.logoFull + '" alt="VaksinKu by Alrasha HCC"></div>' +
+      '<div class="splash-tagline">Aman · Lengkap · Terjangkau</div>' +
+      '<div class="splash-sub">Jadwal vaksin, rekam medis, dan reservasi vaksinasi keluarga dalam satu aplikasi.</div></div>' +
+      '<div class="splash-ilus" aria-hidden="true">' + (K.ilusCover || '') + '</div>' +
       '<div class="dots"><i class="on"></i><i></i><i></i></div></div>';
     return { body: body, penuh: true };
   }
@@ -3608,7 +3608,7 @@
       clearTimeout(jedaSplash);
       jedaSplash = setTimeout(function () {
         if (route.name === 'splash') location.hash = '#/onboarding';
-      }, 1800);
+      }, 2500);
     }
   }
   var jedaSplash = 0;

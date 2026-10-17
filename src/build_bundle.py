@@ -88,6 +88,13 @@ def foto_merek():
     return out
 
 
+def ilustrasi_cover():
+    """Ilustrasi perisai untuk halaman cover (alternatif B, mockup/build_cover.py)."""
+    sys.path.insert(0, os.path.join(ROOT, "mockup"))
+    import build_cover
+    return build_cover.perisai()
+
+
 def katalog_js():
     harga = []
     for no, kategori, sediaan, merk, spes, umum in D.HARGA:
@@ -147,6 +154,7 @@ def katalog_js():
         "alurReservasi": D.ALUR_RESERVASI,
         "logoMark": "data:image/png;base64," + b64_file(os.path.join(HERE, "vaksinku-logo-mark.png")),
         "logoFull": "data:image/png;base64," + b64_file(os.path.join(HERE, "vaksinku-logo.png")),
+        "ilusCover": ilustrasi_cover(),
     }
     js = json.dumps(data, ensure_ascii=False, separators=(",", ":"))
     return "window.KATALOG=" + js.replace("</", "<\\/") + ";"
