@@ -1334,7 +1334,7 @@
   function scSplash() {
     // Cover: perisai 3D dengan kartu ikon (ilustrasi dari mockup/build_cover.py)
     var ilus = K.ilusCover || {};
-    var body = '<div class="splash" data-act="go" data-arg="onboarding">' +
+    var body = '<div class="splash" data-act="lewati-splash">' +
       '<div class="splash-ombak" aria-hidden="true">' + (ilus.ombak || '') + '</div>' +
       '<div class="splash-isi">' +
       '<img class="splash-logo" src="' + K.logoFull + '" alt="VaksinKu by Alrasha HCC">' +
@@ -3609,11 +3609,16 @@
       // splash berpindah sendiri; ketuk di mana saja untuk langsung lanjut
       clearTimeout(jedaSplash);
       jedaSplash = setTimeout(function () {
-        if (route.name === 'splash') location.hash = '#/onboarding';
-      }, 2500);
+        if (route.name === 'splash') lewatiSplash();
+      }, perluOnboarding() ? 2500 : 1600);
     }
   }
   var jedaSplash = 0;
+  // Cover → perkenalan (pemakaian pertama) atau langsung beranda; cover tidak masuk riwayat "kembali".
+  function lewatiSplash() {
+    clearTimeout(jedaSplash);
+    location.replace(perluOnboarding() ? '#/onboarding' : '#/beranda');
+  }
   // Dipakai uji otomatis untuk mensimulasikan balasan Google; tidak memberi
   // akses lebih dari yang sudah dimiliki skrip apa pun di halaman ini.
   window.VaksinKuUji = { terimaGoogle: terimaGoogle, aturState: function (f) { f(S); simpanLokal(); } };
@@ -3764,6 +3769,7 @@
     var d = draft();
 
     switch (act) {
+      case 'lewati-splash': lewatiSplash(); return;
       case 'go':
         sheetHTML = ''; dosisAktif = '';
         if (location.hash === '#/' + arg) render(); else location.hash = '#/' + arg;
@@ -4382,6 +4388,8 @@
     var sc = document.getElementById('scroll');
     if (sc) sc.scrollTop = 0;
   });
+  // Cover tampil sebentar setiap aplikasi dibuka sebelum beranda
+  if (!perluOnboarding() && /^(#\/?(beranda)?)?$/.test(location.hash)) location.replace('#/splash');
   bacaRoute();
   render();
   // aplikasi dibuka kembali: ambil perubahan dari perangkat lain
