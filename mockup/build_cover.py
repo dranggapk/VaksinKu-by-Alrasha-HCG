@@ -297,3 +297,74 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+# ------------------------------------------------------------------ cover terpilih (alternatif 1, Okt 2026)
+def _kartu_ikon(x, y, ikon, s=58):
+    """Kartu putih membulat melayang dengan ikon garis."""
+    return (f'<g transform="translate({x} {y})"><rect x="{-s/2}" y="{-s/2}" width="{s}" height="{s}" rx="16" '
+            f'fill="#FFFFFF" filter="url(#bayang-kartu)"/>{ikon}</g>')
+
+
+IKON_SUNTIK = (f'<g stroke="{TEAL}" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round" transform="rotate(-45)">'
+               '<rect x="-12" y="-5" width="22" height="10" rx="2"/><path d="M10 0 h9 M-12 0 h-5 M-17 -6 v12 M-6 -5 v4 M0 -5 v4"/></g>')
+IKON_KALENDER = (f'<g stroke="{MAG}" stroke-width="2.6" fill="none" stroke-linecap="round">'
+                 '<rect x="-13" y="-11" width="26" height="24" rx="4"/><path d="M-13 -3 h26 M-7 -15 v7 M7 -15 v7"/>'
+                 f'</g><g fill="{MAG}"><rect x="-8" y="2" width="4" height="4" rx="1"/><rect x="-2" y="2" width="4" height="4" rx="1"/>'
+                 '<rect x="4" y="2" width="4" height="4" rx="1"/><rect x="-8" y="7" width="4" height="4" rx="1"/></g>')
+IKON_KELUARGA = (f'<g stroke="{TEAL}" stroke-width="2.6" fill="none" stroke-linecap="round">'
+                 '<circle cx="0" cy="-6" r="6"/><path d="M-11 12 q0 -10 11 -10 q11 0 11 10 z"/>'
+                 '<circle cx="-13" cy="-3" r="4.5"/><path d="M-21 11 q0 -8 8 -8"/>'
+                 '<circle cx="13" cy="-3" r="4.5"/><path d="M21 11 q0 -8 -8 -8"/></g>')
+IKON_HATI = (f'<path d="M0 11 C-17 0 -13 -13 -5 -12 C-2 -12 0 -9 0 -7 C0 -9 2 -12 5 -12 C13 -13 17 0 0 11 Z" '
+             f'stroke="{MAG}" stroke-width="2.8" fill="none" stroke-linejoin="round"/>')
+
+
+def perisai_3d():
+    """Ilustrasi cover: perisai 3D toska dengan centang magenta, orbit, dan kartu ikon."""
+    perisai = "M195 70 C232 92 268 102 300 104 C300 210 262 286 195 326 C128 286 90 210 90 104 C122 102 158 92 195 70 Z"
+    dalam = "M195 96 C226 113 254 121 278 123 C278 211 247 271 195 303 C143 271 112 211 112 123 C136 121 164 113 195 96 Z"
+    orbit = 'transform="rotate(-14 195 205)"'
+    return (
+        '<svg viewBox="0 0 390 370" width="100%" style="display:block;" xmlns="http://www.w3.org/2000/svg"><defs>'
+        '<linearGradient id="pr-luar" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#CFF4F8"/>'
+        '<stop offset=".55" stop-color="#A6E6EE"/><stop offset="1" stop-color="#7FD3DF"/></linearGradient>'
+        '<linearGradient id="pr-dalam" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#F4FDFE"/>'
+        '<stop offset=".5" stop-color="#E3F8FB"/><stop offset=".5" stop-color="#D2F2F7"/><stop offset="1" stop-color="#C4EDF3"/></linearGradient>'
+        f'<linearGradient id="pr-centang" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F45A9F"/><stop offset="1" stop-color="{MAG}"/></linearGradient>'
+        f'<linearGradient id="pr-orbit" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="{MAG}"/>'
+        '<stop offset=".7" stop-color="#E84A93"/><stop offset="1" stop-color="#F6A8CB"/></linearGradient>'
+        '<filter id="bayang-kartu" x="-40%" y="-40%" width="180%" height="180%"><feDropShadow dx="0" dy="6" stdDeviation="7" '
+        'flood-color="#7AA7B4" flood-opacity=".22"/></filter>'
+        '<filter id="bayang-perisai" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="12" stdDeviation="12" '
+        'flood-color="#5FB8C6" flood-opacity=".35"/></filter>'
+        '<filter id="kabur" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="8"/></filter></defs>'
+        '<ellipse cx="195" cy="342" rx="92" ry="12" fill="#8FC9D2" opacity=".35" filter="url(#kabur)"/>'
+        # orbit bagian belakang
+        f'<path d="M58 205 A137 44 0 0 1 332 205" {orbit} stroke="url(#pr-orbit)" stroke-width="4" fill="none" opacity=".75"/>'
+        # perisai
+        f'<path d="{perisai}" fill="url(#pr-luar)" filter="url(#bayang-perisai)"/>'
+        f'<path d="{dalam}" fill="url(#pr-dalam)"/>'
+        '<path d="M195 96 C164 113 136 121 112 123 C112 150 116 175 123 197 C150 160 175 128 195 96 Z" fill="#FFFFFF" opacity=".45"/>'
+        '<path d="M158 196 L186 226 L240 160" stroke="#B90F62" stroke-width="30" fill="none" stroke-linecap="round" '
+        'stroke-linejoin="round" transform="translate(3 6)" opacity=".25"/>'
+        '<path d="M158 196 L186 226 L240 160" stroke="url(#pr-centang)" stroke-width="30" fill="none" stroke-linecap="round" stroke-linejoin="round"/>'
+        '<path d="M164 194 L184 216" stroke="#FFFFFF" stroke-width="5" opacity=".35" stroke-linecap="round"/>'
+        # orbit bagian depan + titik
+        f'<path d="M332 205 A137 44 0 0 1 58 205" {orbit} stroke="url(#pr-orbit)" stroke-width="4" fill="none"/>'
+        f'<g {orbit} fill="{MAG}"><circle cx="58" cy="205" r="9"/><circle cx="332" cy="205" r="9"/><circle cx="170" cy="248" r="10"/></g>'
+        + _kartu_ikon(62, 80, IKON_SUNTIK) + _kartu_ikon(326, 66, IKON_KALENDER, 52)
+        + _kartu_ikon(338, 238, IKON_KELUARGA, 62) + _kartu_ikon(62, 312, IKON_HATI, 56)
+        + '</svg>')
+
+
+def ombak_cover():
+    """Gelombang lembut toska (kiri) & merah muda (kanan) di dasar layar cover."""
+    return ('<svg viewBox="0 0 390 260" preserveAspectRatio="none" width="100%" height="100%" style="display:block;" '
+            'xmlns="http://www.w3.org/2000/svg"><defs>'
+            '<linearGradient id="om-t" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#C9EFF1"/>'
+            '<stop offset="1" stop-color="#E9F8F9" stop-opacity="0"/></linearGradient>'
+            '<linearGradient id="om-p" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#FDEAF3" stop-opacity="0"/>'
+            '<stop offset="1" stop-color="#FAD6E6"/></linearGradient></defs>'
+            '<path d="M0 40 C90 10 170 60 250 130 C290 165 320 210 340 260 H0 Z" fill="url(#om-t)"/>'
+            '<path d="M390 70 C300 80 210 150 140 260 H390 Z" fill="url(#om-p)"/></svg>')

@@ -283,21 +283,21 @@ table.price td.p{text-align:right;font-family:var(--disp);font-weight:800;color:
 .splash{
   flex:1;position:relative;display:flex;flex-direction:column;align-items:center;
   overflow:hidden;padding:0 0 56px;cursor:pointer;min-height:100%;
-  background:linear-gradient(180deg,#E3F6F6 0%,#D2F0F0 60%,#C3EBEB 100%);
+  background:linear-gradient(180deg,#FFFFFF 0%,#FDF8FB 45%,#F6FBFC 100%);
 }
+.splash-ombak{position:absolute;left:0;right:0;bottom:0;height:27%;pointer-events:none;opacity:.85;}
 .splash-isi{position:relative;display:flex;flex-direction:column;align-items:center;text-align:center;
   padding:clamp(40px,11vh,92px) 30px 0;}
-.splash-logo{background:#fff;border-radius:28px;padding:24px 26px 20px;box-shadow:0 16px 40px rgba(31,140,142,.16);}
-.splash-logo img{width:min(220px,58vw);display:block;}
-.splash-tagline{font-style:italic;font-size:17px;color:#1F8C8E;margin-top:22px;}
-.splash-sub{font-size:13px;color:#4F6B6C;line-height:1.6;margin-top:10px;max-width:290px;}
-.splash-ilus{flex:1;display:flex;align-items:flex-end;justify-content:center;width:100%;min-height:0;margin-top:14px;}
-.splash-ilus svg{width:100%;max-width:420px;max-height:46vh;}
+.splash-logo{width:min(270px,70vw);display:block;}
+.splash-judul{font-family:var(--disp);font-weight:800;font-size:21px;color:#1E2A32;margin-top:26px;line-height:1.2;}
+.splash-sub{font-size:15px;color:#4F5B63;margin-top:4px;letter-spacing:.2px;}
+.splash-ilus{position:relative;flex:1;display:flex;align-items:center;justify-content:center;width:100%;min-height:0;margin-top:10px;padding:0 6px;}
+.splash-ilus svg{width:100%;max-width:400px;max-height:50vh;}
 .dots{display:flex;gap:7px;justify-content:center;}
 .dots i{width:7px;height:7px;border-radius:50%;background:var(--line-2);display:block;transition:width .2s;}
 .dots i.on{width:18px;border-radius:4px;background:var(--magenta);}
 .splash .dots{position:absolute;bottom:22px;}
-.splash .dots i{background:#1F8C8E;opacity:.35;}
+.splash .dots i{background:#C9CED6;opacity:1;}
 .splash .dots i.on{width:18px;border-radius:4px;background:var(--magenta);opacity:1;}
 
 .onb{flex:1;display:flex;flex-direction:column;padding:18px 18px 4px;}

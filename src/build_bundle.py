@@ -89,10 +89,10 @@ def foto_merek():
 
 
 def ilustrasi_cover():
-    """Ilustrasi perisai untuk halaman cover (alternatif B, mockup/build_cover.py)."""
+    """Ilustrasi & gelombang halaman cover (mockup/build_cover.py)."""
     sys.path.insert(0, os.path.join(ROOT, "mockup"))
     import build_cover
-    return build_cover.perisai()
+    return {"perisai": build_cover.perisai_3d(), "ombak": build_cover.ombak_cover()}
 
 
 def katalog_js():

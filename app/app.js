@@ -1332,13 +1332,15 @@
   }
 
   function scSplash() {
-    // Cover "Perisai Toska" (alternatif B, mockup/cover-alternatif.html)
+    // Cover: perisai 3D dengan kartu ikon (ilustrasi dari mockup/build_cover.py)
+    var ilus = K.ilusCover || {};
     var body = '<div class="splash" data-act="go" data-arg="onboarding">' +
+      '<div class="splash-ombak" aria-hidden="true">' + (ilus.ombak || '') + '</div>' +
       '<div class="splash-isi">' +
-      '<div class="splash-logo"><img src="' + K.logoFull + '" alt="VaksinKu by Alrasha HCC"></div>' +
-      '<div class="splash-tagline">Aman · Lengkap · Terjangkau</div>' +
-      '<div class="splash-sub">Jadwal vaksin, rekam medis, dan reservasi vaksinasi keluarga dalam satu aplikasi.</div></div>' +
-      '<div class="splash-ilus" aria-hidden="true">' + (K.ilusCover || '') + '</div>' +
+      '<img class="splash-logo" src="' + K.logoFull + '" alt="VaksinKu by Alrasha HCC">' +
+      '<div class="splash-judul">Tempatnya Vaksinasi Aman</div>' +
+      '<div class="splash-sub">Lengkap · Terjangkau · Terpercaya</div></div>' +
+      '<div class="splash-ilus" aria-hidden="true">' + (ilus.perisai || '') + '</div>' +
       '<div class="dots"><i class="on"></i><i></i><i></i></div></div>';
     return { body: body, penuh: true };
   }
