@@ -1,0 +1,17 @@
+{
+  "name": "VaksinKu by Alrasha Health Care Group",
+  "short_name": "VaksinKu",
+  "description": "Jadwal vaksinasi keluarga, rekam medis, dan reservasi vaksin.",
+  "lang": "id",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#FFFFFF",
+  "theme_color": "#38BCBD",
+  "icons": [
+    { "src": "/ikon/ikon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/ikon/ikon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/ikon/ikon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

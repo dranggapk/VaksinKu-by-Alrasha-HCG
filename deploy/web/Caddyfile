@@ -1,0 +1,41 @@
+# Server web di dalam wadah vaksinku-web. HTTPS diurus Caddy sih-deployment di depan,
+# jadi di sini cukup HTTP pada jaringan internal.
+{
+	admin off
+	auto_https off
+	servers {
+		# percayai X-Forwarded-For dari Caddy sih-deployment (alamat privat Docker),
+		# agar layanan masuk melihat IP pengunjung asli untuk pembatasan percobaan
+		trusted_proxies static private_ranges
+	}
+}
+
+:80 {
+	header {
+		X-Content-Type-Options nosniff
+		Referrer-Policy strict-origin-when-cross-origin
+		-Server
+	}
+
+	handle /auth/* {
+		request_body {
+			max_size 16KB
+		}
+		reverse_proxy auth:8080
+	}
+
+	handle_path /api/* {
+		request_body {
+			max_size 2MB
+		}
+		reverse_proxy api:3000
+	}
+
+	handle {
+		root * /srv
+		file_server
+		# halaman selalu diperiksa ulang agar versi baru langsung terpakai
+		@halaman path / /index.html /privasi.html /klinik.html
+		header @halaman Cache-Control "no-cache"
+	}
+}

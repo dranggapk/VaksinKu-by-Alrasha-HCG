@@ -26,13 +26,15 @@ LAYAR = {
     "chat": "#/chat", "chat-baru": "#/chat-baru", "chat-detail": "#/chat-detail/k1",
     "booking-detail": "#/booking-detail/b1",
     "notifikasi": "#/notifikasi",
-    "splash": "#/splash", "onboarding": "#/onboarding", "masuk": "#/masuk",
+    "panduan": "#/panduan", "panduan-hepb": "#/panduan/hepb", "panduan-hamil": "#/panduan-jadwal/hamil",
+    "panduan-polio": "#/panduan/polio", "panduan-flu": "#/panduan/flu",
+    "splash": "#/splash", "onboarding-awal": "#/onboarding", "onboarding": "#/onboarding", "masuk": "#/masuk",
     "korporat": "#/korporat", "korporat-peserta": "#/korporat",
     "korporat-laporan": "#/korporat",
 }
 
 # layar pembuka hanya muncul sebelum pengguna mengisi apa pun
-BARU = {"splash", "onboarding", "masuk"}
+BARU = {"splash", "onboarding-awal", "onboarding", "masuk"}
 
 TANDA_APP = "<script>/*APP-MULAI*/"
 
@@ -122,12 +124,14 @@ def contoh_korporat(tab="ringkasan"):
 
 def state_baru():
     """Perangkat yang belum pernah dipakai — untuk layar splash/onboarding/masuk."""
-    return {"versi": 1, "onboarding": {"selesai": False, "langkah": 1, "fokus": ["anak"], "layanan": ""}}
+    return {"versi": 1, "onboarding": {"selesai": False, "langkah": 1, "fokus": ["anak", "hamil"], "layanan": ""}}
 
 
 def seed_js(nama, tujuan):
     if nama in BARU:
         data = state_baru()
+        if nama == "onboarding-awal":
+            data["onboarding"]["langkah"] = 0
     else:
         data = contoh_state()
         if nama == "korporat-peserta":
@@ -158,7 +162,7 @@ def main():
         png = os.path.join(KELUAR, nama + ".png")
         if os.path.exists(png):
             os.remove(png)
-        # splash berpindah sendiri setelah 1,8 detik — potret sebelum itu
+        # splash berpindah sendiri setelah 2,5 detik — potret sebelum itu
         budget = "1200" if nama == "splash" else "4000"
         subprocess.run(
             [CHROME, "--headless=new", "--disable-gpu", "--no-sandbox", "--allow-file-access-from-files",

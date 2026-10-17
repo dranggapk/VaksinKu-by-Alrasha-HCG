@@ -21,6 +21,8 @@ APP = os.path.join(ROOT, "app")
 sys.path.insert(0, HERE)
 
 import data_katalog as D  # noqa: E402
+import jadwal_anak as J  # noqa: E402
+import panduan_vaksin as P  # noqa: E402
 
 UA = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
 FONT_CSS_URL = ("https://fonts.googleapis.com/css2?"
@@ -56,6 +58,43 @@ def b64_file(path):
         return base64.b64encode(f.read()).decode("ascii")
 
 
+# Antigen yang dikandung tiap produk, untuk mencatat dosis jadwal anak saat
+# vaksinasi selesai. Kategori yang isinya beragam dibedakan lewat sediaannya.
+ANTIGEN_KATEGORI = {
+    "BCG (TBC)": ["bcg"], "Rotavirus (diare)": ["rv"], "Pneumococcus": ["pcv"], "Influenza": ["flu"],
+    "Typhoid (Tipes)": ["tif"], "Tetanus": ["td"], "Campak + Rubella": ["mr"], "Varicella": ["var"],
+    "Hepatitis B": ["hepb"], "Hepatitis A": ["hepa"], "HPV (Kanker Serviks)": ["hpv"],
+    "Demam Berdarah": ["dbd"], "Japanese Encephalitis": ["je"], "Flu Singapura": ["hfmd"],
+}
+ANTIGEN_SEDIAAN = {
+    "Polio Oral": ["polio"], "Polio IPV": ["ipv"],
+    "DPaT + IPV + HIB + HB": ["dtp", "hib", "hepb", "ipv"], "DPaT + HIB + HB": ["dtp", "hib", "hepb"],
+}
+
+
+def foto_merek():
+    """Foto kemasan per merek dari app/merek/<foto>.(webp|jpg|png), ditanam sebagai
+    data URI. Merek tanpa foto memakai ilustrasi vial di aplikasi."""
+    folder, tipe, out = os.path.join(APP, "merek"), {".webp": "image/webp", ".jpg": "image/jpeg",
+                                                     ".jpeg": "image/jpeg", ".png": "image/png"}, {}
+    nama = {m["foto"] for v in P.VAKSIN for m in v["merek"]}
+    for berkas in sorted(os.listdir(folder)) if os.path.isdir(folder) else []:
+        dasar, ext = os.path.splitext(berkas)
+        if dasar in nama and ext.lower() in tipe:
+            with open(os.path.join(folder, berkas), "rb") as f:
+                out[dasar] = "data:%s;base64,%s" % (tipe[ext.lower()], base64.b64encode(f.read()).decode("ascii"))
+    if nama - set(out):
+        print("  foto merek: %d terpasang, %d memakai ilustrasi" % (len(out), len(nama - set(out))))
+    return out
+
+
+def ilustrasi_cover():
+    """Ilustrasi & gelombang halaman cover (mockup/build_cover.py)."""
+    sys.path.insert(0, os.path.join(ROOT, "mockup"))
+    import build_cover
+    return {"perisai": build_cover.perisai_3d(), "ombak": build_cover.ombak_cover()}
+
+
 def katalog_js():
     harga = []
     for no, kategori, sediaan, merk, spes, umum in D.HARGA:
@@ -63,11 +102,8 @@ def katalog_js():
             "id": "v%d-%d" % (int(no), len(harga)),
             "kategori": kategori, "sediaan": sediaan, "merk": merk,
             "spesialis": "" if spes == "—" else spes, "umum": umum,
+            "antigen": ANTIGEN_SEDIAAN.get(sediaan, ANTIGEN_KATEGORI.get(kategori, [])),
         })
-
-    jadwal_anak = [{
-        "usia": usia, "badge": badge or "", "usiaBulan": usia_ke_bulan(usia), "items": items,
-    } for usia, badge, items in D.JADWAL_ANAK]
 
     jadwal_dewasa = []
     for usia, keys in D.JADWAL_DEWASA:
@@ -83,6 +119,10 @@ def katalog_js():
             "callCenterLabel": D.BRAND["call_center_label"], "instagram": D.BRAND["instagram"],
             "website": D.BRAND["website"], "group": D.BRAND["group"],
         },
+        "google": {
+            "clientId": os.environ.get("VAKSINKU_GOOGLE_CLIENT_ID", D.GOOGLE["client_id"]).strip(),
+            "situs": D.GOOGLE["situs"],
+        },
         "pilar": D.PILAR,
         "layanan": D.LAYANAN,
         "termasuk": D.TERMASUK,
@@ -94,7 +134,10 @@ def katalog_js():
             "nama": D.PAKET_TRIPLE["nama"], "isi": D.PAKET_TRIPLE["isi"],
             "harga": D.PAKET_TRIPLE["harga"], "coret": D.PAKET_TRIPLE["coret"],
         },
-        "jadwalAnak": jadwal_anak,
+        "jadwalIDAI": J.IDAI,
+        "jadwalKIA": J.KIA,
+        "kiaKolom": J.KIA_KOLOM,
+        "labelLama": J.LABEL_LAMA,
         "jadwalDewasa": jadwal_dewasa,
         "catatanDewasa": D.JADWAL_DEWASA_CATATAN,
         "pranikahVaksin": D.JADWAL_PRANIKAH_VAKSIN,
@@ -104,9 +147,14 @@ def katalog_js():
         "internasionalTambahan": D.VAKSIN_INTERNASIONAL_TAMBAHAN,
         "dokter": D.DOKTER,
         "klinik": D.KLINIK,
+        "mitra": D.MITRA,
+        "panduan": P.VAKSIN,
+        "jadwalHamil": P.JADWAL_HAMIL,
+        "fotoMerek": foto_merek(),
         "alurReservasi": D.ALUR_RESERVASI,
         "logoMark": "data:image/png;base64," + b64_file(os.path.join(HERE, "vaksinku-logo-mark.png")),
         "logoFull": "data:image/png;base64," + b64_file(os.path.join(HERE, "vaksinku-logo.png")),
+        "ilusCover": ilustrasi_cover(),
     }
     js = json.dumps(data, ensure_ascii=False, separators=(",", ":"))
     return "window.KATALOG=" + js.replace("</", "<\\/") + ";"
@@ -137,6 +185,23 @@ def font_css():
     return "\n".join(rules)
 
 
+# --------------------------------------------------------------- banner
+def tanam_banner(js):
+    """Ganti gambar: 'banner/x.webp' di daftar BANNER dengan data URI,
+    supaya berkas hasil rakitan tetap menampilkan banner tanpa internet."""
+    tipe = {".webp": "image/webp", ".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg"}
+
+    def ganti(m):
+        path = os.path.join(APP, m.group(2))
+        with open(path, "rb") as f:
+            raw = f.read()
+        mime = tipe[os.path.splitext(path)[1].lower()]
+        print("  banner %s: %.0f KB" % (m.group(2), len(raw) / 1024))
+        return "%sdata:%s;base64,%s'" % (m.group(1), mime, base64.b64encode(raw).decode("ascii"))
+
+    return re.sub(r"(gambar:\s*')(banner/[^']+)'", ganti, js)
+
+
 # --------------------------------------------------------------- rakit
 def main():
     tanpa_font = "--tanpa-font" in sys.argv
@@ -146,6 +211,9 @@ def main():
         css = f.read()
     with open(os.path.join(APP, "app.js"), encoding="utf-8") as f:
         js = f.read()
+    # modul sinkronisasi (juga dipakai langsung oleh src/uji_backend.mjs)
+    with open(os.path.join(APP, "sinkron.js"), encoding="utf-8") as f:
+        js = f.read() + "\n" + js
 
     if tanpa_font:
         fonts = ('<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>'
@@ -157,7 +225,7 @@ def main():
     html = html.replace("<!--FONTS-->", fonts)
     html = html.replace("/*STYLES*/", css)
     html = html.replace("/*KATALOG*/", katalog_js())
-    html = html.replace("/*APP*/", js)
+    html = html.replace("/*APP*/", tanam_banner(js))
 
     out = os.path.join(ROOT, "VaksinKu-App.html")
     with open(out, "w", encoding="utf-8") as f:
