@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Isi katalog resmi VaksinKu by Alrasha Ibumas — sumber tunggal untuk
+"""Isi katalog resmi VaksinKu by Alrasha HCC — sumber tunggal untuk
 harga, jadwal vaksin, layanan, dokter, dan lokasi klinik di dalam prototipe."""
 
 # ---------------------------------------------------------------- identitas

@@ -5,6 +5,7 @@
 #   VaksinKu-App.html       → situs/index.html
 #   VaksinKu-Dashboard.html → situs/klinik.html   (dashboard klinik, wajib masuk petugas)
 #   situs/privasi.html      → situs/privasi.html
+#   situs/manifest.json, situs/ikon/*.png → ikon aplikasi di layar utama HP
 # Tidak menjalankan kode apa pun dari repositori, dan tidak menyentuh backend,
 # database, maupun sekolahibuhamil.id. Perubahan backend lewat perbarui-backend.sh.
 #
@@ -42,6 +43,13 @@ pasang() {
 pasang "$SUMBER/VaksinKu-App.html" "$SITUS/index.html" 200000 "VaksinKu"
 pasang "$SUMBER/situs/privasi.html" "$SITUS/privasi.html" 5000 "Kebijakan Privasi"
 pasang "$SUMBER/VaksinKu-Dashboard.html" "$SITUS/klinik.html" 200000 "VaksinKuKlinik" || true
+# ikon layar utama HP & manifest aplikasi (berkas PNG diperiksa tanda tangan berkasnya)
+mkdir -p "$SITUS/ikon"
+pasang "$SUMBER/situs/manifest.json" "$SITUS/manifest.json" 300 '"short_name"' || true
+for f in "$SUMBER"/situs/ikon/*.png; do
+  [ -f "$f" ] || continue
+  head -c 4 "$f" | grep -q PNG && pasang "$f" "$SITUS/ikon/$(basename "$f")" 300 "" || true
+done
 
 # simpan 300 baris log terakhir
 [ -f "$LOG" ] && tail -n 300 "$LOG" > "$LOG.tmp" && mv "$LOG.tmp" "$LOG" || true

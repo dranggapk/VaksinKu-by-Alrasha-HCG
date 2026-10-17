@@ -1,4 +1,4 @@
-/* VaksinKu by Alrasha Ibumas — aplikasi vaksinasi keluarga.
+/* VaksinKu by Alrasha HCC — aplikasi vaksinasi keluarga.
    Data disimpan lokal di perangkat (localStorage). Tanpa server. */
 (function () {
   'use strict';
@@ -1354,7 +1354,7 @@
   function ilustrasiOnb() {
     return '<div class="onb-art">' +
       '<i class="bulat a"></i><i class="bulat b"></i>' +
-      '<img src="' + K.logoFull + '" alt="VaksinKu by Alrasha Ibumas" style="width:72%;max-width:280px;height:auto;position:relative;">' +
+      '<img src="' + K.logoFull + '" alt="VaksinKu by Alrasha HCC" style="width:72%;max-width:280px;height:auto;position:relative;">' +
       '</div>';
   }
   function luarFokusHTML() {
