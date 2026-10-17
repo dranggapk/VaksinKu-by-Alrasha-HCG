@@ -1,13 +1,25 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <!-- Ikon VaksinKu: simbol V di dalam perisai (alternatif 2) -->
+  <defs>
+    <linearGradient id="ombak-toska" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#BDE9EA"/><stop offset="1" stop-color="#BDE9EA" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="ombak-pink" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#FAD2E5" stop-opacity="0"/><stop offset="1" stop-color="#F9C9E0"/>
+    </linearGradient>
+  </defs>
   <rect width="1024" height="1024" fill="#FFFFFF"/>
-  <g transform="translate(512 512) scale(1.36) translate(-212 -228)">
-    <g stroke="#38BCBD" stroke-width="54" stroke-linecap="round">
-      <line x1="52" y1="58" x2="212" y2="383"/>
-      <line x1="375" y1="57" x2="212" y2="383"/>
-    </g>
-    <circle cx="52" cy="58" r="44" fill="#DC106E"/>
-    <circle cx="375" cy="57" r="44" fill="#DC106E"/>
-    <circle cx="212" cy="383" r="58" fill="#DC106E"/>
-    <circle cx="212" cy="383" r="21" fill="#38BCBD"/>
+  <path d="M0 720 C220 640 420 760 620 900 C700 955 760 1000 800 1024 H0 Z" fill="url(#ombak-toska)"/>
+  <path d="M1024 640 C820 660 600 780 420 930 C380 965 350 1000 330 1024 H1024 Z" fill="url(#ombak-pink)"/>
+  <g transform="translate(512 520) scale(.9) translate(-512 -512)">
+  <path d="M512 166 C602 214 702 244 808 250 C808 520 722 730 512 860 C302 730 216 520 216 250 C322 244 422 214 512 166 Z"
+        fill="#FFFFFF" fill-opacity=".55" stroke="#14A3A7" stroke-width="58" stroke-linejoin="round"/>
+  <g stroke="#14A3A7" stroke-width="34" stroke-linecap="round">
+    <line x1="398" y1="388" x2="512" y2="628"/><line x1="628" y1="388" x2="512" y2="628"/>
+  </g>
+  <circle cx="398" cy="384" r="50" fill="#DC106E"/>
+  <circle cx="628" cy="384" r="50" fill="#DC106E"/>
+  <circle cx="512" cy="636" r="54" fill="#DC106E"/>
+  <circle cx="512" cy="636" r="22" fill="#FFFFFF"/>
   </g>
 </svg>

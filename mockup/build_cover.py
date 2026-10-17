@@ -28,7 +28,7 @@ def b64(p):
 
 LOGO = b64(os.path.join(ROOT, "src", "vaksinku-logo.png"))
 LOGO_MARK = b64(os.path.join(ROOT, "src", "vaksinku-logo-mark.png"))
-with open(os.path.join(ROOT, "situs", "ikon", "ikon.svg"), encoding="utf-8") as f:
+with open(os.path.join(HERE, "simbol-v.svg"), encoding="utf-8") as f:
     SIMBOL = f.read().replace('<rect width="1024" height="1024" fill="#FFFFFF"/>', "")
 SIMBOL_96 = SIMBOL.replace('width="1024" height="1024"', 'width="96" height="96"')
 
