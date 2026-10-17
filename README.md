@@ -1,6 +1,6 @@
 # VaksinKu — Aplikasi Vaksinasi Keluarga
 
-Aplikasi **VaksinKu by Alrasha HCC**: mengatur jadwal vaksinasi keluarga,
+Aplikasi **VaksinKu by Alrasha Health Care Group**: mengatur jadwal vaksinasi keluarga,
 menyimpan rekam medis, dan membuat reservasi — dalam satu berkas HTML yang
 berjalan langsung di browser.
 
@@ -176,7 +176,7 @@ ditanam — semua dihitung dari data yang dimasukkan petugas.
 ## Sumber data
 
 Harga, jadwal vaksin, layanan, dokter, dan lokasi klinik diambil dari katalog
-resmi VaksinKu by Alrasha HCC (16 halaman) dan disimpan terpusat di
+resmi VaksinKu by Alrasha Health Care Group (16 halaman) dan disimpan terpusat di
 `src/data_katalog.py` — perbarui di satu berkas itu lalu build ulang.
 
 Rujukan yang dipakai: jadwal anak **IDAI 2024** dan **Buku KIA 2024** (Kemenkes, termasuk BIAS) —

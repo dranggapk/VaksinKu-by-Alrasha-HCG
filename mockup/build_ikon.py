@@ -130,7 +130,7 @@ def main():
             f'<h1>Alternatif Ikon Aplikasi VaksinKu</h1>'
             f'<div class="pengantar">Setiap ikon ditampilkan sebagai kotak membulat (iPhone), lingkaran (sebagian Android), '
             f'dan ukuran kecil seperti di notifikasi/tab browser. Semua digambar dari simbol “V” pada logo '
-            f'<b>VaksinKu by Alrasha HCC</b>, sehingga tetap tajam di semua ukuran.</div>'
+            f'<b>VaksinKu by Alrasha Health Care Group</b>, sehingga tetap tajam di semua ukuran.</div>'
             f'<div class="deret">{kartu_html}</div>'
             f'<h2>Di layar utama HP (wallpaper gelap &amp; terang bergantian)</h2>'
             f'<div class="layar">{layar_html}</div></body></html>')

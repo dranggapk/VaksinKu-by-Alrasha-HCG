@@ -1,4 +1,4 @@
-/* VaksinKu by Alrasha HCC — Dashboard Manajemen klinik.
+/* VaksinKu by Alrasha Health Care Group — Dashboard Manajemen klinik.
    Booking, pendaftaran, penjadwalan, pelayanan, persediaan, dan transaksi.
    Dibuka dari berkas: data disimpan lokal di perangkat (localStorage).
    Di vaksinku.app/klinik.html: petugas masuk dengan Google dan data dibaca/ditulis

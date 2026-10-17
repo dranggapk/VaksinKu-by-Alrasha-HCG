@@ -1,4 +1,4 @@
-/* VaksinKu by Alrasha HCC — aplikasi vaksinasi keluarga.
+/* VaksinKu by Alrasha Health Care Group — aplikasi vaksinasi keluarga.
    Data disimpan lokal di perangkat (localStorage). Tanpa server. */
 (function () {
   'use strict';
@@ -1337,7 +1337,7 @@
     var body = '<div class="splash" data-act="lewati-splash">' +
       '<div class="splash-ombak" aria-hidden="true">' + (ilus.ombak || '') + '</div>' +
       '<div class="splash-isi">' +
-      '<img class="splash-logo" src="' + K.logoFull + '" alt="VaksinKu by Alrasha HCC">' +
+      '<img class="splash-logo" src="' + K.logoFull + '" alt="VaksinKu by Alrasha Health Care Group">' +
       '<div class="splash-judul">Tempatnya Vaksinasi Aman</div>' +
       '<div class="splash-sub">Lengkap · Terjangkau · Terpercaya</div></div>' +
       '<div class="splash-ilus" aria-hidden="true">' + (ilus.perisai || '') + '</div>' +
@@ -1356,7 +1356,7 @@
   function ilustrasiOnb() {
     return '<div class="onb-art">' +
       '<i class="bulat a"></i><i class="bulat b"></i>' +
-      '<img src="' + K.logoFull + '" alt="VaksinKu by Alrasha HCC" style="width:72%;max-width:280px;height:auto;position:relative;">' +
+      '<img src="' + K.logoFull + '" alt="VaksinKu by Alrasha Health Care Group" style="width:72%;max-width:280px;height:auto;position:relative;">' +
       '</div>';
   }
   function luarFokusHTML() {

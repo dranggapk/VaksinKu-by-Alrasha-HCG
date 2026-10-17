@@ -170,7 +170,7 @@ HALAMAN = """<!doctype html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>VaksinKu — Rancangan Aplikasi</title>
-<meta name="description" content="Rancangan antarmuka aplikasi VaksinKu by Alrasha HCC: %(jumlah)d layar, dari splash sampai modul korporat.">
+<meta name="description" content="Rancangan antarmuka aplikasi VaksinKu by Alrasha Health Care Group: %(jumlah)d layar, dari splash sampai modul korporat.">
 <meta name="theme-color" content="#2E9BA0">
 %(font)s
 <style>
@@ -274,7 +274,7 @@ a{color:var(--magenta-dark);}
 
 <header class="vk-atas">
   <div class="vk-bungkus">
-    <img src="%(logo)s" alt="VaksinKu by Alrasha HCC">
+    <img src="%(logo)s" alt="VaksinKu by Alrasha Health Care Group">
     <span class="vk-tag">%(tagline)s</span>
     <h1>Rancangan Aplikasi VaksinKu</h1>
     <p>%(jumlah)d layar antarmuka untuk layanan vaksinasi keluarga %(grup)s — dari pembuka,

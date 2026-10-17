@@ -210,7 +210,7 @@ def hp(isi, latar):
 
 def alt_a():
     isi = (f'<div class="tengah" style="padding-top:96px;">'
-           f'<div class="lingkar"><img src="{LOGO}" alt="VaksinKu by Alrasha HCC" style="width:150px;"></div>'
+           f'<div class="lingkar"><img src="{LOGO}" alt="VaksinKu by Alrasha Health Care Group" style="width:150px;"></div>'
            f'<div class="judul">VaksinKu</div>'
            f'<div class="tagline">“Lindungi Keluarga,<br>Lengkapi Imunisasinya”</div></div>'
            f'<div class="ilus">{keluarga()}</div>')
@@ -219,7 +219,7 @@ def alt_a():
 
 def alt_b():
     isi = (f'<div class="tengah" style="padding-top:84px;">'
-           f'<div class="kartu-logo"><img src="{LOGO}" alt="VaksinKu by Alrasha HCC" style="width:220px;"></div>'
+           f'<div class="kartu-logo"><img src="{LOGO}" alt="VaksinKu by Alrasha Health Care Group" style="width:220px;"></div>'
            f'<div class="tagline" style="color:{TEAL_D};margin-top:22px;">Aman · Lengkap · Terjangkau</div>'
            f'<div class="sub">Jadwal vaksin, rekam medis, dan reservasi<br>vaksinasi keluarga dalam satu aplikasi.</div></div>'
            f'<div class="ilus" style="bottom:46px;">{perisai()}</div>'
@@ -236,7 +236,7 @@ def alt_c():
            f'<div class="lingkar" style="width:150px;height:150px;box-shadow:0 14px 34px rgba(0,60,60,.25);">'
            f'<div style="width:96px;height:96px;">{SIMBOL_96}</div></div>'
            f'<div class="judul" style="color:#fff;margin-top:16px;">VaksinKu</div>'
-           f'<div style="color:#E6FBFB;font-size:13px;font-weight:600;margin-top:-4px;">by Alrasha HCC</div></div>'
+           f'<div style="color:#E6FBFB;font-size:13px;font-weight:600;margin-top:-4px;">by Alrasha Health Care Group</div></div>'
            f'<div style="position:absolute;top:468px;left:0;right:0;text-align:center;padding:0 34px;">'
            f'<div class="tagline" style="color:{MAG};">#VaksinKeluargaJadiMudah</div></div>'
            f'<div class="ilus">{ibu_anak()}</div>')
@@ -274,7 +274,7 @@ def main():
             f'<meta name="viewport" content="width=device-width,initial-scale=1">'
             f'<title>Cover VaksinKu — Alternatif</title><style>{fonts}</style><style>{CSS}</style></head><body>'
             f'<h1>Alternatif Halaman Cover VaksinKu</h1>'
-            f'<div class="pengantar">Layar pertama saat aplikasi dibuka, memakai logo baru <b>VaksinKu by Alrasha HCC</b>. '
+            f'<div class="pengantar">Layar pertama saat aplikasi dibuka, memakai logo baru <b>VaksinKu by Alrasha Health Care Group</b>. '
             f'Ilustrasi digambar ulang dengan warna logo (toska &amp; magenta) sehingga tetap tajam di semua ukuran layar.</div>'
             f'<div class="deret">'
             f'<div class="kolom">{alt_a()}<div class="label">A · Keluarga<small>Paling mirip contoh: logo dalam lingkaran putih, '
