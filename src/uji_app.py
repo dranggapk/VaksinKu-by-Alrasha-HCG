@@ -271,6 +271,11 @@ TEST_JS = r"""
     ok('mencentang vaksin tidak menggulir daftar kembali ke atas', posSd > 0 &&
        Math.abs(document.querySelector('.sheet > div').scrollTop - posSd) < 2, posSd + ' → ' + document.querySelector('.sheet > div').scrollTop);
     klik('[data-act="toggle-vaksin"]', 6);
+    klik('.sheet [data-stop] [data-act="tutup-sheet"]');
+    ok('tombol Selesai menutup daftar vaksin', !document.querySelector('.sheet'));
+    klik('[data-act="buka-vaksin"]');
+    klik('.sheet [data-stop] .sect-title');
+    ok('ketukan di dalam daftar vaksin tidak menutupnya', !!document.querySelector('.sheet'));
     klik('[data-act="tutup-sheet"]');
     var gl = document.getElementById('scroll'); gl.scrollTop = 300; var posGl = gl.scrollTop;
     klik('[data-act="set-dokter"][data-arg="umum"]');

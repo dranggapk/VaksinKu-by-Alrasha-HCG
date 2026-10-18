@@ -3776,7 +3776,8 @@
     var el = ev.target.closest('[data-act]');
     if (!el) return;
     var act = el.getAttribute('data-act'), arg = el.getAttribute('data-arg') || '';
-    if (act === 'tutup-sheet' && ev.target.closest('[data-stop]')) return;
+    // ketukan di dalam isi sheet tidak menutupnya lewat latar; tombol "Selesai"/tutup di dalamnya tetap bekerja
+    if (act === 'tutup-sheet' && el.classList.contains('sheet') && ev.target.closest('[data-stop]')) return;
     var d = draft();
 
     switch (act) {
