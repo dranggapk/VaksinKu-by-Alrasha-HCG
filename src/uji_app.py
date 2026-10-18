@@ -276,6 +276,13 @@ TEST_JS = r"""
     klik('[data-act="buka-vaksin"]');
     klik('.sheet [data-stop] .sect-title');
     ok('ketukan di dalam daftar vaksin tidak menutupnya', !!document.querySelector('.sheet'));
+    // keyboard HP mengirim huruf terakhir saat tombol Selesai disentuh: tombolnya harus tetap sama
+    var tombolSelesai = document.querySelector('.sheet [data-stop] [data-act="tutup-sheet"]');
+    isi('#cari-vaksin', 'infl');
+    ok('mengetik di kolom cari tidak mengganti tombol Selesai', tombolSelesai.isConnected);
+    tombolSelesai.click();
+    ok('Selesai menutup daftar vaksin setelah mengetik', !document.querySelector('.sheet'));
+    klik('[data-act="buka-vaksin"]'); isi('#cari-vaksin', '');
     klik('[data-act="tutup-sheet"]');
     var gl = document.getElementById('scroll'); gl.scrollTop = 300; var posGl = gl.scrollTop;
     klik('[data-act="set-dokter"][data-arg="umum"]');

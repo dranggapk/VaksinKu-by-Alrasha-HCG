@@ -493,6 +493,9 @@ i.pkm{display:inline-block;font-style:normal;font-size:8.5px;font-weight:800;col
 .pd-jdl{border-left:3px solid var(--teal-tint2);padding-left:10px;margin-bottom:10px;} .pd-jdl b{font-size:12.5px;color:var(--ink);}
 .pd-faq{border-top:1px solid var(--line);padding:9px 0;} .pd-faq b{display:block;color:var(--ink);} .pd-faq span{display:block;margin-top:2px;}
 .pd-cta{position:sticky;bottom:0;background:#fff;border-top:1px solid var(--line);padding:10px 18px;display:flex;align-items:center;gap:12px;z-index:3;}
+
+/* tombol Selesai di sheet: area sentuh lebih lebar */
+.tombol-selesai{padding:10px 4px 10px 16px;margin:-10px -4px -10px 0;}
 </style>
 </head>
 <body>
@@ -2841,16 +2844,21 @@ i.pkm{display:inline-block;font-style:normal;font-size:8.5px;font-weight:800;col
   /* --------- sheet pilih vaksin --------- */
   var cariVaksin = '';
   function sheetVaksin() {
-    var d = draft();
+    return '<div class="sheet" data-act="tutup-sheet"><div data-stop="1">' +
+      '<div class="row mid between" style="margin-bottom:12px;"><div class="sect-title">Pilih vaksin</div>' +
+      '<button type="button" class="linkbtn tombol-selesai" data-act="tutup-sheet">Selesai</button></div>' +
+      '<input class="input" id="cari-vaksin" placeholder="Cari vaksin, contoh: influenza" value="' + h(cariVaksin) + '" style="margin-bottom:12px;">' +
+      '<div class="stack g8" id="daftar-vaksin">' + daftarVaksinHTML() + '</div></div></div>';
+  }
+  // Isi daftar saja: saat mengetik di kolom cari, hanya bagian ini yang diganti agar
+  // tombol "Selesai" dan kolom cari tidak ikut digambar ulang di tengah ketukan
+  // (keyboard HP mengirim huruf terakhir tepat saat tombol lain disentuh).
+  function daftarVaksinHTML() {
+    var d = draft(), html = '';
     var q = cariVaksin.toLowerCase();
     var list = K.harga.filter(function (v) {
       return !q || (v.kategori + ' ' + v.sediaan + ' ' + v.merk).toLowerCase().indexOf(q) >= 0;
     });
-    var html = '<div class="sheet" data-act="tutup-sheet"><div data-stop="1">' +
-      '<div class="row mid between" style="margin-bottom:12px;"><div class="sect-title">Pilih vaksin</div>' +
-      '<button class="linkbtn" data-act="tutup-sheet">Selesai</button></div>' +
-      '<input class="input" id="cari-vaksin" placeholder="Cari vaksin, contoh: influenza" value="' + h(cariVaksin) + '" style="margin-bottom:12px;">' +
-      '<div class="stack g8">';
     if (!list.length) html += '<div class="small muted center" style="padding:20px 0;">Vaksin tidak ditemukan.</div>';
     list.forEach(function (v) {
       var on = d.vaksinIds.indexOf(v.id) >= 0;
@@ -2863,7 +2871,7 @@ i.pkm{display:inline-block;font-style:normal;font-size:8.5px;font-weight:800;col
         (produkProgram(v) ? '<div style="margin-top:3px;">' + CHIP_PKM + '</div>' : '') + '</div>' +
         '<div class="disp nowrap small" style="font-weight:800;color:var(--magenta-dark);">' + (hrg ? rp(hrg) : 'Hubungi CS') + '</div></button>';
     });
-    return html + '</div></div></div>';
+    return html;
   }
 
   /* ============================ layar: detail booking ============================ */
@@ -4946,7 +4954,12 @@ i.pkm{display:inline-block;font-style:normal;font-size:8.5px;font-weight:800;col
 
   document.addEventListener('input', function (ev) {
     var el = ev.target;
-    if (el.id === 'cari-vaksin') { cariVaksin = el.value; sheetHTML = sheetVaksin(); render(); return; }
+    if (el.id === 'cari-vaksin') {
+      cariVaksin = el.value; sheetHTML = sheetVaksin();
+      var dv = document.getElementById('daftar-vaksin');
+      if (dv) dv.innerHTML = daftarVaksinHTML(); else render();
+      return;
+    }
     if (el.id === 'cari-panduan') {
       cariPanduan = el.value;
       var pp = el.selectionStart; render();
