@@ -7,7 +7,7 @@
 //
 //   node src/uji_backend.mjs
 //   PGURL=postgresql://postgres@127.0.0.1:54329 POSTGREST=/jalur/postgrest node src/uji_backend.mjs
-import { spawn, execFileSync } from 'node:child_process';
+import { spawn, spawnSync, execFileSync } from 'node:child_process';
 import crypto from 'node:crypto';
 import http from 'node:http';
 import fs from 'node:fs';
@@ -306,7 +306,7 @@ try {
       p_bagikan_riwayat: false, p_item: anakRina.map((id) => ({ pasien_id: id, vaksin_id: 'v7-11' })) }) });
     ok('slot 13:00 diisi 3 pasien (kapasitas klinik)', penuh.status === 200, String(penuh.status));
 
-    async function bukaAppBooking(sub, email, jam) {
+    async function bukaAppBooking(sub, email, jam, ubah = {}) {
       const akun = await masuk(tokenGoogle({ sub, email, name: 'Lina' }));
       const st = {
         versi: 1, onboarding: { selesai: true, langkah: 2, fokus: ['anak'], layanan: 'klinik' },
@@ -315,13 +315,19 @@ try {
         pasien: [{ id: 'p1', nama: 'Kiki', tglLahir: '2024-03-03', jenisKelamin: 'Perempuan', hubungan: 'Anak' }],
         draft: { layanan: 'klinik', klinikIdx: 0, alamatId: '', institusi: '', institusiAlamat: '', pasienIds: ['p1'],
           vaksinIds: ['v7-11'], dokter: 'umum', tanggal: tgl, jam, catatan: 'uji', bagikan: true },
+        ...ubah, draft: undefined,
       };
+      st.draft = { layanan: 'klinik', klinikIdx: 0, alamatId: '', institusi: '', institusiAlamat: '', pasienIds: ['p1'],
+        vaksinIds: ['v7-11'], dokter: 'umum', tanggal: tgl, jam, catatan: 'uji', bagikan: true, ...(ubah.draft || {}) };
       const html = fs.readFileSync(path.join(ROOT, 'VaksinKu-App.html'), 'utf8').replace('<script>/*APP-MULAI*/',
         `<script>localStorage.setItem('vaksinku.v1', ${JSON.stringify(JSON.stringify(st))});location.hash='#/booking';</script><script>/*APP-MULAI*/`)
-        .replace('</body>', `<script>setTimeout(function () { document.querySelector('[data-act="kirim-booking"]').click(); }, 1500);</script></body>`);
+        .replace('</body>', `<script>window.__galat = []; window.addEventListener('error', function (e) { window.__galat.push(e.message); });
+          window.addEventListener('unhandledrejection', function (e) { window.__galat.push('janji: ' + (e.reason && e.reason.message)); });
+          setTimeout(function () { document.querySelector('[data-act="kirim-booking"]').click(); }, 1500);setTimeout(function () { var p = document.createElement('pre'); p.id = 'st-uji'; p.textContent = localStorage.getItem('vaksinku.v1'); p.setAttribute('data-galat', window.__galat.join(' ; ')); document.body.appendChild(p); }, 4000);</script></body>`);
       fs.writeFileSync(path.join(webRoot, 'index.html'), html);
-      const dom = execFileSync(process.env.CHROME, ['--headless=new', '--no-sandbox', '--disable-gpu', '--virtual-time-budget=8000',
+      const jalan = spawnSync(process.env.CHROME, ['--headless=new', '--no-sandbox', '--disable-gpu', '--virtual-time-budget=8000',
         '--dump-dom', `http://127.0.0.1:${PORT_WEB}/`], { encoding: 'utf8', timeout: 60000, maxBuffer: 64 * 1024 * 1024 });
+      const dom = jalan.stdout;
       return { akun, dom };
     }
     const g = await bukaAppBooking('8008', 'lina@gmail.com', '13:00');
@@ -334,6 +340,27 @@ try {
     const kodeY = bkY.split('|')[0];
     ok('aplikasi: reservasi online tercatat di server dengan harga klinik', /^VK-\d{6}-\d{4}\|baru\|10:00:00\|true\|Kiki\|v7-11\|400000$/.test(bkY), bkY || '(kosong)');
     ok('aplikasi: detail reservasi menampilkan kode dari server', !!kodeY && y.dom.includes(kodeY) && y.dom.includes('Reservasi online diterima sistem klinik'));
+
+    // pasien remaja dengan riwayat beragam, dua vaksin, jam buka pertama (kasus dari lapangan)
+    const z = await bukaAppBooking('9010', 'ayu@gmail.com', '08:00', {
+      profil: { nama: 'Ayu', hp: '081200001111', jenisKelamin: 'Perempuan', email: 'ayu@gmail.com' },
+      pasien: [{ id: 'p1', nama: 'Ayesha', tglLahir: '2010-04-12', jenisKelamin: 'Perempuan', hubungan: 'Anak', jadwalAnak: 'idai',
+        kondisi: { alergi: true, hamil: false }, rv: '' }],
+      riwayat: [
+        { id: 'r1', pasienId: 'p1', label: 'Hepatitis B 0', kunci: ['hepb:0'], tanggal: '2010-04-12', sumber: 'jadwal', batch: '' },
+        { id: 'r2', pasienId: 'p1', label: 'BCG', tanggal: '2010-05-12', sumber: 'jadwal' },
+        { id: 'r3', pasienId: 'p1', label: 'Influenza — Vaxigrip Tetra', merek: 'Vaxigrip Tetra', kunci: ['flu:1'], tanggal: '2025-01-10',
+          sumber: 'booking', bookingId: 'lama', tempat: 'Klinik', faskes: 'Klinik Alrasha Health Care Center' },
+        { id: 'r4', pasienId: 'p1', label: 'Campak', kunci: ['mr:1'], tanggal: '', sumber: 'jadwal' },
+      ],
+      draft: { vaksinIds: ['v12-20', 'v13-22'], bagikan: false },
+    });
+    const bkZ = psql(DB, '-c', `select b.jam || '|' || count(bi.id) from booking b join booking_item bi on bi.booking_id = b.id
+      where b.profil_id = '${z.akun.data.akun.id}' group by b.jam`).trim();
+    ok('aplikasi: remaja + riwayat beragam + 2 vaksin jam 08:00 terkirim ke server', bkZ === '08:00:00|2',
+      bkZ || (() => { try { const gl = (z.dom.match(/data-galat="([^"]*)"/) || [])[1];
+        const j = JSON.parse(z.dom.match(/<pre id="st-uji"[^>]*>([\s\S]*?)<\/pre>/)[1].replace(/&quot;/g, '"').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>'));
+        return JSON.stringify({ js: gl, galat: (j.booking[0] || {}).galatServer, kode: (j.booking[0] || {}).kode, sinkron: j.sinkron, draft: !!j.draft }).slice(0, 900); } catch (e) { return '(tidak terkirim) ' + e.message + ' ' + z.dom.length; } })());
 
     // ---- dashboard klinik sungguhan di browser: masuk petugas → stok → hadir → catat vaksinasi → bayar
     const admin = await masuk(tokenGoogle({ sub: '5005', email: 'admin.hcc@gmail.com', name: 'Admin HCC' }));
@@ -489,7 +516,7 @@ try {
     }
     // petugas tidak melihat pasien yang tidak pernah berurusan dengan kliniknya
     const pt = await panggil('/pasien?select=nama', admin.data.token);
-    ok('petugas hanya melihat pasien kliniknya', pt.status === 200 && pt.data.every((p) => ['Kiki', 'Dodi Walkin', 'Nadia', 'Ana', 'Ani', 'Ari'].includes(p.nama)) &&
+    ok('petugas hanya melihat pasien kliniknya', pt.status === 200 && pt.data.every((p) => ['Kiki', 'Ayesha', 'Dodi Walkin', 'Nadia', 'Ana', 'Ani', 'Ari'].includes(p.nama)) &&
       !pt.data.some((p) => p.nama === 'Bima'), pt.data.map((p) => p.nama).join(','));
   }
 

@@ -781,6 +781,17 @@ TEST_JS = r"""
       var b = st().booking[0];
       ok('online: server tak terjangkau → reservasi disimpan di perangkat', st().booking.length === jml + 1 && !b.serverId &&
          document.body.textContent.indexOf('hanya tersimpan di perangkat') > 0, b.kode);
+      ok('online: penyebab gagal kirim ditampilkan', document.body.textContent.indexOf('Penyebab: Sinkron data keluarga gagal') > 0 &&
+         !!document.querySelector('[data-act="kirim-ulang-booking"]'), (b.galatServer || '-'));
+      // server pulih: kirim ulang dari halaman detail
+      mode = 'ok';
+      window.VaksinKuSinkron.sinkron = function (S) { return Promise.resolve({ dikirim: 0, diterima: 0, dihapus: 0 }); };
+      klik('[data-act="kirim-ulang-booking"]');
+      return tunggu().then(function () { return b.id; });
+    }).then(function (idB) {
+      var b = st().booking.filter(function (x) { return x.id === idB; })[0] || {};
+      ok('online: kirim ulang ke server berhasil, kode server dipakai', !!b.serverId && /^VK-261016-/.test(b.kode) && !b.galatServer &&
+         document.body.textContent.indexOf('Reservasi online diterima sistem klinik') >= 0, b.kode + ' ' + (b.serverId || '-'));
     });
   }
   function tulisHasil() {

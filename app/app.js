@@ -1466,6 +1466,7 @@
   }
   /* ---------------- sinkronisasi data dengan server (app/sinkron.js) ---------------- */
   var sinkronStatus = '', sinkronJeda = 0, sinkronBerjalan = false, sinkronLagi = false, sinkronJanji = null;
+  var sinkronGalat = null;   // {status, detail} dari sinkron terakhir yang gagal
   function akunLain() {
     return !!(sesiAktif() && S.sinkron && S.sinkron.akunId && S.sinkron.akunId !== S.akun.sesi.id);
   }
@@ -1482,11 +1483,12 @@
     if (manual) render();
     sinkronJanji = window.VaksinKuSinkron.sinkron(S, { api: '/api', token: S.akun.sesi.token, akunId: S.akun.sesi.id })
       .then(function (r) {
-        petakanDosisKlinik();
+        try { petakanDosisKlinik(); } catch (e) { /* pemetaan dosis tidak boleh menggagalkan sinkron */ }
         return tarikBooking().then(function (n) { r.diterima += n; return r; }, function () { return r; });
       })
       .then(function (r) {
-        sinkronStatus = 'ok';
+        sinkronStatus = 'ok'; sinkronGalat = null;
+        if (S.sinkron) delete S.sinkron.galatDetail;
         simpanLokal();
         var sedangMengetik = document.activeElement && /INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName);
         if (manual || (r.diterima && !sedangMengetik)) render();
@@ -1495,6 +1497,8 @@
       })
       .catch(function (e) {
         S.sinkron = S.sinkron || {};
+        sinkronGalat = { status: (e && e.status) || 0, detail: String((e && e.message) || e || '').slice(0, 160) };
+        S.sinkron.galatDetail = sinkronGalat.detail;
         if (e && e.status === 401) {
           S.akun.sesi = null; sinkronStatus = 'sesi';
           S.sinkron.galat = 'Sesi berakhir — masuk lagi dengan Google untuk melanjutkan sinkron.';
@@ -1539,29 +1543,53 @@
   }
   function bookingOnline() { return sesiAktif() && !akunLain() && !!window.VaksinKuSinkron; }
   var bookingDikirim = false;
+  // Kirim satu reservasi ke /api/rpc/buat_booking. data: {klinik, layanan, lokasi, tanggal, jam,
+  // dokter, catatan, bagikan, pasienIds, vaksinIds}. Data keluarga disinkronkan dulu agar pasien
+  // punya id server. Galat membawa .status, .pesan (ditolak server, bisa diperbaiki pengguna)
+  // dan .alasan (teks singkat penyebab, ditampilkan bila reservasi jatuh ke cara cadangan).
+  function kirimKeServer(data) {
+    return sinkronTuntas().then(function (berhasil) {
+      if (!sesiAktif()) { var e00 = new Error('sesi'); e00.status = 401; throw e00; }
+      var dikenal = (S.sinkron || {}).dikenal || {}, item = [], belum = [];
+      data.pasienIds.forEach(function (pid) {
+        var p = S.pasien.filter(function (x) { return x.id === pid; })[0];
+        if (!p || !p.sid || !dikenal[p.sid]) { belum.push(p ? p.nama : namaPasien(pid)); return; }
+        data.vaksinIds.forEach(function (vid) { item.push({ pasien_id: p.sid, vaksin_id: vid }); });
+      });
+      if (belum.length) {
+        var e1 = new Error('pasien');
+        if (!berhasil) {   // sinkron gagal: sebutkan penyebab sebenarnya
+          var g = sinkronGalat || {};
+          e1.status = g.status || 0;
+          e1.alasan = 'Sinkron data keluarga gagal' + (g.status ? ' (kode ' + g.status + ')' : '') + (g.detail ? ': ' + g.detail : '.');
+        } else {
+          e1.status = 400;
+          e1.pesan = 'Data ' + belum.join(', ') + ' belum tersimpan di server. Lengkapi tanggal lahirnya di menu Keluarga, lalu coba lagi.';
+        }
+        throw e1;
+      }
+      return apiVaksinKu('POST', '/rpc/buat_booking', {
+        p_klinik: data.klinik, p_layanan: data.layanan, p_lokasi: data.lokasi || '', p_tanggal: data.tanggal, p_jam: data.jam,
+        p_tarif: data.dokter === 'spesialis' ? 'spesialis' : 'umum', p_catatan: data.catatan || '', p_bagikan_riwayat: !!data.bagikan, p_item: item
+      });
+    }).catch(function (e) {
+      if (!e.pesan && !e.alasan) {
+        e.alasan = e.status === 401 ? 'Sesi masuk berakhir — masuk lagi dengan Google di Profil.'
+          : e.status === 0 ? 'Server VaksinKu tidak terjangkau (periksa koneksi internet).'
+          : 'Server VaksinKu menolak permintaan (kode ' + e.status + ').';
+      }
+      throw e;
+    });
+  }
   function kirimBookingServer() {
     if (bookingDikirim) return Promise.resolve();
     bookingDikirim = true;
     var tombol = document.querySelector('[data-act="kirim-booking"]');
     if (tombol) { tombol.disabled = true; tombol.textContent = 'Mengirim reservasi…'; }
     var d = draft();
-    return sinkronTuntas().then(function (berhasil) {
-      if (!berhasil) { var e0 = new Error('sinkron'); e0.status = sesiAktif() ? 0 : 401; throw e0; }
-      var dikenal = (S.sinkron || {}).dikenal || {}, item = [], belum = [];
-      d.pasienIds.forEach(function (pid) {
-        var p = S.pasien.filter(function (x) { return x.id === pid; })[0];
-        if (!p || !p.sid || !dikenal[p.sid]) { belum.push(p ? p.nama : namaPasien(pid)); return; }
-        d.vaksinIds.forEach(function (vid) { item.push({ pasien_id: p.sid, vaksin_id: vid }); });
-      });
-      if (belum.length) {
-        var e1 = new Error('pasien'); e1.status = 400;
-        e1.pesan = 'Data ' + belum.join(', ') + ' belum tersimpan di server. Lengkapi tanggal lahirnya di menu Keluarga, lalu coba lagi.';
-        throw e1;
-      }
-      return apiVaksinKu('POST', '/rpc/buat_booking', {
-        p_klinik: klinikAktif().id, p_layanan: d.layanan, p_lokasi: lokasiTeks(d), p_tanggal: d.tanggal, p_jam: d.jam,
-        p_tarif: d.dokter === 'spesialis' ? 'spesialis' : 'umum', p_catatan: d.catatan || '', p_bagikan_riwayat: !!d.bagikan, p_item: item
-      });
+    return kirimKeServer({
+      klinik: klinikAktif().id, layanan: d.layanan, lokasi: lokasiTeks(d), tanggal: d.tanggal, jam: d.jam, dokter: d.dokter,
+      catatan: d.catatan, bagikan: d.bagikan, pasienIds: d.pasienIds, vaksinIds: d.vaksinIds
     }).then(function (srv) {
       var rec = buatBooking(srv);
       errB = {};
@@ -1577,15 +1605,34 @@
         toast(e.pesan);
         return;
       }
-      // server tidak terjangkau / sesi berakhir: reservasi disimpan di perangkat, konfirmasi lewat WhatsApp
+      // server tidak terjangkau / sesi berakhir / sinkron gagal: disimpan di perangkat dengan alasannya,
+      // bisa dikirim ulang dari halaman detail
       if (e.status === 401 && S.akun) S.akun.sesi = null;
       var rec = buatBooking();
+      rec.galatServer = e.alasan; simpanLokal();
       errB = {};
       location.hash = '#/booking-detail/' + rec.id;
-      setTimeout(function () {
-        toast((e.status === 401 ? 'Sesi berakhir. ' : 'Server VaksinKu belum terjangkau. ') +
-          'Reservasi ' + rec.kode + ' disimpan di perangkat — kirim ke WhatsApp CS untuk konfirmasi.');
-      }, 60);
+      setTimeout(function () { toast('Reservasi belum terkirim ke server: ' + e.alasan); }, 60);
+    }).then(function () { bookingDikirim = false; });
+  }
+  // Reservasi yang tersimpan di perangkat dikirim ulang ke server dari halaman detail.
+  function kirimUlangBooking(b) {
+    if (bookingDikirim) return;
+    bookingDikirim = true;
+    var tombol = document.querySelector('[data-act="kirim-ulang-booking"]');
+    if (tombol) { tombol.disabled = true; tombol.textContent = 'Mengirim ke server…'; }
+    kirimKeServer({
+      klinik: b.klinik, layanan: b.layanan, lokasi: b.lokasi, tanggal: b.tanggal, jam: b.jam, dokter: b.dokter,
+      catatan: b.catatan, bagikan: false, pasienIds: b.pasienIds, vaksinIds: b.vaksinIds
+    }).then(function (srv) {
+      b.kodeLama = b.kode; b.kode = srv.kode; b.serverId = srv.id; b.statusServer = srv.status;
+      b.status = STATUS_DARI_SERVER[srv.status] || 'menunggu';
+      delete b.galatServer;
+      simpan(); render(); toast('Reservasi terkirim ke klinik dengan kode ' + b.kode + '.');
+    }, function (e) {
+      b.galatServer = e.pesan || e.alasan;
+      if (e.status === 401 && S.akun) S.akun.sesi = null;
+      simpanLokal(); render(); toast('Belum terkirim: ' + b.galatServer);
     }).then(function () { bookingDikirim = false; });
   }
   // Reservasi online milik akun ini: perbarui status, dan tambahkan yang dibuat di perangkat lain.
@@ -1652,7 +1699,7 @@
     }
     var st = S.sinkron || {}, teksSt;
     if (sinkronStatus === 'jalan') teksSt = 'Menyinkronkan…';
-    else if (st.galat && sinkronStatus !== 'ok') teksSt = st.galat;
+    else if (st.galat && sinkronStatus !== 'ok') teksSt = st.galat + (st.galatDetail ? ' Rincian: ' + st.galatDetail : '');
     else if (st.terakhir) teksSt = 'Tersinkron ' + new Date(st.terakhir).toLocaleString('id-ID', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
     else teksSt = 'Belum pernah disinkronkan';
     return '<div class="card stack g8"><div class="row mid g8"><div class="grow"><div class="small" style="font-weight:700;">Sinkron data keluarga</div>' +
@@ -2121,8 +2168,13 @@
         'Status diperbarui otomatis.' + (bookingAktif(b) ? ' Untuk konfirmasi lebih cepat, kirim juga ringkasannya ke WhatsApp CS ' + h(K.brand.callCenter) + '.' : '') + '</div>' +
         (sesiAktif() ? '<button class="btn outline sm" data-act="sinkron-sekarang">Perbarui status</button>' : '') + '</div>';
     } else {
-      body += '<div class="card warn stack g8"><div class="row mid g8">' + ic('info', 16) + '<span class="small" style="font-weight:700;color:var(--amber);">Reservasi belum terjadwal otomatis</span></div>' +
-        '<div class="tiny" style="color:#8A6A21;line-height:1.6;">Reservasi ini hanya tersimpan di perangkat Anda. Kirim ringkasan ke WhatsApp CS ' + h(K.brand.callCenter) + ' agar jadwal dikonfirmasi petugas.</div></div>';
+      body += '<div class="card warn stack g8"><div class="row mid g8">' + ic('info', 16) + '<span class="small" style="font-weight:700;color:var(--amber);">Reservasi belum terkirim ke sistem klinik</span></div>' +
+        '<div class="tiny" style="color:#8A6A21;line-height:1.6;">Reservasi ini hanya tersimpan di perangkat Anda.' +
+        (b.galatServer ? ' Penyebab: ' + h(b.galatServer) : '') +
+        (bookingAktif(b) && sesiAktif() ? ' Tekan <b>Kirim ulang ke server</b>, atau kirim ringkasan ke WhatsApp CS ' + h(K.brand.callCenter) + '.'
+          : ' Kirim ringkasan ke WhatsApp CS ' + h(K.brand.callCenter) + ' agar jadwal dikonfirmasi petugas.') + '</div>' +
+        (bookingAktif(b) && sesiAktif() ? '<button class="btn primary sm" data-act="kirim-ulang-booking" data-arg="' + b.id + '">Kirim ulang ke server</button>' : '') +
+        '</div>';
     }
 
     if (bookingAktif(b)) {
@@ -3978,6 +4030,11 @@
         errB = {};
         location.hash = '#/booking-detail/' + rec.id;
         setTimeout(function () { toast('Reservasi ' + rec.kode + ' tersimpan. Kirim ke CS untuk konfirmasi.'); }, 60);
+        return;
+      }
+      case 'kirim-ulang-booking': {
+        var bk = S.booking.filter(function (x) { return x.id === arg; })[0];
+        if (bk && !bk.serverId) kirimUlangBooking(bk);
         return;
       }
       case 'toggle-bagikan':
