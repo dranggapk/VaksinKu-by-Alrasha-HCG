@@ -3552,7 +3552,7 @@
   }
 
   /* ============================ render ============================ */
-  var sheetHTML = '';
+  var sheetHTML = '', layarTerakhir = '';
   function render() {
     var r;
     // layar awal hanya dipaksa saat benar-benar pemakaian pertama; pengguna lama
@@ -3595,11 +3595,22 @@
       case 'riwayat-booking': r = scRiwayatBooking(); break;
       default: r = scBeranda();
     }
+    // Posisi gulir dipertahankan saat layar yang sama digambar ulang (mis. mencentang
+    // pilihan); pindah layar tetap mulai dari atas (lihat hashchange).
+    var kunciLayar = route.name + '/' + route.param, gulirLama = document.getElementById('scroll');
+    var posLayar = gulirLama && kunciLayar === layarTerakhir ? gulirLama.scrollTop : 0;
+    var sheetLama = document.querySelector('.sheet > div'), posSheet = sheetLama ? sheetLama.scrollTop : 0;
+    layarTerakhir = kunciLayar;
+    var sedangCari = !!(document.activeElement && document.activeElement.id === 'cari-vaksin');
     app.innerHTML = '<div class="device">' +
       '<div class="scroll' + (r.penuh ? ' penuh' : '') + '" id="scroll">' + r.body + '</div>' +
       (r.foot || '') + (r.nav ? navbar(r.nav) : '') + sheetHTML + '</div>';
+    if (posLayar) document.getElementById('scroll').scrollTop = posLayar;
+    var sheetBaru = document.querySelector('.sheet > div');
+    if (sheetBaru && posSheet) sheetBaru.scrollTop = posSheet;
+    // kolom cari vaksin hanya difokuskan lagi bila sedang dipakai mengetik
     var s = document.getElementById('cari-vaksin');
-    if (s) { s.focus(); s.setSelectionRange(s.value.length, s.value.length); }
+    if (s && sedangCari) { s.focus({ preventScroll: true }); s.setSelectionRange(s.value.length, s.value.length); }
     pasangBanner();
     if (route.name === 'masuk') pasangTombolGoogle();
     // tabel KIA lebar: gulir otomatis ke kolom usia anak saat ini
@@ -3610,7 +3621,7 @@
       clearTimeout(jedaSplash);
       jedaSplash = setTimeout(function () {
         if (route.name === 'splash') lewatiSplash();
-      }, perluOnboarding() ? 2500 : 1600);
+      }, perluOnboarding() ? 4500 : 3600);
     }
   }
   var jedaSplash = 0;

@@ -428,6 +428,8 @@ try {
     return tunggu(function () { return teks().indexOf('baru@gmail.com') >= 0; });
   }).then(function () {
     ok('admin menambah petugas lewat email', teks().indexOf('baru@gmail.com') >= 0);
+    return tunggu(function () { return false; }, 600);   // beri waktu simpanan sebelumnya selesai
+  }).then(function () {
     return ke('#/pendaftaran');
   }).then(function () {
     klik('[data-act="form-pasien"]');

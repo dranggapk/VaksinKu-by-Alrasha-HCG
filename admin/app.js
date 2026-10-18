@@ -433,6 +433,7 @@
       : '<div class="kaki">' + h(S.klinik.nama) + '<br>Data tersimpan di perangkat ini</div></aside>';
     return out;
   }
+  var ruteTerakhir = '';
   function render() {
     if (wajibMasuk() && !modeServer()) { app.innerHTML = layarMasuk(); pasangTombolGoogle(); return; }
     var isi;
@@ -447,12 +448,19 @@
       default: isi = scRingkasan();
     }
     var j = JUDUL[route];
+    // posisi gulir layar & panel dipertahankan saat layar yang sama digambar ulang
+    var isiLama = document.querySelector('.isi'), badanLama = document.querySelector('.panel .badan');
+    var posIsi = isiLama && route === ruteTerakhir ? isiLama.scrollTop : 0, posBadan = badanLama ? badanLama.scrollTop : 0;
+    ruteTerakhir = route;
     app.innerHTML = '<div class="shell">' + sidebar() +
       '<main class="utama"><header class="topbar">' +
       '<div class="grow"><h1>' + h(j[0]) + '</h1><div class="sub">' + h(j[1]) + '</div></div>' +
       (isi.aksi || '') + '</header>' +
       '<div class="isi">' + isi.body + '</div></main>' +
       (panel ? panelHTML() : '') + '</div>';
+    if (posIsi) document.querySelector('.isi').scrollTop = posIsi;
+    var badanBaru = document.querySelector('.panel .badan');
+    if (badanBaru && posBadan) badanBaru.scrollTop = posBadan;
     pasangGrafik();
   }
   function toast(pesan) {

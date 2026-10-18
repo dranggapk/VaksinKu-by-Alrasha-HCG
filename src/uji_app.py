@@ -266,6 +266,17 @@ TEST_JS = r"""
     klik('[data-act="toggle-pasien"]');
     klik('[data-act="buka-vaksin"]');
     ok('daftar vaksin terbuka', !!document.querySelector('.sheet'));
+    var sd = document.querySelector('.sheet > div'); sd.scrollTop = 400; var posSd = sd.scrollTop;
+    klik('[data-act="toggle-vaksin"]', 6);
+    ok('mencentang vaksin tidak menggulir daftar kembali ke atas', posSd > 0 &&
+       Math.abs(document.querySelector('.sheet > div').scrollTop - posSd) < 2, posSd + ' → ' + document.querySelector('.sheet > div').scrollTop);
+    klik('[data-act="toggle-vaksin"]', 6);
+    klik('[data-act="tutup-sheet"]');
+    var gl = document.getElementById('scroll'); gl.scrollTop = 300; var posGl = gl.scrollTop;
+    klik('[data-act="set-dokter"][data-arg="umum"]');
+    ok('memilih opsi di formulir tidak menggulir halaman ke atas', posGl > 0 &&
+       Math.abs(document.getElementById('scroll').scrollTop - posGl) < 2, posGl + ' → ' + document.getElementById('scroll').scrollTop);
+    klik('[data-act="buka-vaksin"]');
     isi('#cari-vaksin', 'influenza');
     var kartu = document.querySelectorAll('[data-act="toggle-vaksin"]');
     ok('pencarian vaksin bekerja', kartu.length > 0 && kartu.length < window.KATALOG.harga.length,

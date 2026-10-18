@@ -162,8 +162,8 @@ def main():
         png = os.path.join(KELUAR, nama + ".png")
         if os.path.exists(png):
             os.remove(png)
-        # splash berpindah sendiri setelah 2,5 detik — potret sebelum itu
-        budget = "1200" if nama == "splash" else "4000"
+        # splash berpindah sendiri setelah 3,6–4,5 detik — potret sebelum itu
+        budget = "1200" if nama == "splash" else "6000"
         subprocess.run(
             [CHROME, "--headless=new", "--disable-gpu", "--no-sandbox", "--allow-file-access-from-files",
              # Chrome headless menata halaman pada lebar minimum 500px; memakai angka
