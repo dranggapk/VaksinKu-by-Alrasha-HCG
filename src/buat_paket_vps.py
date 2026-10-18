@@ -38,6 +38,7 @@ def isi_paket():
         ("perbarui-situs.sh", os.path.join(DEP, "perbarui-situs.sh"), 0o755),
         ("perbarui-backend.sh", os.path.join(DEP, "perbarui-backend.sh"), 0o755),
         ("jadikan-admin.sh", os.path.join(DEP, "jadikan-admin.sh"), 0o755),
+        ("cek-server.sh", os.path.join(DEP, "cek-server.sh"), 0o755),
         ("web/Caddyfile", os.path.join(DEP, "web", "Caddyfile"), 0o644),
         ("auth/server.mjs", os.path.join(DEP, "backend", "auth", "server.mjs"), 0o644),
         ("db/init/00_auth.sql", os.path.join(DEP, "backend", "db", "00_auth.sql"), 0o644),

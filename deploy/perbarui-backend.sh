@@ -22,7 +22,7 @@ echo "1/5 Mencadangkan database..."
 ./cadangkan.sh
 
 echo "2/5 Memasang skrip baru..."
-for f in perbarui-situs.sh cadangkan.sh atur-google.sh jadikan-admin.sh; do
+for f in perbarui-situs.sh cadangkan.sh atur-google.sh jadikan-admin.sh cek-server.sh; do
   sed 's/\r$//' "$SUMBER/deploy/$f" > "$DASAR/$f.baru"
   chmod 755 "$DASAR/$f.baru" && mv "$DASAR/$f.baru" "$DASAR/$f"
 done
@@ -41,8 +41,15 @@ for m in "$SUMBER"/supabase/migrations/*.sql; do
 done
 
 echo "4/5 Memuat ulang API & server web..."
-docker compose kill -s SIGUSR1 api >/dev/null
-docker compose restart web >/dev/null
+# dinyalakan ulang (bukan sinyal) agar API pasti hidup kembali dengan skema terbaru
+docker compose up -d >/dev/null 2>&1
+docker compose restart api web >/dev/null
+sleep 6
+if docker exec vaksinku-web wget -qO- -T 5 'http://api:3000/klinik?select=id' >/dev/null 2>&1; then
+  echo "   API: OK"
+else
+  echo "   API: TIDAK MERESPONS - jalankan: sh $SUMBER/deploy/cek-server.sh"
+fi
 
 echo "5/5 Memperbarui halaman..."
 ./perbarui-situs.sh
