@@ -159,7 +159,9 @@ TEST_JS = r"""
     /* 1d. beranda */
     ok('beranda tampil', !!document.querySelector('.device') && document.body.textContent.indexOf('Halo') >= 0);
     ok('bottom nav tampil', document.querySelectorAll('.navitem').length === 4);
-    ok('rekomendasi sesuai kebutuhan tampil', document.body.textContent.indexOf('Sesuai kebutuhan Anda') > 0);
+    var tBeranda = document.getElementById('app').textContent;
+    ok('kartu "Sesuai kebutuhan Anda" & promo Haji tidak lagi di beranda', tBeranda.indexOf('Sesuai kebutuhan Anda') < 0 &&
+       tBeranda.indexOf('Ubah kebutuhan vaksinasi') < 0 && tBeranda.indexOf('Paket Polio') < 0 && tBeranda.indexOf('Daftar Harga') > 0);
 
     /* 1d. mitra klinik: pilih kota & klinik */
     ok('pengguna baru diminta memilih kota & klinik', document.body.textContent.indexOf('Pilih kota & klinik mitra') > 0);

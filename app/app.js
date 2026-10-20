@@ -1867,30 +1867,6 @@
         }).join('') + '</div>';
     }
 
-    var rek = vaksinFokus();
-    if (rek.length) {
-      var namaFokus = (S.onboarding.fokus || []).map(function (id) {
-        var f = fokusById(id); return f ? f.label : '';
-      }).filter(Boolean);
-      var termurah = rek.slice().sort(function (a, b) {
-        return angka(a.umum || a.spesialis) - angka(b.umum || b.spesialis);
-      });
-      body += '<div class="card stack g10">' +
-        '<div class="row mid"><div class="sect-title">Sesuai kebutuhan Anda</div><div class="grow"></div>' +
-        '<button class="linkbtn" data-act="go" data-arg="harga-fokus">Lihat semua</button></div>' +
-        '<div class="tiny muted" style="margin-top:-4px;">' + h(namaFokus.join(' · ')) + ' — ' + rek.length + ' jenis vaksin</div>' +
-        '<table class="price">' + termurah.slice(0, 4).map(function (v) {
-          var hrg = hargaVaksin(v, tarif);
-          return '<tr><td><div style="font-weight:600;">' + tautPanduan(v.kategori) + '</div>' +
-            '<div class="tiny muted">' + h(v.merk) + '</div></td>' +
-            '<td class="p">' + (hrg ? rp(hrg) : '<span class="muted" style="font-weight:600;">' + (punyaHarga() ? 'Hubungi CS' : 'Dikonfirmasi klinik') + '</span>') + '</td></tr>';
-        }).join('') + vaksinFokusLuar().map(function (v) {
-          return '<tr><td><div style="font-weight:600;">' + tautPanduan(v[0]) + '</div><div class="tiny muted">' + h(v[1]) + '</div></td>' +
-            '<td class="p"><span class="muted" style="font-weight:600;">Dikonfirmasi klinik</span></td></tr>';
-        }).join('') + '</table>' +
-        '<button class="btn outline sm" data-act="ubah-fokus">Ubah kebutuhan vaksinasi</button></div>';
-    }
-
     body += '<div class="card row g8">' +
       pintasan('harga', 'Daftar Harga', 'harga') +
       pintasan('jadwal', 'Jadwal Vaksin', 'jadwal') +
@@ -1909,16 +1885,6 @@
       '<div class="row wrap g6 mid"><span class="tiny muted" style="font-weight:600;">Sudah termasuk:</span>' +
       K.termasuk.map(function (t) { return '<span class="chip teal" style="padding:4px 9px;font-size:10.5px;">' + h(t) + '</span>'; }).join('') +
       '</div></div>';
-
-    var promo = promoKlinik() === 'alrasha' && K.hargaInternasional.filter(function (x) { return x.coret; })[0];
-    if (promo) {
-      body += '<div class="card tap stack g6" style="background:linear-gradient(135deg,var(--teal-dark),var(--magenta-dark));border-color:transparent;color:#fff;" data-act="go" data-arg="internasional">' +
-        '<div class="row mid g8"><span class="chip" style="background:#fff;color:var(--magenta-dark);padding:3px 10px;font-size:10px;">PROMO</span>' +
-        '<span class="tiny" style="opacity:.85;">Haji &amp; Umrah</span></div>' +
-        '<div class="disp" style="font-size:16px;font-weight:800;">Paket ' + h(promo.nama) + '</div>' +
-        '<div class="row mid g10" style="align-items:baseline;"><span class="disp" style="font-size:21px;font-weight:800;">' + rp(angka(promo.harga)) + '</span>' +
-        '<span class="small" style="opacity:.75;text-decoration:line-through;">' + rp(angka(promo.coret)) + '</span></div></div>';
-    }
 
     body += '<button class="card rowlink" data-act="go" data-arg="tentang" style="padding:16px;">' +
       '<div class="icon-sq">' + ic('pin', 19) + '</div>' +
