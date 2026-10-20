@@ -281,6 +281,9 @@ TEST_JS = r"""
       ok('impor menambah booking dari aplikasi', (s10.booking || []).length === 3,
          (s10.booking || []).length + ' booking');
       ok('booking impor ditandai sumbernya', (s10.booking || []).some(function (b) { return b.sumber === 'aplikasi pasien'; }));
+      try { ujiTempelWA(s10); } catch (e) {
+        hasil.push('GAGAL | pengecualian: ' + e.message + ' @ ' + (e.stack || '').split('\n')[1]);
+      }
       selesai();
     }, 400);
     return;
@@ -288,6 +291,69 @@ TEST_JS = r"""
     hasil.push('GAGAL | pengecualian: ' + e.message + ' @ ' + (e.stack || '').split('\n')[1]);
   }
   selesai();
+
+  /* 11. tempel pesan WhatsApp dari aplikasi pasien */
+  function kodeVKD(d) {
+    return 'VKD1.' + btoa(unescape(encodeURIComponent(JSON.stringify(d))))
+      .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  }
+  function bukaTempel() { ganti('#/booking'); klik('[data-act="form-tempel-wa"]'); }
+  function ujiTempelWA(s10) {
+    var vFlu = K2.harga.filter(function (v) { return v.kategori.indexOf('Influenza') === 0 && v.umum; })[0];
+    var nB = s10.booking.length, nP = s10.pasien.length, tgl10 = geser(10);
+    var pesan = 'Halo VaksinKu, saya ingin reservasi vaksinasi.\n\nKode: VK-654321\n...\n' +
+      'Kode data untuk petugas klinik (mohon tidak diubah):\n' + kodeVKD({
+        k: 'VK-654321', n: 'Rina Ramadhani', h: '081299998888', l: 'homecare', lo: 'Jl. Contoh No. 1',
+        t: tgl10, j: '10:00', d: 'umum', c: 'Anak alergi telur', v: [vFlu.id, 'vaksin-tak-dikenal'],
+        p: [['Citra Ramadhani', geser(-2500), 'Perempuan'], ['Zoë Ramadhani', geser(-400), 'Perempuan']]
+      });
+
+    bukaTempel();
+    ok('panel tempel WhatsApp terbuka', !!document.getElementById('teks-wa'));
+    isi('#teks-wa', 'Halo, saya mau vaksin besok ya');
+    ok('pesan tanpa kode data ditolak', teks().indexOf('Kode data tidak ditemukan') > 0 &&
+       !document.querySelector('[data-act="simpan-tempel"]'));
+    isi('#teks-wa', 'VKD1.bukan-json-yang-sah');
+    ok('kode data rusak dikenali', teks().indexOf('rusak atau terpotong') > 0);
+
+    // kapasitas masih 1 dari uji 4b: dua pasien tidak muat di satu slot
+    isi('#teks-wa', pesan);
+    ok('pratinjau membedakan pasien lama & baru', teks().indexOf('Pasien baru') > 0 && teks().indexOf('Terdaftar · RM') > 0);
+    ok('vaksin di luar price list dilewati', teks().indexOf('1 vaksin tidak ada di price list') > 0);
+    ok('jadwal yang diminta jadi nilai awal', el('[data-pd="tanggal"]').value === tgl10 &&
+       !!el('[data-act="pd-jam"][data-arg="10:00"].on'));
+    ok('lokasi home care ditampilkan', teks().indexOf('Jl. Contoh No. 1') > 0);
+    klik('[data-act="simpan-tempel"]');
+    ok('slot yang tidak cukup untuk sekeluarga ditolak', st().booking.length === nB &&
+       teks().indexOf('tidak cukup untuk 2 pasien') > 0);
+    klik('[data-act="tutup-panel"]');
+
+    ganti('#/pengaturan');
+    isi('[data-field="jadwal.kapasitas"]', '3');
+    bukaTempel();
+    isi('#teks-wa', pesan);
+    klik('[data-act="simpan-tempel"]');
+    var s11 = st(), bk = s11.booking.filter(function (b) { return b.asal === 'VK-654321'; });
+    ok('satu booking per pasien dibuat', bk.length === 2, bk.length + ' booking');
+    ok('booking dari WhatsApp menunggu konfirmasi', bk.every(function (b) {
+      return b.status === 'baru' && b.tanggal === tgl10 && b.jam === '10:00' && b.layanan === 'Home Care' &&
+        b.lokasi === 'Jl. Contoh No. 1' && b.vaksinIds.length === 1 && b.catatan === 'Anak alergi telur';
+    }));
+    var zoe = s11.pasien.filter(function (p) { return p.nama === 'Zoë Ramadhani'; })[0];
+    ok('pasien lama tidak didaftarkan ganda', s11.pasien.length === nP + 1, s11.pasien.length + ' pasien');
+    ok('pasien baru terdaftar dengan kontak pendaftar', !!zoe && zoe.hp === '081299998888' &&
+       zoe.wali === 'Rina Ramadhani' && zoe.alamat === 'Jl. Contoh No. 1' && /^RM\d{5}$/.test(zoe.noRM),
+       zoe ? zoe.noRM + ' · ' + zoe.wali : '-');
+
+    bukaTempel();
+    isi('#teks-wa', pesan);
+    ok('pesan yang sama tidak dicatat dua kali', teks().indexOf('sudah tercatat sebagai booking') > 0 &&
+       !document.querySelector('[data-act="simpan-tempel"]'));
+    klik('[data-act="tutup-panel"]');
+    klik('[data-act="buka-booking"][data-arg="' + bk[0].id + '"]');
+    ok('detail booking menunjukkan asal & lokasi', teks().indexOf('Aplikasi pasien · VK-654321') > 0 &&
+       teks().indexOf('Jl. Contoh No. 1') > 0);
+  }
 
   function selesai() {
     if (galat.length) hasil.push('GAGAL | galat konsol: ' + galat.join(' ; '));

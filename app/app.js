@@ -1,4 +1,4 @@
-/* VaksinKu by Alrasha Ibumas — aplikasi vaksinasi keluarga.
+/* VaksinKu by Alrasha Health Care Group — aplikasi vaksinasi keluarga.
    Data disimpan lokal di perangkat (localStorage). Tanpa server. */
 (function () {
   'use strict';
@@ -45,6 +45,183 @@
       'stroke="currentColor" stroke-width="' + (sw || 1.8) + '" stroke-linecap="round" stroke-linejoin="round">' +
       (ICON[name] || '') + '</svg>';
   }
+
+  /* ============================ ikon menu (Alternatif 2) ============================
+     Gaya "flat filled with outline" dari lembar Alternatif Desain Ikon Menu:
+     isi teal & pink, garis tepi biru tua, di atas lingkaran teal pucat.
+     Digambar sebagai SVG berwarna (viewBox 48) agar tajam di layar apa pun. */
+  var IM = { o: '#1E3A4C', t: '#56C3C7', tm: '#C9EEEF', p: '#E8488C', pm: '#FAD0E0', k: '#F5C04A' };
+  var IKON_MENU = {
+    beranda:
+      '<path d="M11 22v17a2 2 0 0 0 2 2h22a2 2 0 0 0 2-2V22" fill="#fff"/>' +
+      '<path d="M4.6 23.4 24 6.6l19.4 16.8-2.7 3.1L24 12 7.3 26.5z" fill="' + IM.p + '"/>' +
+      '<path d="M24 36.4s-6-3.6-6-7.5a3.1 3.1 0 0 1 6-1.5 3.1 3.1 0 0 1 6 1.5c0 3.9-6 7.5-6 7.5z" fill="' + IM.p + '" stroke-width="1.8"/>',
+    konsultasi:
+      '<path d="M11 7h19a6 6 0 0 1 6 6v5a6 6 0 0 1-6 6H17l-7 5 1.4-5H11a6 6 0 0 1-6-6v-5a6 6 0 0 1 6-6z" fill="' + IM.pm + '"/>' +
+      '<circle cx="14" cy="15.5" r="1.7" fill="' + IM.o + '" stroke="none"/><circle cx="20" cy="15.5" r="1.7" fill="' + IM.o + '" stroke="none"/>' +
+      '<circle cx="26" cy="15.5" r="1.7" fill="' + IM.o + '" stroke="none"/>' +
+      '<path d="M22 20h16a5 5 0 0 1 5 5v6a5 5 0 0 1-5 5h-1l1.4 5-7-5H22a5 5 0 0 1-5-5v-6a5 5 0 0 1 5-5z" fill="' + IM.t + '"/>' +
+      '<path d="M24 26.5h12M24 31h7" stroke="#fff" stroke-width="2.4"/>',
+    rekam:
+      '<path d="M12 5h17l9 9v27a2 2 0 0 1-2 2H12a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z" fill="#fff"/>' +
+      '<path d="M29 5v7a2 2 0 0 0 2 2h7" fill="' + IM.tm + '"/>' +
+      '<path d="M19.5 10.5v9M15 15h9" stroke="' + IM.p + '" stroke-width="3.2"/>' +
+      '<path d="M16 25.5h16M16 31h16M16 36.5h9" stroke="' + IM.t + '" stroke-width="2.8"/>' +
+      '<circle cx="33" cy="37" r="3.4" fill="' + IM.p + '" stroke-width="1.8"/>',
+    profil:
+      '<circle cx="21" cy="15" r="7.5" fill="#fff"/>' +
+      '<path d="M6.5 41c0-8.3 6.5-13.5 14.5-13.5 4.6 0 8.6 1.8 11.2 4.8L27.5 41z" fill="' + IM.tm + '"/>' +
+      '<circle cx="35" cy="35" r="8" fill="' + IM.p + '"/>' +
+      '<path d="M35 31v8M31 35h8" stroke="#fff" stroke-width="2.6"/>',
+    pasien:
+      '<circle cx="12.5" cy="16" r="5" fill="' + IM.t + '"/><path d="M3.5 37c0-6.2 4-10.5 9-10.5s9 4.3 9 10.5z" fill="' + IM.t + '"/>' +
+      '<circle cx="35.5" cy="16" r="5" fill="' + IM.t + '"/><path d="M26.5 37c0-6.2 4-10.5 9-10.5s9 4.3 9 10.5z" fill="' + IM.t + '"/>' +
+      '<circle cx="24" cy="14.5" r="6.5" fill="#fff"/><path d="M12.5 41c0-7.4 5.1-12.5 11.5-12.5S35.5 33.6 35.5 41z" fill="' + IM.p + '"/>',
+    alamat:
+      '<path d="M4.5 22.5 16 18.5l16 5 11.5-4v21L32 44.5l-16-5-11.5 4z" fill="' + IM.tm + '"/>' +
+      '<path d="M16 18.5v21M32 23.5v21"/>' +
+      '<path d="M24 3a10.5 10.5 0 0 0-10.5 10.5C13.5 21.4 24 32 24 32s10.5-10.6 10.5-18.5A10.5 10.5 0 0 0 24 3z" fill="' + IM.p + '"/>' +
+      '<circle cx="24" cy="13.5" r="4" fill="#fff"/>',
+    jadwal:
+      '<rect x="5" y="9" width="32" height="31" rx="4" fill="#fff"/>' +
+      '<path d="M9 9h24a4 4 0 0 1 4 4v5H5v-5a4 4 0 0 1 4-4z" fill="' + IM.p + '"/>' +
+      '<path d="M13 5v7M29 5v7" stroke-width="2.8"/>' +
+      '<g fill="' + IM.tm + '" stroke-width="1.5"><rect x="9.5" y="23" width="5.5" height="4.5" rx="1"/><rect x="17.5" y="23" width="5.5" height="4.5" rx="1"/>' +
+      '<rect x="25.5" y="23" width="5.5" height="4.5" rx="1"/><rect x="9.5" y="30.5" width="5.5" height="4.5" rx="1"/></g>' +
+      '<g transform="translate(35 32) rotate(45)"><path d="M0 -15v4M-4 -15h8"/><rect x="-3.6" y="-11" width="7.2" height="16" rx="1.4" fill="' + IM.t + '"/>' +
+      '<path d="M-3.6 -6h3M-3.6 -2h3M-3.6 2h3" stroke-width="1.5"/><path d="M0 5v7" stroke-width="2"/></g>',
+    pengingat:
+      '<path d="M24 5a3 3 0 0 1 3 3v1.3c5.8 1.3 10 6.4 10 12.5V29l3.6 5.2H7.4L11 29v-7.2c0-6.1 4.2-11.2 10-12.5V8a3 3 0 0 1 3-3z" fill="' + IM.pm + '"/>' +
+      '<path d="M19.4 38.5a4.6 4.6 0 0 0 9.2 0z" fill="' + IM.p + '"/>' +
+      '<path d="M16.5 22.5c0-3 1.6-5.6 4-6.8" stroke="#fff" stroke-width="2.4"/>',
+    korporat:
+      '<path d="M3.5 42.5h41"/>' +
+      '<rect x="5" y="22" width="9" height="20.5" fill="' + IM.tm + '"/><rect x="34" y="22" width="9" height="20.5" fill="' + IM.tm + '"/>' +
+      '<rect x="14" y="15.5" width="20" height="27" fill="' + IM.t + '"/>' +
+      '<g fill="#fff" stroke-width="1.5"><rect x="17.5" y="20" width="4.5" height="4.5" rx=".8"/><rect x="26" y="20" width="4.5" height="4.5" rx=".8"/>' +
+      '<rect x="17.5" y="27" width="4.5" height="4.5" rx=".8"/><rect x="26" y="27" width="4.5" height="4.5" rx=".8"/>' +
+      '<path d="M21 42.5V35h6v7.5"/><rect x="8" y="27" width="3" height="3.5"/><rect x="8" y="34" width="3" height="3.5"/>' +
+      '<rect x="37" y="27" width="3" height="3.5"/><rect x="37" y="34" width="3" height="3.5"/></g>' +
+      '<path d="M21.8 3h4.4v3.8H30v4.4h-3.8V15h-4.4v-3.8H18V6.8h3.8z" fill="' + IM.p + '" stroke-width="1.8"/>',
+    harga:
+      '<path d="M7.5 21.5 21 8h13a3 3 0 0 1 3 3v13L23.5 37.5a3 3 0 0 1-4.2 0L7.5 25.7a3 3 0 0 1 0-4.2z" fill="' + IM.p + '"/>' +
+      '<circle cx="31" cy="14" r="2.6" fill="#fff"/>' +
+      '<text transform="translate(22 27) rotate(-45)" text-anchor="middle" font-family="Plus Jakarta Sans,Arial,sans-serif" ' +
+      'font-weight="800" font-size="10" fill="#fff" stroke="none">Rp</text>' +
+      '<g fill="' + IM.k + '" stroke-width="1.8"><ellipse cx="36" cy="42" rx="8" ry="3"/><ellipse cx="36" cy="38" rx="8" ry="3"/>' +
+      '<ellipse cx="36" cy="34" rx="8" ry="3"/></g>',
+    tentang:
+      '<ellipse cx="24" cy="42.5" rx="9" ry="2.6" fill="' + IM.pm + '" stroke="none"/>' +
+      '<path d="M24 3.5A13.5 13.5 0 0 0 10.5 17c0 10 13.5 23 13.5 23s13.5-13 13.5-23A13.5 13.5 0 0 0 24 3.5z" fill="#fff"/>' +
+      '<circle cx="24" cy="11.5" r="2.3" fill="' + IM.p + '" stroke="none"/><path d="M24 17v9" stroke="' + IM.p + '" stroke-width="3.6"/>',
+    riwayat:
+      '<rect x="9" y="7" width="30" height="36" rx="4" fill="#fff"/>' +
+      '<path d="M17 4.5h14v6a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 17 10.5z" fill="' + IM.p + '"/>' +
+      '<path d="M15.5 22l3 3 5-5.5M15.5 33l3 3 5-5.5" stroke="' + IM.t + '" stroke-width="2.8"/>' +
+      '<path d="M27.5 23h6M27.5 34h6" stroke-width="2.4"/>',
+    internasional:
+      '<circle cx="24" cy="24" r="17.5" fill="' + IM.tm + '"/>' +
+      '<path d="M15 11.5c3 2 2.5 5.5 6 6.5s3.5 5 1 7-6.5 1-8 4.5-1 5.5-3 6.2A17.5 17.5 0 0 1 15 11.5z" fill="' + IM.t + '" stroke-width="1.8"/>' +
+      '<path d="M33 9.5c-2 3-1 5 1.5 6.5s6 1 7 5.5A17.5 17.5 0 0 0 33 9.5zM29 31c2.5-1 5 0 5.5 2.5S32 39 29.5 39 26 33 29 31z" fill="' + IM.t + '" stroke-width="1.8"/>' +
+      '<path d="M37 4.5 44 8l-3.5 1.6 1.2 4.2-2.2-1.9-2.6 1.3 1.1-3z" fill="' + IM.p + '" stroke-width="1.6"/>'
+  };
+  var SUNTIK =
+    '<path d="M-6 -20h12M0 -20v6" stroke-width="2.4"/>' +
+    '<rect x="-5" y="-14" width="10" height="22" rx="2" fill="' + IM.tm + '" stroke="none"/>' +
+    '<rect x="-5" y="-3" width="10" height="11" fill="' + IM.p + '" stroke="none"/>' +
+    '<rect x="-5" y="-14" width="10" height="22" rx="2"/>' +
+    '<path d="M-5 -9h4M-5 -4h4M1 1h4" stroke-width="1.6"/>' +
+    '<path d="M-3 8h6l-1.5 4h-3z" fill="' + IM.t + '" stroke-width="1.8"/><path d="M0 12v9" stroke-width="2"/>';
+  // ikon kategori vaksin dan cara vaksinasi (lembar "Ikon Kategori Vaksin")
+  IKON_MENU.suntik = '<g transform="translate(24 24) rotate(45) scale(1.22)" stroke-width="1.9">' + SUNTIK + '</g>';
+  IKON_MENU['suntik-combo'] = '<g transform="translate(20.5 20.5) rotate(45) scale(1.08)" stroke-width="2">' + SUNTIK + '</g>' +
+    '<circle cx="36.5" cy="36.5" r="8" fill="' + IM.p + '"/><path d="M36.5 32.5v8M32.5 36.5h8" stroke="#fff" stroke-width="2.6"/>';
+  IKON_MENU.homecare = IKON_MENU.beranda;
+  IKON_MENU.panduan =
+    '<path d="M5 9c5.5-2.2 10-1.6 19 2.6V41c-9-4.2-13.5-4.8-19-2.6z" fill="' + IM.tm + '"/>' +
+    '<path d="M43 9c-5.5-2.2-10-1.6-19 2.6V41c9-4.2 13.5-4.8 19-2.6z" fill="#fff"/>' +
+    '<path d="M29 19h8.5M29 24.5h8.5M29 30h5.5" stroke="' + IM.t + '" stroke-width="2.4"/>' +
+    '<path d="M14 15.5v9M9.5 20h9" stroke="' + IM.p + '" stroke-width="3"/>';
+  IKON_MENU.klinik =
+    '<path d="M3.5 42.5h41"/>' +
+    '<rect x="5" y="20" width="10" height="22.5" fill="' + IM.tm + '"/><rect x="33" y="20" width="10" height="22.5" fill="' + IM.tm + '"/>' +
+    '<rect x="15" y="8" width="18" height="34.5" fill="#fff"/>' +
+    '<path d="M22 11.5h4v3.5h3.5v4H26v3.5h-4V19h-3.5v-4H22z" fill="' + IM.p + '" stroke-width="1.6"/>' +
+    '<path d="M20.5 42.5V33h7v9.5" fill="' + IM.t + '"/>' +
+    '<g fill="' + IM.t + '" stroke-width="1.5"><rect x="8" y="25" width="4" height="4" rx=".6"/><rect x="8" y="32" width="4" height="4" rx=".6"/>' +
+    '<rect x="36" y="25" width="4" height="4" rx=".6"/><rect x="36" y="32" width="4" height="4" rx=".6"/>' +
+    '<rect x="18.5" y="26" width="3.5" height="3.5" rx=".6"/><rect x="26" y="26" width="3.5" height="3.5" rx=".6"/></g>';
+  IKON_MENU.corporate =
+    '<rect x="12" y="4" width="24" height="30" rx="1.5" fill="#fff"/>' +
+    '<g fill="' + IM.t + '" stroke="none"><rect x="16" y="8.5" width="4" height="3.5" rx=".6"/><rect x="22" y="8.5" width="4" height="3.5" rx=".6"/>' +
+    '<rect x="28" y="8.5" width="4" height="3.5" rx=".6"/><rect x="16" y="14.5" width="4" height="3.5" rx=".6"/><rect x="22" y="14.5" width="4" height="3.5" rx=".6"/>' +
+    '<rect x="28" y="14.5" width="4" height="3.5" rx=".6"/><rect x="16" y="20.5" width="4" height="3.5" rx=".6"/><rect x="28" y="20.5" width="4" height="3.5" rx=".6"/></g>' +
+    '<circle cx="12" cy="30" r="4" fill="' + IM.t + '"/><path d="M4.5 44c0-5 3.3-8 7.5-8s7.5 3 7.5 8z" fill="' + IM.t + '"/>' +
+    '<circle cx="36" cy="30" r="4" fill="' + IM.t + '"/><path d="M28.5 44c0-5 3.3-8 7.5-8s7.5 3 7.5 8z" fill="' + IM.t + '"/>' +
+    '<circle cx="24" cy="28" r="4.8" fill="#fff"/><path d="M14.5 45c0-6 4.2-9.6 9.5-9.6s9.5 3.6 9.5 9.6z" fill="' + IM.p + '"/>';
+
+  // Varian warna sesuai lembar ikon: 'aktif' (dipilih) berubah pink,
+  // 'nonaktif' jadi abu-abu. Warna diganti sekali jalan agar tidak bertumpuk.
+  /* Ikon kebutuhan vaksinasi (onboarding), gaya sama dengan ikon menu Alternatif 2. */
+  IKON_MENU['fokus-anak'] =
+    '<circle cx="11.5" cy="27" r="2.8" fill="#fff"/><circle cx="36.5" cy="27" r="2.8" fill="#fff"/>' +
+    '<circle cx="24" cy="26.5" r="12.5" fill="#fff"/>' +
+    '<path d="M11.8 24.5C12.5 17.6 17.6 14 24 14s11.5 3.6 12.2 10.5c-3.4-.6-6.4-2.6-8-5.3-2.4 2.6-6.4 4.3-10.6 4.3-2.2 0-4 .4-5.8 1z" fill="' + IM.p + '"/>' +
+    '<path d="M24 14.2 20.6 11.4v4.2zM24 14.2l3.4-2.8v4.2z" fill="' + IM.o + '" stroke-width="1.4"/>' +
+    '<circle cx="19.3" cy="28" r="1.5" fill="' + IM.o + '" stroke="none"/><circle cx="28.7" cy="28" r="1.5" fill="' + IM.o + '" stroke="none"/>' +
+    '<path d="M20.6 32.6c2 2 4.8 2 6.8 0" stroke="' + IM.p + '" stroke-width="2.2"/>';
+  IKON_MENU['fokus-dewasa'] =
+    '<path d="M8.5 43v-5.5C8.5 31 13 27 19 27h10c6 0 10.5 4 10.5 10.5V43z" fill="' + IM.t + '"/>' +
+    '<path d="M19.5 27.2c1.2 2.4 2.8 3.6 4.5 3.6s3.3-1.2 4.5-3.6" fill="#fff"/>' +
+    '<circle cx="24" cy="15.5" r="8" fill="#fff"/>' +
+    '<path d="M16 15c0-5.6 3.6-8.6 8-8.6s8 3 8 8.6c-3.2-.6-5.6-2.2-7-4.4-2 2.4-5.2 3.9-9 4.4z" fill="' + IM.p + '"/>';
+  IKON_MENU['fokus-pranikah'] =
+    '<circle cx="18" cy="29.5" r="9.5" stroke="' + IM.t + '" stroke-width="3.4"/>' +
+    '<circle cx="30" cy="29.5" r="9.5" stroke="' + IM.p + '" stroke-width="3.4"/>' +
+    '<path d="M24 16.5s-5.6-3.4-5.6-7a2.9 2.9 0 0 1 5.6-1.2 2.9 2.9 0 0 1 5.6 1.2c0 3.6-5.6 7-5.6 7z" fill="' + IM.p + '" stroke="' + IM.p + '" stroke-width="1.4"/>';
+  IKON_MENU['fokus-hamil'] =
+    '<path d="M17.5 12.5c-1.5 5-3 10-2.6 15.5" stroke="' + IM.t + '" stroke-width="4.4"/>' +
+    '<circle cx="22.5" cy="10" r="6" fill="#fff"/>' +
+    '<path d="M16.4 10.2c-.3-4.4 2.5-7 6.2-7 3.2 0 5.6 2 6 5.4-2.6-.2-5-1.4-6.4-3.2-1.2 2.4-3.2 4-5.8 4.8z" fill="' + IM.p + '"/>' +
+    '<path d="M18.5 19.5c-2 3.6-2.6 8-1.5 12.5.8 3.1 2 5.4 2 8.5V44h10v-3c5.4-.4 8.5-3.8 8.5-8.5 0-5-3.6-8.2-8-8.6-1.6-.2-2.6-1.7-2.9-3.8l-.4-2.1z" fill="' + IM.t + '"/>' +
+    '<path d="M22.5 23c-1.4 4.4-.4 8 3.4 9.6 2.6 1 5.4.6 7.4-.8" stroke-width="2"/>' +
+    '<path d="M32 38.4s-3.4-2-3.4-4.2a1.75 1.75 0 0 1 3.4-.7 1.75 1.75 0 0 1 3.4.7c0 2.2-3.4 4.2-3.4 4.2z" fill="' + IM.p + '" stroke="' + IM.p + '" stroke-width="1"/>';
+  IKON_MENU['fokus-haji'] =
+    '<path d="M24 6.5 41 11.5v24.5L24 41.5 7 36V11.5z" fill="' + IM.t + '"/>' +
+    '<path d="M7 11.5 24 6.5l17 5-17 5z" fill="' + IM.tm + '"/>' +
+    '<path d="M7 11.5l17 5 17-5v5l-17 5-17-5z" fill="' + IM.p + '"/>' +
+    '<path d="M7 16.5l17 5 17-5v3.4l-17 5-17-5z" fill="#fff"/>' +
+    '<path d="M24 16.5v25"/>';
+  IKON_MENU['fokus-internasional'] =
+    '<g transform="translate(3.5 1.5) scale(1.75)" stroke-width="1.25">' +
+    '<path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z" fill="' + IM.t + '"/></g>' +
+    '<path d="M4 41.5l4.5-2.5M9.5 45l4-2.2" stroke="' + IM.t + '" stroke-width="2.6"/>';
+  IKON_MENU['fokus-lansia'] =
+    '<path d="M7.5 43v-5C7.5 31.5 12 27.5 18 27.5h8.5c5.6 0 9 3.5 9 9.5v6z" fill="' + IM.t + '"/>' +
+    '<circle cx="22" cy="15.5" r="8.5" fill="#fff"/>' +
+    '<circle cx="18.6" cy="15.6" r="2.7" stroke="' + IM.t + '" stroke-width="2"/><circle cx="25.4" cy="15.6" r="2.7" stroke="' + IM.t + '" stroke-width="2"/>' +
+    '<path d="M21.3 15.6h1.4" stroke="' + IM.t + '" stroke-width="2"/>' +
+    '<path d="M19.6 20.6c1.4 1 3.4 1 4.8 0" stroke-width="1.8"/>' +
+    '<path d="M36.5 44V31.5c0-2.2 1.4-3.8 3.2-3.8s3.2 1.6 3.2 3.8" stroke="' + IM.p + '" stroke-width="3"/>';
+  var VARIAN_IKON = {
+    aktif: { '#1E3A4C': '#A81260', '#56C3C7': '#E8488C', '#C9EEEF': '#FAD0E0' },
+    nonaktif: { '#1E3A4C': '#A3A8AD', '#56C3C7': '#C9CDD1', '#C9EEEF': '#E6E8EA', '#E8488C': '#BFC3C7',
+      '#FAD0E0': '#E6E8EA', '#F5C04A': '#D5D8DB' }
+  };
+  function icm(name, size, varian) {
+    var svg = '<svg class="icm" width="' + (size || 28) + '" height="' + (size || 28) + '" viewBox="0 0 48 48" fill="none" ' +
+      'stroke="' + IM.o + '" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+      (IKON_MENU[name] || '') + '</svg>';
+    var peta = VARIAN_IKON[varian];
+    return peta ? svg.replace(/#[0-9A-F]{6}/g, function (c) { return peta[c] || c; }) : svg;
+  }
+  // ikon dalam kotak membulat; varian '' | 'aktif' | 'nonaktif'
+  function ikonKotak(name, varian, ukuran) {
+    ukuran = ukuran || 40;
+    return '<span class="ikon-kotak' + (varian ? ' ' + varian : '') + '" style="width:' + ukuran + 'px;height:' + ukuran + 'px;">' +
+      icm(name, Math.round(ukuran * 0.72), varian) + '</span>';
+  }
+  function ikonKategori(kategori) { return /combo|\+/i.test(kategori) ? 'suntik-combo' : 'suntik'; }
 
   /* ============================ util ============================ */
   function h(s) {
@@ -98,7 +275,8 @@
     notif: { dibaca: {}, terkirim: {} },
     onboarding: { selesai: false, langkah: 0, fokus: [], layanan: '' },
     akun: { masuk: false, metode: '' },
-    korporat: { aktif: false, nama: '', jenis: '', periode: '', peserta: [], tab: 'ringkasan', vaksinId: '', tanggal: '' }
+    korporat: { aktif: false, nama: '', jenis: '', periode: '', peserta: [], tab: 'ringkasan', vaksinId: '', tanggal: '' },
+    lokasi: { kota: '', klinik: '' }
   };
   var S, storageOk = true;
   function salin(v) { return JSON.parse(JSON.stringify(v)); }
@@ -119,18 +297,81 @@
       return d;
     } catch (e) { storageOk = false; return salin(kosong); }
   }
-  function simpan() {
+  function simpanLokal() {
     try { localStorage.setItem(KEY, JSON.stringify(S)); }
     catch (e) { storageOk = false; }
   }
+  // setiap perubahan disimpan di perangkat, lalu dikirim ke server bila sesi aktif
+  function simpan() { simpanLokal(); jadwalkanSinkron(); }
   S = baca();
+  migrasiRiwayat();
+  migrasiLokasi();
 
   /* ============================ katalog ============================ */
   function vaksinById(id) {
     for (var i = 0; i < K.harga.length; i++) if (K.harga[i].id === id) return K.harga[i];
     return null;
   }
+  /* ============================ mitra klinik ============================
+     VaksinKu bekerja sama dengan klinik di beberapa kota. Harga, ketersediaan,
+     dokter, dan promo mengikuti klinik yang dipilih pengguna (S.lokasi). */
+  function semuaKlinik() {
+    var out = [];
+    K.mitra.forEach(function (m) {
+      m.klinik.forEach(function (k) {
+        var o = salin(k); o.kota = m.id; o.kotaNama = m.kota; out.push(o);
+      });
+    });
+    return out;
+  }
+  function klinikById(id) { return semuaKlinik().filter(function (k) { return k.id === id; })[0] || null; }
+  function klinikAktif() { return klinikById((S.lokasi || {}).klinik); }
+  function kotaAktif() {
+    var id = (S.lokasi || {}).kota;
+    return K.mitra.filter(function (m) { return m.id === id; })[0] || null;
+  }
+  function punyaHarga() { var k = klinikAktif(); return !!(k && k.harga); }
+  function promoKlinik() { var k = klinikAktif(); return k && k.harga === 'alrasha' ? 'alrasha' : ''; }
+  function dokterKlinik(k) {
+    k = k || klinikAktif();
+    return k ? k.dokter.map(function (i) { return K.dokter[i]; }).filter(Boolean) : [];
+  }
+  function namaPendek(k) { return k.nama.replace(/^Klinik (Utama )?/, ''); }
+  // Pengguna lama memakai VaksinKu saat masih satu jaringan klinik di Tanjungpinang.
+  function migrasiLokasi() {
+    if (S.lokasi && S.lokasi.klinik) return;
+    var lama = S.pasien.length || S.booking.length;
+    S.lokasi = lama ? { kota: 'tanjungpinang', klinik: 'alrasha-hcc' } : { kota: '', klinik: '' };
+  }
+  function lokasiChip() {
+    var k = klinikAktif();
+    return '<button class="lokasi-chip" data-act="buka-lokasi">' + ic('pin', 15) +
+      '<span class="grow">' + (k ? '<b>' + h(k.kotaNama.replace('Kota ', '')) + '</b> · ' + h(namaPendek(k)) : '<b>Pilih kota & klinik mitra</b>') + '</span>' +
+      ic('chevron', 14) + '</button>';
+  }
+  function sheetLokasi() {
+    var aktif = klinikAktif();
+    return '<div class="sheet" data-act="tutup-sheet"><div data-stop="1"><div class="stack g12">' +
+      '<div class="row mid between"><div><div class="sect-title">Lokasi vaksinasi</div>' +
+      '<div class="tiny muted">Harga dan ketersediaan vaksin mengikuti klinik mitra yang dipilih.</div></div>' +
+      '<button class="linkbtn" data-act="tutup-sheet">' + ic('close', 18) + '</button></div>' +
+      K.mitra.map(function (m) {
+        return '<div class="stack g8"><div class="tiny" style="font-weight:800;color:var(--ink-3);text-transform:uppercase;letter-spacing:.05em;">' + h(m.kota) + '</div>' +
+          m.klinik.map(function (k) {
+            var on = aktif && aktif.id === k.id;
+            return '<button class="checkrow' + (on ? ' on' : '') + '" data-act="pilih-klinik" data-arg="' + k.id + '">' +
+              ikonKotak('klinik', on ? 'aktif' : '', 40) +
+              '<div class="grow"><div class="small" style="font-weight:700;">' + h(k.nama) + '</div>' +
+              '<div class="tiny muted">' + h(k.alamat || 'Alamat menyusul') + '</div>' +
+              '<div style="margin-top:4px;">' + (k.harga ? '<span class="chip teal" style="font-size:9.5px;padding:2px 7px;">Price list tersedia</span>'
+                : '<span class="chip amber" style="font-size:9.5px;padding:2px 7px;">Harga dikonfirmasi klinik</span>') + '</div></div>' +
+              '<div class="box">' + (on ? ic('check', 14, 3) : '') + '</div></button>';
+          }).join('') + '</div>';
+      }).join('') +
+      '<div class="tiny muted">Klinik mitra di kota lain akan segera hadir.</div></div></div></div>';
+  }
   function hargaVaksin(v, dokter) {
+    if (!punyaHarga()) return 0;
     var s = dokter === 'spesialis' ? v.spesialis : v.umum;
     return s ? angka(s) : 0;
   }
@@ -167,23 +408,12 @@
         }]
       };
     }
-    return {
-      tipe: 'anak', judul: 'Jadwal IDAI 2024', catatan: '',
-      langkah: K.jadwalAnak.map(function (st) {
-        return {
-          usia: st.usia, badge: st.badge, usiaBulan: st.usiaBulan,
-          jatuhTempo: st.usiaBulan <= bln,
-          berikutnya: st.usiaBulan > bln,
-          items: st.items.map(function (lb) {
-            return { label: lb, selesai: sudah(p.id, lb) };
-          })
-        };
-      })
-    };
+    return jadwalAnak(p, bln);
   }
   function ringkasJadwal(p) {
     var j = jadwalPasien(p);
     if (!j) return null;
+    if (j.tipe === 'anak') return j.ringkas;
     var total = 0, selesai = 0, belum = [];
     j.langkah.forEach(function (st) {
       if (!st.jatuhTempo) return;
@@ -193,6 +423,158 @@
       });
     });
     return { total: total, selesai: selesai, belum: belum, persen: total ? Math.round(selesai / total * 100) : 0, jadwal: j };
+  }
+
+  /* ============================ jadwal anak per dosis ============================
+     Dua rujukan: IDAI 2024 dan Buku KIA 2024 (program pemerintah), dipilih per
+     anak. Riwayat dicatat per kunci antigen:urutan (mis. "hepb:1"), bukan per
+     nama baris, sehingga saat orang tua berganti rujukan, dosis yang sudah
+     diberikan langsung terbaca di jadwal yang baru — DPT-HB-Hib 1 di KIA
+     memenuhi DTP 1, Hib 1, dan Hepatitis B 1 di IDAI. Lihat src/jadwal_anak.py. */
+  var NAMA_JADWAL = { idai: 'IDAI 2024', kia: 'Buku KIA 2024' };
+  function rujukanAnak(p) { return p.jadwalAnak === 'kia' ? 'kia' : 'idai'; }
+  function daftarDosis(rujukan) { return rujukan === 'kia' ? K.jadwalKIA : K.jadwalIDAI; }
+  function petaRiwayat(pasienId) {
+    var peta = {};
+    S.riwayat.forEach(function (r) {
+      if (r.pasienId !== pasienId) return;
+      (r.kunci || []).forEach(function (k) {
+        if (!peta[k] || r.tanggal > peta[k].tanggal) peta[k] = r;
+      });
+    });
+    return peta;
+  }
+  function antigenDari(kunci) { return kunci.split(':')[0]; }
+  // tanggal dosis terakhir suatu antigen (untuk dosis berulang: flu, tifoid)
+  function terakhirAntigen(peta, antigen) {
+    var t = '';
+    for (var k in peta) if (antigenDari(k) === antigen && peta[k].tanggal > t) t = peta[k].tanggal;
+    return t;
+  }
+  function usiaDosisTeks(bln) {
+    if (bln === 0) return 'Lahir';
+    if (bln < 24) return bln + ' bulan';
+    return (bln % 12 ? (bln / 12).toFixed(1).replace('.', ',') : bln / 12) + ' tahun';
+  }
+  function dosisOpsional(p, d) {
+    if (d.syarat === 'tambahan') return 'Vaksin tambahan, di luar jadwal rujukan';
+    if (d.syarat === 'endemis' && !p.endemis) return 'Hanya untuk daerah endemis JE';
+    if (d.syarat === 'perempuan' && p.jenisKelamin === 'Laki-laki') return 'Dianjurkan untuk anak perempuan';
+    if (d.syarat === 'rv5' && p.rv === 'rv1') return 'Tidak perlu — memakai Rotarix (2 dosis)';
+    return '';
+  }
+  // st: belum | tepat | boleh | kejar | terlewat | selesai
+  function statusDosis(p, d, bln, peta) {
+    var o = { d: d, opsional: dosisOpsional(p, d), catatan: peta[d.kunci[0]] || null,
+      jatuh: tambahBulan(p.tglLahir, d.mulai), pkm: !!(p.pkm && p.pkm[d.kunci.join('+')]) };
+    if (d.ulang) {
+      var akhir = terakhirAntigen(peta, antigenDari(d.kunci[0]));
+      if (akhir && tambahBulan(akhir, d.ulang) > hariIni()) {
+        o.st = 'selesai'; o.berikut = tambahBulan(akhir, d.ulang); o.catatan = { tanggal: akhir };
+        return o;
+      }
+      if (akhir) o.jatuh = tambahBulan(akhir, d.ulang);
+    } else if (d.kunci.every(function (k) { return peta[k]; })) {
+      o.st = 'selesai';
+      return o;
+    }
+    o.st = bln < d.mulai ? 'belum' : bln <= d.tepat ? 'tepat' : bln <= d.boleh ? 'boleh' : bln <= d.batas ? 'kejar' : 'terlewat';
+    // Lewat batas program pemerintah bukan berarti tidak boleh lagi: bila
+    // menurut IDAI antigen itu masih boleh dikejar, tampilkan sebagai kejar.
+    if (o.st === 'terlewat' && d.id.indexOf('k-') === 0) {
+      var batasIdai = 0;
+      K.jadwalIDAI.forEach(function (x) {
+        if (x.kunci.some(function (k) { return d.kunci.indexOf(k) >= 0; })) batasIdai = Math.max(batasIdai, x.batas);
+      });
+      if (bln <= batasIdai) { o.st = 'kejar'; o.lewatProgram = true; }
+    }
+    return o;
+  }
+  function jadwalAnak(p, bln) {
+    var rujukan = rujukanAnak(p), peta = petaRiwayat(p.id);
+    var dosis = daftarDosis(rujukan).map(function (d) { return statusDosis(p, d, bln, peta); });
+    var total = 0, selesai = 0, belum = [], kejar = 0, terlewat = 0, pkm = 0;
+    dosis.forEach(function (x) {
+      if (x.opsional) return;
+      if (x.st === 'selesai' && x.d.mulai <= bln) { total++; selesai++; }
+      else if (x.st === 'tepat' || x.st === 'boleh' || x.st === 'kejar') {
+        total++;
+        belum.push({ usia: usiaDosisTeks(x.d.mulai), label: x.d.label, st: x.st, pkm: x.pkm });
+        if (x.st !== 'tepat') kejar++;
+        if (x.pkm) pkm++;
+      } else if (x.st === 'terlewat') terlewat++;
+    });
+    var j = { tipe: 'anak', rujukan: rujukan, judul: 'Jadwal ' + NAMA_JADWAL[rujukan], catatan: '', dosis: dosis, bln: bln };
+    j.ringkas = { total: total, selesai: selesai, belum: belum, kejar: kejar, terlewat: terlewat, pkm: pkm,
+      persen: total ? Math.round(selesai / total * 100) : 100, jadwal: j };
+    return j;
+  }
+  // produk price list → antigen yang dikandungnya (lihat build_bundle.py)
+  // Produk yang antigennya termasuk program imunisasi pemerintah: untuk anak
+  // dosis ini tersedia gratis di Puskesmas/Posyandu.
+  var ANTIGEN_PROGRAM = {};
+  K.jadwalKIA.forEach(function (d) { d.kunci.forEach(function (k) { ANTIGEN_PROGRAM[antigenDari(k)] = true; }); });
+  function produkProgram(v) {
+    return (v.antigen || []).some(function (a) { return ANTIGEN_PROGRAM[a]; });
+  }
+  var CHIP_PKM = '<span class="chip green" style="font-size:9.5px;padding:2px 7px;" title="Untuk anak sesuai jadwal program pemerintah">Gratis di Puskesmas (anak)</span>';
+  function antigenProduk(vaksinId) {
+    var v = K.harga.filter(function (x) { return x.id === vaksinId; })[0];
+    return v ? v.antigen || [] : [];
+  }
+  // Catat dosis dari produk yang diberikan: tiap antigen mengisi dosis
+  // berikutnya yang belum tercatat pada jadwal anak tersebut.
+  function catatDariProduk(p, vaksinId, tanggal, tambahan) {
+    var kunci = kunciDariProduk(p, vaksinId);
+    if (!kunci) return null;
+    var v = K.harga.filter(function (x) { return x.id === vaksinId; })[0];
+    if (v && /rotarix/i.test(v.merk)) p.rv = 'rv1';
+    var rec = { id: uid(), pasienId: p.id, label: v ? v.kategori + ' — ' + v.merk : 'Vaksin', kunci: kunci, tanggal: tanggal,
+      merek: v ? v.merk : '', sumber: 'booking' };
+    for (var k in (tambahan || {})) rec[k] = tambahan[k];
+    S.riwayat.push(rec);
+    return rec;
+  }
+  // Dosis jadwal anak berikutnya yang dipenuhi satu produk vaksin (null bila tidak ada).
+  function kunciDariProduk(p, vaksinId) {
+    var antigen = antigenProduk(vaksinId), bln = umurBulan(p.tglLahir);
+    if (!antigen.length || bln == null || bln >= 228) return null;
+    var peta = petaRiwayat(p.id), kunci = [];
+    antigen.forEach(function (ag) {
+      var urut = K.jadwalIDAI.concat(K.jadwalKIA).map(function (d) { return d.kunci; })
+        .reduce(function (a, b) { return a.concat(b); }, [])
+        .filter(function (k, i, arr) { return antigenDari(k) === ag && arr.indexOf(k) === i; })
+        .sort(function (a, b) {
+          var x = a.split(':')[1], y = b.split(':')[1];
+          return (x === 't' ? 99 : +x) - (y === 't' ? 99 : +y);
+        });
+      var berikut = urut.filter(function (k) { return !peta[k] && k.split(':')[1] !== 't'; })[0] ||
+        urut.filter(function (k) { return k.split(':')[1] === 't'; })[0];
+      if (berikut) kunci.push(berikut);
+    });
+    return kunci.length ? kunci : null;
+  }
+  // Catatan vaksinasi dari dashboard klinik belum membawa kunci dosis; dipetakan sekali
+  // di sini (urut tanggal) agar jadwal anak ikut tercentang, lalu dipertahankan sinkron.
+  function petakanDosisKlinik() {
+    var n = 0;
+    S.riwayat.filter(function (r) { return r.sumber === 'klinik' && !(r.kunci || []).length && !r.kunciDipetakan; })
+      .sort(function (a, b) { return String(a.tanggal).localeCompare(String(b.tanggal)); })
+      .forEach(function (r) {
+        var p = S.pasien.filter(function (x) { return x.id === r.pasienId; })[0];
+        var v = K.harga.filter(function (x) { return x.merk === r.merek; })[0];
+        r.kunciDipetakan = true;
+        var kunci = p && v ? kunciDariProduk(p, v.id) : null;
+        if (kunci) { r.kunci = kunci; n++; }
+        if (p && v && /rotarix/i.test(v.merk)) p.rv = 'rv1';
+      });
+    return n;
+  }
+  // Riwayat versi lama dicatat per nama baris; terjemahkan ke kunci dosis.
+  function migrasiRiwayat() {
+    S.riwayat.forEach(function (r) {
+      if (!r.kunci && K.labelLama[r.label]) r.kunci = K.labelLama[r.label].slice();
+    });
   }
 
   /* ============================ booking ============================ */
@@ -217,7 +599,7 @@
     return { rincian: rincian, tanpaHarga: tanpaHarga, perPasien: subtotal, jumlahPasien: jml, total: subtotal * jml };
   }
   function lokasiTeks(d) {
-    if (d.layanan === 'klinik') { var kl = K.klinik[d.klinikIdx]; return kl ? kl[0] + ' — ' + kl[1] : ''; }
+    if (d.layanan === 'klinik') { var kl = klinikAktif(); return kl ? kl.nama + (kl.alamat ? ' — ' + kl.alamat : ', ' + kl.kotaNama) : ''; }
     if (d.layanan === 'homecare') {
       var a = S.alamat.filter(function (x) { return x.id === d.alamatId; })[0];
       return a ? a.label + ' — ' + a.alamat + ', ' + a.kecamatan : '';
@@ -231,28 +613,40 @@
     var e = {};
     if (!d.layanan) e.layanan = 'Pilih jenis layanan.';
     if (d.layanan === 'homecare' && !d.alamatId) e.lokasi = 'Pilih atau tambahkan alamat vaksinasi.';
-    if (d.layanan === 'klinik' && K.klinik[d.klinikIdx] == null) e.lokasi = 'Pilih klinik.';
+    if (!klinikAktif()) e.lokasi = 'Pilih kota dan klinik mitra yang akan melayani.';
     if (d.layanan === 'corporate' && !String(d.institusi).trim()) e.lokasi = 'Isi nama institusi/perusahaan.';
     if (!d.pasienIds.length) e.pasien = 'Pilih minimal satu pasien.';
     if (!d.vaksinIds.length) e.vaksin = 'Pilih minimal satu vaksin.';
     if (!d.tanggal) e.jadwal = 'Pilih tanggal vaksinasi.';
     else if (selisihHari(d.tanggal) < 0) e.jadwal = 'Tanggal tidak boleh di masa lalu.';
+    else if (new Date(d.tanggal + 'T00:00:00').getDay() === 0) e.jadwal = 'Klinik libur hari Minggu. Pilih tanggal lain.';
     else if (!d.jam) e.jadwal = 'Pilih jam vaksinasi.';
     if (!String(S.profil.nama).trim()) e.profil = 'Lengkapi nama pendaftar di Profil.';
     if (!String(S.profil.hp).trim()) e.profil = 'Lengkapi nomor HP pendaftar di Profil.';
     return e;
   }
-  function buatBooking() {
+  /* Status reservasi. Reservasi online (serverId) mengikuti status di server VaksinKu;
+     'menunggu' dan 'terkonfirmasi' berarti reservasi masih berjalan. */
+  var STATUS_BK = {
+    menunggu: ['mag', 'Menunggu konfirmasi', 'Menunggu'], terkonfirmasi: ['teal', 'Terkonfirmasi klinik', 'Terkonfirmasi'],
+    selesai: ['green', 'Selesai', 'Selesai'], batal: ['grey', 'Dibatalkan', 'Batal'], tidak_hadir: ['grey', 'Tidak hadir', 'Tidak hadir']
+  };
+  var STATUS_DARI_SERVER = { baru: 'menunggu', terkonfirmasi: 'terkonfirmasi', hadir: 'terkonfirmasi', selesai: 'selesai', batal: 'batal', tidak_hadir: 'tidak_hadir' };
+  function bookingAktif(b) { return b.status === 'menunggu' || b.status === 'terkonfirmasi'; }
+  // srv = baris booking dari /api/rpc/buat_booking; tanpa srv reservasi hanya tersimpan di perangkat
+  function buatBooking(srv) {
     var d = draft(), b = hitungBiaya(d);
-    var kode = 'VK-' + String(Date.now()).slice(-6);
+    var kode = srv ? srv.kode : 'VK-' + String(Date.now()).slice(-6);
     var rec = {
-      id: uid(), kode: kode, dibuat: new Date().toISOString(), status: 'menunggu',
+      id: uid(), kode: kode, dibuat: new Date().toISOString(), status: srv ? STATUS_DARI_SERVER[srv.status] || 'menunggu' : 'menunggu',
       layanan: d.layanan, lokasi: lokasiTeks(d), pasienIds: d.pasienIds.slice(),
       vaksinIds: d.vaksinIds.slice(), dokter: d.dokter, tanggal: d.tanggal, jam: d.jam,
       catatan: d.catatan, rincian: b.rincian, tanpaHarga: b.tanpaHarga,
+      klinik: (klinikAktif() || {}).id || '', klinikNama: (klinikAktif() || {}).nama || '', kota: (klinikAktif() || {}).kotaNama || '',
       perPasien: b.perPasien, total: b.total,
       pendaftar: { nama: S.profil.nama, hp: S.profil.hp }
     };
+    if (srv) { rec.serverId = srv.id; rec.statusServer = srv.status; rec.bagikan = !!d.bagikan; }
     S.booking.unshift(rec);
     S.draft = null;
     simpan();
@@ -267,7 +661,9 @@
     L.push('Halo VaksinKu, saya ingin reservasi vaksinasi.');
     L.push('');
     L.push('Kode: ' + b.kode);
+    if (b.serverId) L.push('(Reservasi online — sudah tercatat di sistem klinik VaksinKu)');
     L.push('Pendaftar: ' + b.pendaftar.nama + ' (' + b.pendaftar.hp + ')');
+    if (b.klinikNama) L.push('Klinik mitra: ' + b.klinikNama + ' (' + b.kota + ')');
     L.push('Layanan: ' + LAYANAN_NAMA[b.layanan]);
     L.push('Lokasi: ' + b.lokasi);
     L.push('Jadwal: ' + tgl(b.tanggal, true) + ', pukul ' + b.jam);
@@ -285,7 +681,25 @@
     L.push('');
     L.push('Estimasi total: ' + rp(b.total) + ' (' + rp(b.perPasien) + ' x ' + b.pasienIds.length + ' pasien)');
     if (b.catatan) { L.push(''); L.push('Catatan: ' + b.catatan); }
+    L.push('');
+    L.push('Kode data untuk petugas klinik (mohon tidak diubah):');
+    L.push(kodeData(b));
     return L.join('\n');
+  }
+  // Salinan reservasi yang bisa dibaca mesin, ikut terkirim di pesan WhatsApp.
+  // Petugas menempelkan pesan itu di dashboard klinik, yang membaca baris ini
+  // untuk mendaftarkan pasien dan membuat booking tanpa mengetik ulang.
+  function kodeData(b) {
+    var d = {
+      k: b.kode, n: b.pendaftar.nama, h: b.pendaftar.hp, l: b.layanan, lo: b.lokasi,
+      t: b.tanggal, j: b.jam, d: b.dokter, c: b.catatan || '', v: b.vaksinIds, kl: b.klinik || '',
+      p: b.pasienIds.map(function (id) {
+        var p = S.pasien.filter(function (x) { return x.id === id; })[0] || {};
+        return [p.nama || namaPasien(id), p.tglLahir || '', p.jenisKelamin || ''];
+      })
+    };
+    var b64 = btoa(unescape(encodeURIComponent(JSON.stringify(d))));
+    return 'VKD1.' + b64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
   }
   function kirimWA(b) {
     window.open('https://wa.me/' + WA + '?text=' + encodeURIComponent(pesanWA(b)), '_blank');
@@ -305,15 +719,21 @@
     d.setDate(Math.min(hari, akhir));
     return isoDari(d);
   }
-  /* Tiap langkah jadwal anak punya tanggal jatuh tempo nyata: lahir + usia langkah. */
+  /* Dosis anak yang masih bisa diberikan, dikelompokkan per tanggal jatuh tempo
+     (lahir + usia mulai). Dosis terlewat dan opsional tidak diingatkan. */
   function jadwalBertanggal(p) {
     if (!p.tglLahir) return [];
-    return K.jadwalAnak.map(function (st) {
-      return {
-        usia: st.usia, tanggal: tambahBulan(p.tglLahir, st.usiaBulan),
-        items: st.items.filter(function (lb) { return !sudah(p.id, lb); })
-      };
-    }).filter(function (st) { return st.items.length; });
+    var j = jadwalPasien(p);
+    if (!j || j.tipe !== 'anak') return [];
+    var grup = {}, urut = [];
+    j.dosis.forEach(function (x) {
+      if (x.opsional || x.st === 'selesai' || x.st === 'terlewat') return;
+      var kunci = x.jatuh;
+      if (!grup[kunci]) { grup[kunci] = { usia: usiaDosisTeks(x.d.mulai), tanggal: x.jatuh, items: [], kejar: false }; urut.push(kunci); }
+      grup[kunci].items.push(x.d.label + (x.pkm ? ' (Puskesmas)' : ''));
+      if (x.st === 'kejar' || x.st === 'boleh') grup[kunci].kejar = true;
+    });
+    return urut.sort().map(function (k) { return grup[k]; });
   }
   function pengaturan() {
     if (!S.pengaturan) S.pengaturan = JSON.parse(JSON.stringify(kosong.pengaturan));
@@ -331,7 +751,7 @@
 
     if (P.booking) {
       S.booking.forEach(function (b) {
-        if (b.status !== 'menunggu') return;
+        if (!bookingAktif(b)) return;
         var sisa = selisihHari(b.tanggal);
         var nama = b.pasienIds.map(namaPasien).join(', ');
         if (sisa < 0) {
@@ -497,7 +917,7 @@
     }
 
     S.booking.forEach(function (b) {
-      if (b.status !== 'menunggu' || selisihHari(b.tanggal) < 0) return;
+      if (!bookingAktif(b) || selisihHari(b.tanggal) < 0) return;
       acara('b' + b.id, b.tanggal, b.jam,
         'Vaksinasi ' + b.pasienIds.map(namaPasien).join(', '),
         'Reservasi ' + b.kode + '\n' + b.rincian.map(function (r) { return r.nama; }).join(', ') +
@@ -511,7 +931,7 @@
         if (!st.tanggal || st.tanggal < hariIni() || st.tanggal > batas) return;
         acara('v' + p.id + st.tanggal, st.tanggal, '',
           'Jadwal vaksin ' + p.nama + ' (' + st.usia + ')',
-          st.items.join(', ') + '\nSesuai jadwal IDAI 2024.\nReservasi: ' + K.brand.callCenter, 7);
+          st.items.join(', ') + '\nSesuai jadwal ' + NAMA_JADWAL[rujukanAnak(p)] + '.\nReservasi: ' + K.brand.callCenter, 7);
       });
     });
 
@@ -820,12 +1240,12 @@
       (aksi || '') + '</div>';
   }
   function navbar(aktif) {
-    var items = [['beranda', 'home', 'Beranda'], ['chat', 'chat', 'Konsultasi'], null,
-      ['rekam', 'doc', 'Rekam Medis'], ['profil', 'user', 'Profil']];
+    var items = [['beranda', 'beranda', 'Beranda'], ['chat', 'konsultasi', 'Konsultasi'], null,
+      ['rekam', 'rekam', 'Rekam Medis'], ['profil', 'profil', 'Profil']];
     return '<nav class="navbar">' + items.map(function (it) {
       if (!it) return '<button class="navfab" data-act="go" data-arg="booking" aria-label="Booking vaksinasi">' + ic('plus', 24, 2.4) + '</button>';
       return '<button class="navitem' + (aktif === it[0] ? ' on' : '') + '" data-act="go" data-arg="' + it[0] + '">' +
-        ic(it[1], 21) + '<span>' + it[2] + '</span></button>';
+        icm(it[1], 26) + '<span>' + it[2] + '</span></button>';
     }).join('') + '</nav>';
   }
   function toast(msg) {
@@ -853,13 +1273,21 @@
      rekomendasi WHO, lansia dari halaman "Vaksinasi Lansia" katalog. Tiap entri
      dicocokkan sebagai potongan nama kategori pada price list. */
   var FOKUS = [
-    { id: 'anak', label: 'Vaksin Anak', sub: 'Imunisasi dasar & lanjutan', icon: 'family', sumber: 'Jadwal IDAI 2024',
+    { id: 'anak', label: 'Vaksin Anak', sub: 'Imunisasi dasar & lanjutan', icon: 'fokus-anak', sumber: 'Jadwal IDAI 2024',
       kat: ['BCG', 'Polio', 'DPT', 'Rotavirus', 'Pneumococcus', 'Campak', 'Varicella', 'Hepatitis B', 'Hepatitis A', 'Influenza', 'Typhoid', 'Japanese Encephalitis', 'Flu Singapura'] },
-    { id: 'dewasa', label: 'Vaksin Dewasa', sub: 'HPV, flu, tifoid, dll', icon: 'user', sumber: 'Jadwal PAPDI 2025',
+    { id: 'dewasa', label: 'Vaksin Dewasa', sub: 'HPV, flu, tifoid, dll', icon: 'fokus-dewasa', sumber: 'Jadwal PAPDI 2025',
       kat: ['Influenza', 'Pneumococcus', 'Demam Berdarah', 'HPV', 'Typhoid', 'Hepatitis A', 'Hepatitis B', 'Varicella', 'Campak', 'Tetanus'] },
-    { id: 'haji', label: 'Umroh & Haji', sub: 'Meningitis wajib jamaah', icon: 'globe', sumber: 'Regulasi Arab Saudi + WHO',
+    { id: 'pranikah', label: 'Pranikah', sub: 'HPV, MMR, tetanus', icon: 'fokus-pranikah', sumber: 'Jadwal pranikah katalog',
+      kat: ['HPV', 'Campak', 'Tetanus'] },
+    { id: 'hamil', label: 'Ibu Hamil', sub: 'Flu, Tdap & RSV', icon: 'fokus-hamil', sumber: 'Rekomendasi POGI 2026',
+      kat: ['Influenza', 'Tetanus'],
+      // dianjurkan tetapi belum ada di price list klinik mitra
+      luar: [['RSV', 'Abrysvo · 1 dosis tiap kehamilan, usia kandungan 32–36 minggu']] },
+    { id: 'haji', label: 'Umroh & Haji', sub: 'Meningitis wajib jamaah', icon: 'fokus-haji', sumber: 'Regulasi Arab Saudi + WHO',
       kat: ['Meningitis', 'Polio', 'Influenza', 'Pneumococcus'] },
-    { id: 'lansia', label: 'Lansia', sub: 'Influenza, pneumonia', icon: 'shield', sumber: 'Halaman lansia katalog',
+    { id: 'internasional', label: 'Internasional', sub: 'Studi, kerja & wisata', icon: 'fokus-internasional', sumber: 'Rekomendasi WHO bagi pelancong',
+      kat: ['Meningitis', 'Polio', 'Typhoid', 'Hepatitis A', 'Hepatitis B', 'Influenza', 'Japanese Encephalitis', 'Tetanus', 'Campak'] },
+    { id: 'lansia', label: 'Lansia', sub: 'Influenza, pneumonia', icon: 'fokus-lansia', sumber: 'Halaman lansia katalog',
       kat: ['Influenza', 'Pneumococcus'] }
   ];
   function fokusById(id) {
@@ -869,34 +1297,50 @@
   function vaksinFokus() {
     var dipilih = S.onboarding.fokus || [];
     if (!dipilih.length) return [];
-    var kat = [];
-    dipilih.forEach(function (id) {
-      var f = fokusById(id);
-      if (f) f.kat.forEach(function (k) { if (kat.indexOf(k) < 0) kat.push(k); });
-    });
+    // Sediaan khusus usia (mis. Engerix-B Anak / Dewasa) hanya cocok untuk
+    // kelompoknya: sediaan anak tidak direkomendasikan untuk kebutuhan dewasa,
+    // dan sebaliknya.
+    function sediaanCocok(f, v) {
+      var nama = (v.sediaan || '') + ' ' + (v.merk || '');
+      return f.id === 'anak' ? !/\bDewasa\b/i.test(nama) : !/\bAnak\b/i.test(nama);
+    }
     return K.harga.filter(function (v) {
-      return kat.some(function (k) { return v.kategori.indexOf(k) >= 0; });
+      return dipilih.some(function (id) {
+        var f = fokusById(id);
+        return f && sediaanCocok(f, v) && f.kat.some(function (k) { return v.kategori.indexOf(k) >= 0; });
+      });
     });
+  }
+  // Vaksin yang dianjurkan untuk kebutuhan terpilih tetapi belum ada di price list.
+  function vaksinFokusLuar() {
+    var hasil = [];
+    (S.onboarding.fokus || []).forEach(function (id) {
+      var f = fokusById(id);
+      ((f && f.luar) || []).forEach(function (v) { if (!hasil.some(function (x) { return x[0] === v[0]; })) hasil.push(v); });
+    });
+    return hasil;
   }
   function perluOnboarding() {
     return !S.onboarding.selesai && !S.profil.nama && !S.pasien.length;
   }
   function selesaikanOnboarding(metode) {
     S.onboarding.selesai = true;
-    S.akun.masuk = metode === 'hp';
+    S.akun.masuk = metode === 'google';
     S.akun.metode = metode;
     if (S.onboarding.layanan && S.onboarding.layanan !== 'korporat') draft().layanan = S.onboarding.layanan;
     simpan();
   }
 
   function scSplash() {
-    var body = '<div class="splash" data-act="go" data-arg="onboarding">' +
-      '<i class="blob a"></i><i class="blob b"></i>' +
+    // Cover: perisai 3D dengan kartu ikon (ilustrasi dari mockup/build_cover.py)
+    var ilus = K.ilusCover || {};
+    var body = '<div class="splash" data-act="lewati-splash">' +
+      '<div class="splash-ombak" aria-hidden="true">' + (ilus.ombak || '') + '</div>' +
       '<div class="splash-isi">' +
-      '<img src="' + K.logoFull + '" alt="VaksinKu" style="width:240px;margin:0 auto;">' +
-      '<div class="disp" style="font-size:25px;font-weight:800;line-height:1.25;">#VaksinKeluargaJadiMudah</div>' +
-      '<div class="small muted" style="max-width:270px;margin:0 auto;line-height:1.6;">' +
-      'Booking, rekam medis, dan konsultasi vaksinasi keluarga dalam satu aplikasi.</div></div>' +
+      '<img class="splash-logo" src="' + K.logoFull + '" alt="VaksinKu by Alrasha Health Care Group">' +
+      '<div class="splash-judul">Tempatnya Vaksinasi Aman</div>' +
+      '<div class="splash-sub">Lengkap · Terjangkau · Terpercaya</div></div>' +
+      '<div class="splash-ilus" aria-hidden="true">' + (ilus.perisai || '') + '</div>' +
       '<div class="dots"><i class="on"></i><i></i><i></i></div></div>';
     return { body: body, penuh: true };
   }
@@ -912,13 +1356,14 @@
   function ilustrasiOnb() {
     return '<div class="onb-art">' +
       '<i class="bulat a"></i><i class="bulat b"></i>' +
-      '<svg width="180" height="150" viewBox="0 0 180 150" fill="none" aria-hidden="true">' +
-      '<circle cx="60" cy="46" r="22" fill="#56C3C7"/>' +
-      '<circle cx="120" cy="46" r="22" fill="#D11972" opacity=".85"/>' +
-      '<circle cx="90" cy="60" r="17" fill="#2E9BA0"/>' +
-      '<path d="M20 140c8-34 30-52 55-52s45 16 52 52" stroke="#56C3C7" stroke-width="6" fill="none" stroke-linecap="round"/>' +
-      '<path d="M95 140c6-24 20-36 40-36s32 12 38 36" stroke="#D11972" stroke-width="6" fill="none" stroke-linecap="round" opacity=".85"/>' +
-      '</svg></div>';
+      '<img src="' + K.logoFull + '" alt="VaksinKu by Alrasha Health Care Group" style="width:72%;max-width:280px;height:auto;position:relative;">' +
+      '</div>';
+  }
+  function luarFokusHTML() {
+    return vaksinFokusLuar().map(function (v) {
+      return '<div class="tiny" style="margin-top:8px;line-height:1.6;color:var(--ink-2);">Juga dianjurkan: <b>' + tautPanduan(v[0]) + '</b> (' +
+        h(v[1]) + '). Belum ada di price list klinik — ketersediaan dikonfirmasi saat reservasi.</div>';
+    }).join('');
   }
   function scOnboarding() {
     var n = Math.min(2, Math.max(0, S.onboarding.langkah || 0)), t = ONB[n];
@@ -939,7 +1384,7 @@
         var on = dipilih.indexOf(f.id) >= 0;
         return '<button class="pick' + (on ? ' on' : '') + '" data-act="toggle-fokus" data-arg="' + f.id + '">' +
           (on ? '<span class="pick-ck">' + ic('checkc', 16) + '</span>' : '') +
-          '<span class="pick-ic">' + ic(f.icon, 21) + '</span>' +
+          '<span class="pick-ic">' + icm(f.icon, 38) + '</span>' +
           '<span><span class="pick-j">' + h(f.label) + '</span>' +
           '<span class="pick-s">' + h(f.sub) + '</span></span></button>';
       }).join('') + '</div>';
@@ -949,18 +1394,18 @@
           '<div class="small" style="font-weight:700;color:var(--teal-dark);">' + cocok.length + ' jenis vaksin cocok dengan pilihan Anda</div>' +
           '<div class="tiny muted" style="margin-top:4px;line-height:1.6;">Daftarnya muncul di beranda dan bisa difilter di menu Daftar Harga. Dasar: ' +
           h((S.onboarding.fokus || []).map(function (id) { var f = fokusById(id); return f ? f.sumber : ''; })
-            .filter(Boolean).join(' · ')) + '.</div></div>';
+            .filter(Boolean).join(' · ')) + '.</div>' + luarFokusHTML() + '</div>';
       }
     } else {
       var pilihan = [
-        ['homecare', 'house', 'Home Care', 'Petugas datang ke rumah'],
-        ['klinik', 'building', 'Datang ke Klinik', 'Kunjungan ke klinik Alrasha Ibumas'],
-        ['korporat', 'chart', 'Korporat / Sekolah', 'Vaksinasi massal karyawan atau siswa']
+        ['homecare', 'homecare', 'Home Care', 'Petugas datang ke rumah'],
+        ['klinik', 'klinik', 'Datang ke Klinik', 'Kunjungan ke klinik Alrasha Ibumas'],
+        ['korporat', 'corporate', 'Korporat / Sekolah', 'Vaksinasi massal karyawan atau siswa']
       ];
       isi = '<div class="stack g10">' + pilihan.map(function (p) {
         var on = S.onboarding.layanan === p[0];
         return '<button class="checkrow' + (on ? ' on' : '') + '" data-act="set-fokus-layanan" data-arg="' + p[0] + '">' +
-          '<span class="icon-sq">' + ic(p[1], 18) + '</span>' +
+          ikonKotak(p[1], on ? 'aktif' : '', 40) +
           '<span class="grow"><span class="small" style="font-weight:700;display:block;">' + h(p[2]) + '</span>' +
           '<span class="tiny muted">' + h(p[3]) + '</span></span>' +
           '<span class="box">' + (on ? ic('check', 14, 2.6) : '') + '</span></button>';
@@ -981,110 +1426,372 @@
     return { body: body, foot: foot, penuh: true };
   }
 
+  /* ============================ masuk dengan Google ============================
+     Satu-satunya cara mendaftar. Google Identity Services hanya berjalan di
+     situs https yang terdaftar pada Client ID (vaksinku.app), tidak di berkas
+     yang dibuka langsung dari perangkat. Nomor HP diminta setelah masuk, di
+     Profil, karena dibutuhkan untuk reservasi dan tidak diberikan Google. */
+  var LOGO_G = '<svg width="19" height="19" viewBox="0 0 48 48" aria-hidden="true">' +
+    '<path fill="#EA4335" d="M24 9.5c3.4 0 6.4 1.2 8.8 3.5l6.5-6.5C35.3 2.6 30 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.6 5.9C12.1 13 17.5 9.5 24 9.5z"/>' +
+    '<path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.2-.4-4.7H24v9h12.7c-.5 3-2.2 5.5-4.7 7.2l7.3 5.7c4.3-4 6.8-9.9 6.8-17.2z"/>' +
+    '<path fill="#FBBC05" d="M10.2 19.1a14.5 14.5 0 0 0 0 9.8l-7.6 5.9a24 24 0 0 1 0-21.6l7.6 5.9z"/>' +
+    '<path fill="#34A853" d="M24 48c6 0 11.3-2 15-5.4l-7.3-5.7c-2 1.4-4.7 2.2-7.7 2.2-6.5 0-12-4.4-13.8-10.3l-7.6 5.9C6.5 42.6 14.6 48 24 48z"/></svg>';
+  // '' = siap; 'luar' = dibuka bukan dari situs https; 'belum' = Client ID belum diisi
+  function kendalaGoogle() {
+    var lokal = /^(localhost|127\.0\.0\.1)$/.test(location.hostname);
+    if (location.protocol !== 'https:' && !lokal) return 'luar';
+    if (!(K.google && K.google.clientId)) return 'belum';
+    return '';
+  }
+  function bacaJwt(token) {
+    try {
+      var b = String(token).split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+      while (b.length % 4) b += '=';
+      return JSON.parse(decodeURIComponent(escape(atob(b))));
+    } catch (e) { return null; }
+  }
+  // Token Google ditukar dengan sesi VaksinKu di server (deploy/backend/auth), yang
+  // memverifikasi tanda tangan token. selesai(status, data): status 0 = server tak terjangkau.
+  function tukarSesiServer(credential, selesai) {
+    fetch('/auth/google', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ credential: credential })
+    }).then(function (r) {
+      return r.json().catch(function () { return {}; }).then(function (d) { selesai(r.status, d); });
+    }).catch(function () { selesai(0, {}); });
+  }
+  function sesiAktif() {
+    var s = S.akun && S.akun.sesi;
+    return !!(s && s.token && s.exp * 1000 > Date.now());
+  }
+  /* ---------------- sinkronisasi data dengan server (app/sinkron.js) ---------------- */
+  var sinkronStatus = '', sinkronJeda = 0, sinkronBerjalan = false, sinkronLagi = false, sinkronJanji = null;
+  var sinkronGalat = null;   // {status, detail} dari sinkron terakhir yang gagal
+  function akunLain() {
+    return !!(sesiAktif() && S.sinkron && S.sinkron.akunId && S.sinkron.akunId !== S.akun.sesi.id);
+  }
+  function jadwalkanSinkron() {
+    if (!sesiAktif() || akunLain() || !window.VaksinKuSinkron) return;
+    clearTimeout(sinkronJeda);
+    sinkronJeda = setTimeout(jalankanSinkron, 2500);
+  }
+  // Hasil: janji yang selesai dengan true bila sinkron berhasil.
+  function jalankanSinkron(manual) {
+    if (!sesiAktif() || akunLain() || !window.VaksinKuSinkron) return Promise.resolve(false);
+    if (sinkronBerjalan) { sinkronLagi = true; return sinkronJanji; }
+    sinkronBerjalan = true; sinkronStatus = 'jalan';
+    if (manual) render();
+    sinkronJanji = window.VaksinKuSinkron.sinkron(S, { api: '/api', token: S.akun.sesi.token, akunId: S.akun.sesi.id })
+      .then(function (r) {
+        try { petakanDosisKlinik(); } catch (e) { /* pemetaan dosis tidak boleh menggagalkan sinkron */ }
+        return tarikBooking().then(function (n) { r.diterima += n; return r; }, function () { return r; });
+      })
+      .then(function (r) {
+        sinkronStatus = 'ok'; sinkronGalat = null;
+        if (S.sinkron) delete S.sinkron.galatDetail;
+        simpanLokal();
+        var sedangMengetik = document.activeElement && /INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName);
+        if (manual || (r.diterima && !sedangMengetik)) render();
+        if (manual) toast('Data tersinkron' + (r.diterima ? ' · ' + r.diterima + ' perubahan diterima' : '') + '.');
+        return true;
+      })
+      .catch(function (e) {
+        S.sinkron = S.sinkron || {};
+        sinkronGalat = { status: (e && e.status) || 0, detail: String((e && e.message) || e || '').slice(0, 160) };
+        S.sinkron.galatDetail = sinkronGalat.detail;
+        if (e && e.status === 401) {
+          S.akun.sesi = null; sinkronStatus = 'sesi';
+          S.sinkron.galat = 'Sesi berakhir — masuk lagi dengan Google untuk melanjutkan sinkron.';
+        } else {
+          sinkronStatus = 'galat';
+          S.sinkron.galat = navigator.onLine === false ? 'Tidak ada koneksi internet.' : 'Server belum dapat dihubungi.';
+        }
+        simpanLokal();
+        if (manual) { render(); toast(S.sinkron.galat); }
+        return false;
+      })
+      .then(function (berhasil) {
+        sinkronBerjalan = false;
+        if (sinkronLagi) { sinkronLagi = false; jadwalkanSinkron(); }
+        return berhasil;
+      });
+    return sinkronJanji;
+  }
+  // Sinkron yang mencakup semua perubahan sampai saat ini (menunggu putaran yang sedang berjalan).
+  function sinkronTuntas() {
+    if (!sinkronBerjalan) return jalankanSinkron();
+    sinkronLagi = false;
+    return sinkronJanji.then(function () { return jalankanSinkron(); });
+  }
+
+  /* ---------------- reservasi online: /api/rpc/buat_booking ---------------- */
+  // Permintaan ke PostgREST VaksinKu atas nama akun yang masuk. Galat membawa .status
+  // dan .pesan (pesan berbahasa Indonesia dari fungsi database, mis. "Slot 09:00 penuh").
+  function apiVaksinKu(metode, jalur, isi) {
+    return window.fetch('/api' + jalur, {
+      method: metode,
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + S.akun.sesi.token },
+      body: isi ? JSON.stringify(isi) : undefined
+    }).then(function (r) {
+      return r.json().catch(function () { return null; }).then(function (d) {
+        if (r.ok) return d;
+        var e = new Error((d && d.message) || 'HTTP ' + r.status);
+        e.status = r.status; e.pesan = d && d.message && r.status < 500 && r.status !== 401 ? d.message : '';
+        throw e;
+      });
+    }, function () { var e = new Error('jaringan'); e.status = 0; e.pesan = ''; throw e; });
+  }
+  function bookingOnline() { return sesiAktif() && !akunLain() && !!window.VaksinKuSinkron; }
+  var bookingDikirim = false;
+  // Kirim satu reservasi ke /api/rpc/buat_booking. data: {klinik, layanan, lokasi, tanggal, jam,
+  // dokter, catatan, bagikan, pasienIds, vaksinIds}. Data keluarga disinkronkan dulu agar pasien
+  // punya id server. Galat membawa .status, .pesan (ditolak server, bisa diperbaiki pengguna)
+  // dan .alasan (teks singkat penyebab, ditampilkan bila reservasi jatuh ke cara cadangan).
+  function kirimKeServer(data) {
+    return sinkronTuntas().then(function (berhasil) {
+      if (!sesiAktif()) { var e00 = new Error('sesi'); e00.status = 401; throw e00; }
+      var dikenal = (S.sinkron || {}).dikenal || {}, item = [], belum = [];
+      data.pasienIds.forEach(function (pid) {
+        var p = S.pasien.filter(function (x) { return x.id === pid; })[0];
+        if (!p || !p.sid || !dikenal[p.sid]) { belum.push(p ? p.nama : namaPasien(pid)); return; }
+        data.vaksinIds.forEach(function (vid) { item.push({ pasien_id: p.sid, vaksin_id: vid }); });
+      });
+      if (belum.length) {
+        var e1 = new Error('pasien');
+        if (!berhasil) {   // sinkron gagal: sebutkan penyebab sebenarnya
+          var g = sinkronGalat || {};
+          e1.status = g.status || 0;
+          e1.alasan = 'Sinkron data keluarga gagal' + (g.status ? ' (kode ' + g.status + ')' : '') + (g.detail ? ': ' + g.detail : '.');
+        } else {
+          e1.status = 400;
+          e1.pesan = 'Data ' + belum.join(', ') + ' belum tersimpan di server. Lengkapi tanggal lahirnya di menu Keluarga, lalu coba lagi.';
+        }
+        throw e1;
+      }
+      return apiVaksinKu('POST', '/rpc/buat_booking', {
+        p_klinik: data.klinik, p_layanan: data.layanan, p_lokasi: data.lokasi || '', p_tanggal: data.tanggal, p_jam: data.jam,
+        p_tarif: data.dokter === 'spesialis' ? 'spesialis' : 'umum', p_catatan: data.catatan || '', p_bagikan_riwayat: !!data.bagikan, p_item: item
+      });
+    }).catch(function (e) {
+      if (!e.pesan && !e.alasan) {
+        e.alasan = e.status === 401 ? 'Sesi masuk berakhir — masuk lagi dengan Google di Profil.'
+          : e.status === 0 ? 'Server VaksinKu tidak terjangkau (periksa koneksi internet).'
+          : 'Server VaksinKu menolak permintaan (kode ' + e.status + ').';
+      }
+      throw e;
+    });
+  }
+  function kirimBookingServer() {
+    if (bookingDikirim) return Promise.resolve();
+    bookingDikirim = true;
+    var tombol = document.querySelector('[data-act="kirim-booking"]');
+    if (tombol) { tombol.disabled = true; tombol.textContent = 'Mengirim reservasi…'; }
+    var d = draft();
+    return kirimKeServer({
+      klinik: klinikAktif().id, layanan: d.layanan, lokasi: lokasiTeks(d), tanggal: d.tanggal, jam: d.jam, dokter: d.dokter,
+      catatan: d.catatan, bagikan: d.bagikan, pasienIds: d.pasienIds, vaksinIds: d.vaksinIds
+    }).then(function (srv) {
+      var rec = buatBooking(srv);
+      errB = {};
+      location.hash = '#/booking-detail/' + rec.id;
+      setTimeout(function () { toast('Reservasi ' + rec.kode + ' terkirim ke ' + (rec.klinikNama || 'klinik') + '.'); }, 60);
+    }, function (e) {
+      if (e.pesan) {
+        // ditolak server (slot penuh, klinik libur, dsb.): perbaiki isian lalu kirim lagi
+        errB = /slot|libur|jam|tanggal/i.test(e.pesan) ? { jadwal: e.pesan } : { kirim: e.pesan };
+        render();
+        var bad = document.querySelector('.errmsg');
+        if (bad) bad.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        toast(e.pesan);
+        return;
+      }
+      // server tidak terjangkau / sesi berakhir / sinkron gagal: disimpan di perangkat dengan alasannya,
+      // bisa dikirim ulang dari halaman detail
+      if (e.status === 401 && S.akun) S.akun.sesi = null;
+      var rec = buatBooking();
+      rec.galatServer = e.alasan; simpanLokal();
+      errB = {};
+      location.hash = '#/booking-detail/' + rec.id;
+      setTimeout(function () { toast('Reservasi belum terkirim ke server: ' + e.alasan); }, 60);
+    }).then(function () { bookingDikirim = false; });
+  }
+  // Reservasi yang tersimpan di perangkat dikirim ulang ke server dari halaman detail.
+  function kirimUlangBooking(b) {
+    if (bookingDikirim) return;
+    bookingDikirim = true;
+    var tombol = document.querySelector('[data-act="kirim-ulang-booking"]');
+    if (tombol) { tombol.disabled = true; tombol.textContent = 'Mengirim ke server…'; }
+    kirimKeServer({
+      klinik: b.klinik, layanan: b.layanan, lokasi: b.lokasi, tanggal: b.tanggal, jam: b.jam, dokter: b.dokter,
+      catatan: b.catatan, bagikan: false, pasienIds: b.pasienIds, vaksinIds: b.vaksinIds
+    }).then(function (srv) {
+      b.kodeLama = b.kode; b.kode = srv.kode; b.serverId = srv.id; b.statusServer = srv.status;
+      b.status = STATUS_DARI_SERVER[srv.status] || 'menunggu';
+      delete b.galatServer;
+      simpan(); render(); toast('Reservasi terkirim ke klinik dengan kode ' + b.kode + '.');
+    }, function (e) {
+      b.galatServer = e.pesan || e.alasan;
+      if (e.status === 401 && S.akun) S.akun.sesi = null;
+      simpanLokal(); render(); toast('Belum terkirim: ' + b.galatServer);
+    }).then(function () { bookingDikirim = false; });
+  }
+  // Reservasi online milik akun ini: perbarui status, dan tambahkan yang dibuat di perangkat lain.
+  function tarikBooking() {
+    return apiVaksinKu('GET', '/booking?select=id,kode,klinik_id,layanan,lokasi,tanggal,jam,tarif,status,catatan,bagikan_riwayat,dibuat_pada,' +
+      'booking_item(pasien_id,vaksin_id,harga)&order=dibuat_pada.desc&limit=200').then(function (baris) {
+      var st = S.sinkron = S.sinkron || {}, ubah = 0;
+      var tersembunyi = st.bookingTersembunyi = st.bookingTersembunyi || {};
+      var sidKeLokal = {};
+      S.pasien.forEach(function (p) { if (p.sid) sidKeLokal[p.sid] = p.id; });
+      (baris || []).forEach(function (r) {
+        var stt = STATUS_DARI_SERVER[r.status] || 'menunggu';
+        var lok = S.booking.filter(function (b) { return b.serverId === r.id; })[0];
+        if (lok) {
+          lok.statusServer = r.status;
+          // "Tandai selesai" di perangkat tetap berlaku sampai klinik mencatatnya sendiri
+          if (lok.status !== stt && !(lok.status === 'selesai' && stt !== 'batal')) { lok.status = stt; ubah++; }
+          return;
+        }
+        if (tersembunyi[r.id]) return;
+        var items = r.booking_item || [], pasienIds = [], vaksinIds = [], hargaV = {}, total = 0;
+        items.forEach(function (it) {
+          var pid = sidKeLokal[it.pasien_id] || '';
+          if (pid && pasienIds.indexOf(pid) < 0) pasienIds.push(pid);
+          if (vaksinIds.indexOf(it.vaksin_id) < 0) { vaksinIds.push(it.vaksin_id); hargaV[it.vaksin_id] = it.harga; }
+          total += it.harga || 0;
+        });
+        var rincian = [], tanpaHarga = [], perPasien = 0;
+        vaksinIds.forEach(function (vid) {
+          var v = vaksinById(vid), nama = v ? v.kategori + ' — ' + v.merk : vid;
+          if (hargaV[vid] != null) { rincian.push({ nama: nama, harga: hargaV[vid] }); perPasien += hargaV[vid]; } else tanpaHarga.push(nama);
+        });
+        var kl = klinikById(r.klinik_id) || {};
+        S.booking.push({
+          id: uid(), kode: r.kode, dibuat: r.dibuat_pada, status: stt, serverId: r.id, statusServer: r.status,
+          layanan: r.layanan, lokasi: r.lokasi, pasienIds: pasienIds, vaksinIds: vaksinIds, dokter: r.tarif,
+          tanggal: r.tanggal, jam: String(r.jam).slice(0, 5), catatan: r.catatan, rincian: rincian, tanpaHarga: tanpaHarga,
+          klinik: r.klinik_id, klinikNama: kl.nama || '', kota: kl.kotaNama || '', perPasien: perPasien, total: total,
+          bagikan: !!r.bagikan_riwayat, pendaftar: { nama: S.profil.nama, hp: S.profil.hp }
+        });
+        ubah++;
+      });
+      if (ubah) S.booking.sort(function (a, b) { return String(b.dibuat).localeCompare(String(a.dibuat)); });
+      return ubah;
+    });
+  }
+  function batalkanBookingServer(b) {
+    if (!sesiAktif()) { toast('Masuk dengan Google untuk membatalkan reservasi online.'); return; }
+    apiVaksinKu('POST', '/rpc/ubah_status_booking', { p_booking: b.serverId, p_status: 'batal' }).then(function (r) {
+      b.status = 'batal'; b.statusServer = (r && r.status) || 'batal';
+      simpan(); render(); toast('Reservasi ' + b.kode + ' dibatalkan.');
+    }, function (e) {
+      toast(e.pesan ? e.pesan + '. Hubungi CS untuk membatalkan.' : 'Server VaksinKu belum terjangkau. Coba lagi sebentar.');
+    });
+  }
+  window.addEventListener('online', function () { jalankanSinkron(); });
+  function statusSinkronHTML() {
+    if (!sesiAktif()) return '';
+    if (akunLain()) {
+      return '<div class="card warn stack g8"><div class="small" style="font-weight:700;color:#8A6A21;">Data di perangkat ini milik akun lain</div>' +
+        '<div class="tiny" style="line-height:1.6;color:#8A6A21;">Data keluarga di perangkat ini pernah disinkronkan dengan akun Google lain, jadi tidak dikirim ke akun ' +
+        h(S.akun.email) + '. Pilih ganti untuk menghapus data di perangkat ini dan memuat data akun yang sedang masuk.</div>' +
+        '<button class="btn outline sm" data-act="pakai-data-akun">Ganti dengan data akun ini</button></div>';
+    }
+    var st = S.sinkron || {}, teksSt;
+    if (sinkronStatus === 'jalan') teksSt = 'Menyinkronkan…';
+    else if (st.galat && sinkronStatus !== 'ok') teksSt = st.galat + (st.galatDetail ? ' Rincian: ' + st.galatDetail : '');
+    else if (st.terakhir) teksSt = 'Tersinkron ' + new Date(st.terakhir).toLocaleString('id-ID', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+    else teksSt = 'Belum pernah disinkronkan';
+    return '<div class="card stack g8"><div class="row mid g8"><div class="grow"><div class="small" style="font-weight:700;">Sinkron data keluarga</div>' +
+      '<div class="tiny muted" id="status-sinkron">' + h(teksSt) + '</div></div>' +
+      '<button class="btn outline sm" data-act="sinkron-sekarang"' + (sinkronStatus === 'jalan' ? ' disabled' : '') + '>Sinkronkan</button></div>' +
+      '<div class="hint">Keluarga, riwayat vaksin, dan profil tersimpan di server VaksinKu sehingga tetap ada saat ganti HP. Foto label vaksin tetap di perangkat ini.</div></div>';
+  }
+
+  function terimaGoogle(resp, tukar) {
+    var d = bacaJwt(resp && resp.credential);
+    var sah = d && d.aud === K.google.clientId && /^(https:\/\/)?accounts\.google\.com$/.test(d.iss) &&
+      d.exp * 1000 > Date.now() && d.email && d.email_verified !== false;
+    if (!sah) { toast('Gagal masuk dengan Google. Silakan coba lagi.'); return; }
+    (tukar || tukarSesiServer)(resp.credential, function (status, data) {
+      // server menolak = tidak boleh masuk; server belum terjangkau = tetap masuk, data di perangkat
+      if (status === 400 || status === 401 || status === 403) {
+        toast('Akun Google tidak dapat diverifikasi oleh server VaksinKu.'); return;
+      }
+      if (status === 429) { toast('Terlalu banyak percobaan masuk. Coba lagi sebentar.'); return; }
+      var sesi = status === 200 && data && data.token
+        ? { token: data.token, exp: data.exp, id: (data.akun || {}).id || '' } : null;
+      S.akun = { masuk: true, metode: 'google', email: d.email, sub: d.sub, nama: d.name || '', foto: d.picture || '', sesi: sesi };
+      if (!String(S.profil.nama).trim()) S.profil.nama = d.name || '';
+      S.profil.email = d.email;
+      selesaikanOnboarding('google');
+      location.hash = '#/beranda';
+      if (sesi) jalankanSinkron();
+      toast('Selamat datang, ' + (d.given_name || String(d.name || '').split(' ')[0] || d.email) + '.' +
+        (String(S.profil.hp).trim() ? '' : ' Lengkapi nomor HP di Profil untuk reservasi.') +
+        (sesi ? '' : ' Server VaksinKu belum terjangkau; data disimpan di perangkat ini.'));
+    });
+  }
+  var gisDimuat = false;
+  function pasangTombolGoogle() {
+    var el = document.getElementById('tombol-google');
+    if (!el || kendalaGoogle()) return;
+    function gambar() {
+      if (!window.google || !google.accounts || !document.getElementById('tombol-google')) return;
+      google.accounts.id.initialize({ client_id: K.google.clientId, callback: terimaGoogle, ux_mode: 'popup' });
+      google.accounts.id.renderButton(document.getElementById('tombol-google'), {
+        theme: 'outline', size: 'large', shape: 'pill', text: 'continue_with', locale: 'id',
+        width: Math.min(400, document.getElementById('tombol-google').offsetWidth || 320)
+      });
+    }
+    if (window.google && google.accounts) { gambar(); return; }
+    if (gisDimuat) return;
+    gisDimuat = true;
+    var sc = document.createElement('script');
+    sc.src = 'https://accounts.google.com/gsi/client';
+    sc.async = true;
+    sc.onload = gambar;
+    sc.onerror = function () {
+      gisDimuat = false;
+      var t = document.getElementById('tombol-google');
+      if (t) t.innerHTML = '<div class="tiny center" style="color:var(--danger,#B42318);">Tidak dapat memuat layanan Google. Periksa koneksi internet lalu muat ulang.</div>';
+    };
+    document.head.appendChild(sc);
+  }
+
   function scMasuk() {
+    var kendala = kendalaGoogle();
+    var tombol = kendala
+      ? '<button class="btn block tombol-g" disabled>' + LOGO_G + ' Lanjutkan dengan Google</button>' +
+        '<div class="tiny muted center" style="margin-top:8px;line-height:1.6;">' + (kendala === 'luar'
+          ? 'Masuk dengan Google hanya bisa di situs resmi VaksinKu, bukan dari berkas yang dibuka langsung di perangkat.'
+          : 'Masuk dengan Google sedang disiapkan. Sementara itu Anda bisa melihat-lihat dulu.') + '</div>' +
+        (kendala === 'luar' ? '<a class="btn primary block" style="margin-top:12px;" href="' + h(K.google.situs) + '">Buka ' +
+          h(K.google.situs.replace(/^https?:\/\//, '')) + '</a>' : '')
+      : '<div id="tombol-google" class="tombol-google"><div class="tiny muted center">Memuat tombol Google…</div></div>';
     var body = '<div class="masuk">' +
       '<div class="stack g8" style="align-items:center;">' +
       '<img src="' + K.logoMark + '" alt="VaksinKu" style="height:46px;width:auto;">' +
       '<div class="disp center" style="font-size:21px;font-weight:800;margin-top:26px;">Masuk untuk mulai vaksinasi</div>' +
-      '<div class="small muted center" style="line-height:1.6;">Kelola jadwal, rekam medis, dan keluarga Anda dalam satu akun VaksinKu.</div>' +
+      '<div class="small muted center" style="line-height:1.6;">Daftar dan masuk cukup dengan akun Google — tanpa kata sandi baru.</div>' +
       '</div>' +
-      '<form id="form-masuk" class="stack g12" style="margin-top:30px;">' +
-      '<div><label class="lbl">Nama lengkap<span class="req">*</span></label>' +
-      '<input class="input' + (formErr.nama ? ' err' : '') + '" name="nama" value="' + h(S.profil.nama) + '" placeholder="Nama sesuai identitas" autocomplete="name">' +
-      (formErr.nama ? '<div class="errmsg">' + h(formErr.nama) + '</div>' : '') + '</div>' +
-      '<div><label class="lbl">Nomor HP / WhatsApp<span class="req">*</span></label>' +
-      '<input class="input' + (formErr.hp ? ' err' : '') + '" type="tel" inputmode="tel" name="hp" value="' + h(S.profil.hp) + '" placeholder="08xxxxxxxxxx" autocomplete="tel">' +
-      (formErr.hp ? '<div class="errmsg">' + h(formErr.hp) + '</div>' : '') + '</div>' +
-      '<button type="submit" class="btn primary block">' + ic('wa', 17) + ' Lanjutkan dengan Nomor HP</button>' +
-      '</form>' +
-      '<button class="btn block" style="background:#fff;border:1.4px solid var(--line-2);color:var(--ink-4);margin-top:12px;" disabled>' +
-      '<svg width="19" height="19" viewBox="0 0 48 48" aria-hidden="true"><path fill="#BDBDBD" d="M24 9.5c3.4 0 6.4 1.2 8.8 3.5l6.5-6.5C35.3 2.6 30 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.6 5.9C12.1 13 17.5 9.5 24 9.5z"/>' +
-      '<path fill="#D6D6D6" d="M46.5 24.5c0-1.6-.1-3.2-.4-4.7H24v9h12.7c-.5 3-2.2 5.5-4.7 7.2l7.3 5.7c4.3-4 6.8-9.9 6.8-17.2z"/>' +
-      '<path fill="#CFCFCF" d="M10.2 19.1a14.5 14.5 0 0 0 0 9.8l-7.6 5.9a24 24 0 0 1 0-21.6l7.6 5.9z"/>' +
-      '<path fill="#C9C9C9" d="M24 48c6 0 11.3-2 15-5.4l-7.3-5.7c-2 1.4-4.7 2.2-7.7 2.2-6.5 0-12-4.4-13.8-10.3l-7.6 5.9C6.5 42.6 14.6 48 24 48z"/></svg>' +
-      ' Lanjutkan dengan Google</button>' +
-      '<div class="tiny muted center" style="margin-top:8px;line-height:1.6;">Masuk dengan Google belum tersedia: perlu server untuk memverifikasi akun, ' +
-      'sedangkan aplikasi ini berjalan sebagai satu berkas di perangkat Anda.</div>' +
-      '<div class="card flat" style="margin-top:16px;background:#F6F6F5;border-color:transparent;">' +
-      '<div class="tiny" style="line-height:1.65;color:var(--ink-2);">Tidak ada kode OTP dan tidak ada data yang dikirim ke server. ' +
-      'Nama dan nomor di atas disimpan di perangkat ini saja, lalu dipakai sebagai kontak pada reservasi dan konsultasi.</div></div>' +
-      '<button class="btn ghost block" style="margin-top:4px;" data-act="masuk-tamu">Lihat-lihat dulu tanpa mengisi</button>' +
+      '<div style="margin-top:30px;">' + tombol + '</div>' +
+      '<div class="card flat" style="margin-top:18px;background:#F6F6F5;border-color:transparent;">' +
+      '<div class="tiny" style="line-height:1.65;color:var(--ink-2);">VaksinKu hanya menerima <b>nama, email, dan foto profil</b> dari akun Google Anda. ' +
+      'Nomor HP/WhatsApp diisi setelah masuk, di menu Profil, untuk kontak reservasi dan konsultasi. ' +
+      'Dengan masuk, Anda menyetujui <a href="' + h(K.google.situs) + '/privasi.html" target="_blank" rel="noopener">Kebijakan Privasi</a> VaksinKu.</div></div>' +
+      '<button class="btn ghost block" style="margin-top:4px;" data-act="masuk-tamu">Lihat-lihat dulu tanpa masuk</button>' +
       '<div class="stack g6" style="align-items:center;margin-top:18px;">' +
       '<div class="tiny muted">Butuh bantuan? WhatsApp ' +
       '<a href="https://wa.me/' + WA + '" target="_blank" rel="noopener" style="font-weight:700;">' + h(K.brand.callCenter) + '</a></div>' +
-      '<div class="tiny" style="color:var(--ink-4);">Versi 1.0</div></div></div>';
+      '<div class="tiny" style="color:var(--ink-4);">Versi 1.1</div></div></div>';
     return { body: body, penuh: true };
-  }
-
-  /* ============================ banner promo ============================ */
-  /* Isi banner diturunkan dari katalog resmi: promo adalah paket yang memang
-     punya harga coret di price list, bukan diskon karangan. Dua banner terakhir
-     memperkenalkan layanan yang sudah ada di aplikasi. */
-  function daftarBanner() {
-    var out = [];
-    var pt = K.paketTriple;
-    if (pt && pt.coret) {
-      out.push({
-        tag: 'PROMO', judul: pt.nama, teks: pt.isi.join(' · '),
-        harga: angka(pt.harga), coret: angka(pt.coret), icon: 'globe',
-        warna: 'linear-gradient(135deg,var(--teal-deep) 0%,var(--magenta-dark) 100%)',
-        tujuan: 'internasional'
-      });
-    }
-    K.hargaInternasional.forEach(function (x) {
-      if (!x.coret) return;
-      out.push({
-        tag: 'PROMO', judul: x.nama, teks: 'Vaksin wajib jemaah haji & umrah',
-        harga: angka(x.harga), coret: angka(x.coret), icon: 'syringe',
-        warna: 'linear-gradient(135deg,var(--magenta-dark) 0%,var(--magenta) 100%)',
-        tujuan: 'internasional'
-      });
-    });
-    out.push({
-      tag: 'LAYANAN', judul: 'Home Care', teks: 'Petugas datang ke rumah — ' + K.termasuk.join(', ').toLowerCase() + ' sudah termasuk',
-      icon: 'house', warna: 'linear-gradient(135deg,var(--teal-deep) 0%,var(--teal) 100%)',
-      aksi: 'mulai-booking', arg: 'homecare'
-    });
-    out.push({
-      tag: 'FITUR BARU', judul: 'Korporat & Sekolah', teks: 'Vaksinasi massal karyawan atau siswa, pantau cakupannya',
-      icon: 'chart', warna: 'linear-gradient(135deg,var(--ink) 0%,var(--teal-deep) 100%)',
-      aksi: 'go', arg: S.korporat.nama ? 'korporat' : 'korporat-setup'
-    });
-    return out;
-  }
-  function sliderBanner() {
-    var daftar = daftarBanner();
-    if (!daftar.length) return '';
-    return '<div class="banner-bungkus">' +
-      '<div class="banner" id="banner" role="group" aria-label="Promo dan layanan">' +
-      daftar.map(function (b, i) {
-        return '<button class="banner-slide" style="background:' + b.warna + ';" ' +
-          'data-act="' + (b.aksi || 'go') + '" data-arg="' + h(b.arg || b.tujuan) + '" ' +
-          'aria-label="' + h(b.tag + ': ' + b.judul) + '" aria-roledescription="slide" ' +
-          'aria-posinset="' + (i + 1) + '" aria-setsize="' + daftar.length + '">' +
-          '<span class="banner-ikon">' + ic(b.icon, 44, 1.4) + '</span>' +
-          '<span class="banner-isi">' +
-          '<span class="banner-tag">' + h(b.tag) + '</span>' +
-          '<span class="banner-judul disp">' + h(b.judul) + '</span>' +
-          '<span class="banner-teks">' + h(b.teks) + '</span>' +
-          (b.harga
-            ? '<span class="banner-harga"><span class="disp">' + h(rp(b.harga)) + '</span>' +
-              (b.coret ? '<s>' + h(rp(b.coret)) + '</s>' : '') + '</span>'
-            : '') +
-          '</span></button>';
-      }).join('') + '</div>' +
-      (daftar.length > 1
-        ? '<div class="banner-titik" id="banner-titik">' + daftar.map(function (b, i) {
-          return '<button class="' + (i ? '' : 'on') + '" data-slide="' + i + '" aria-label="Banner ' + (i + 1) + '"></button>';
-        }).join('') + '</div>'
-        : '') +
-      '</div>';
   }
 
   /* ============================ layar: beranda ============================ */
   function scBeranda() {
     var belumSiap = !S.profil.nama || !S.pasien.length;
-    var aktif = S.booking.filter(function (b) { return b.status === 'menunggu'; });
+    var aktif = S.booking.filter(bookingAktif);
     var baru = jumlahBaru();
     var body = '';
 
@@ -1098,6 +1805,7 @@
       '<div style="height:14px;"></div>' +
       '<div class="disp" style="font-size:18px;font-weight:800;">Halo' + (S.profil.nama ? ', ' + h(S.profil.nama.split(' ')[0]) : '') + '</div>' +
       '<div class="small" style="color:var(--ink-2);margin-top:2px;">' + h(K.brand.tagline) + '</div>' +
+      '<div style="margin-top:12px;">' + lokasiChip() + '</div>' +
       '</div>';
 
     body += '<div class="pad stack g14">';
@@ -1127,13 +1835,17 @@
       });
     } else {
       body += '<div class="card stack g12 center">' +
-        '<div class="icon-sq mag" style="margin:0 auto;">' + ic('syringe', 20) + '</div>' +
+        '<div style="display:flex;justify-content:center;">' + ikonKotak('suntik', 'aktif', 48) + '</div>' +
         '<div><div style="font-weight:700;">Belum ada reservasi aktif</div>' +
         '<div class="small muted" style="margin-top:4px;">Atur jadwal vaksinasi keluarga Anda sekarang.</div></div>' +
         '<button class="btn primary" data-act="go" data-arg="booking">' + ic('plus', 17, 2.2) + ' Booking Vaksinasi</button></div>';
     }
 
-    body += sliderBanner();
+    // Kabar promo dan layanan baru. Diletakkan tepat di bawah kartu
+    // reservasi: yang sudah punya jadwal melihat jadwalnya lebih dulu,
+    // yang belum melihat tombol Booking lebih dulu. Banner menyusul,
+    // tidak mendahului.
+    body += bannerHTML();
 
     // pengingat dari jadwal pasien
     var pengingat = [];
@@ -1150,44 +1862,24 @@
           return '<button class="rowlink" data-act="pasien-jadwal" data-arg="' + x.p.id + '">' +
             '<div class="avatar" style="width:32px;height:32px;font-size:12px;">' + h(inisial(x.p.nama)) + '</div>' +
             '<div class="grow"><div class="small" style="font-weight:700;">' + h(x.p.nama) + '</div>' +
-            '<div class="tiny muted">' + x.jml + ' vaksin tertunda · ' + h(x.contoh) + '</div></div>' +
+            '<div class="tiny muted">' + x.jml + ' dosis perlu diberikan · ' + h(x.contoh) + '</div></div>' +
             '<span style="color:var(--ink-4);">' + ic('chevron', 15) + '</span></button>';
         }).join('') + '</div>';
     }
 
-    var rek = vaksinFokus();
-    if (rek.length) {
-      var namaFokus = (S.onboarding.fokus || []).map(function (id) {
-        var f = fokusById(id); return f ? f.label : '';
-      }).filter(Boolean);
-      var termurah = rek.slice().sort(function (a, b) {
-        return angka(a.umum || a.spesialis) - angka(b.umum || b.spesialis);
-      });
-      body += '<div class="card stack g10">' +
-        '<div class="row mid"><div class="sect-title">Sesuai kebutuhan Anda</div><div class="grow"></div>' +
-        '<button class="linkbtn" data-act="go" data-arg="harga-fokus">Lihat semua</button></div>' +
-        '<div class="tiny muted" style="margin-top:-4px;">' + h(namaFokus.join(' · ')) + ' — ' + rek.length + ' jenis vaksin</div>' +
-        '<table class="price">' + termurah.slice(0, 4).map(function (v) {
-          var hrg = tarif === 'spesialis' ? v.spesialis : v.umum;
-          return '<tr><td><div style="font-weight:600;">' + h(v.kategori) + '</div>' +
-            '<div class="tiny muted">' + h(v.merk) + '</div></td>' +
-            '<td class="p">' + (hrg ? rp(angka(hrg)) : '<span class="muted" style="font-weight:600;">Hubungi CS</span>') + '</td></tr>';
-        }).join('') + '</table>' +
-        '<button class="btn outline sm" data-act="ubah-fokus">Ubah kebutuhan vaksinasi</button></div>';
-    }
-
     body += '<div class="card row g8">' +
-      pintasan('tag', 'Daftar Harga', 'harga') +
-      pintasan('calendar', 'Jadwal Vaksin', 'jadwal') +
-      pintasan('globe', 'Internasional', 'internasional') +
+      pintasan('harga', 'Daftar Harga', 'harga') +
+      pintasan('jadwal', 'Jadwal Vaksin', 'jadwal') +
+      pintasan('internasional', 'Internasional', 'internasional') +
+      pintasan('panduan', 'Panduan', 'panduan') +
       '</div>';
 
     body += '<div class="card stack g12">' +
       '<div class="row mid"><div class="sect-title">Pilih cara vaksinasi</div><div class="grow"></div><span class="chip teal">3 layanan</span></div>' +
       '<div class="row g8">' +
-      layananPintasan('house', 'Home Care', 'homecare') +
-      layananPintasan('pin', 'On Site Klinik', 'klinik') +
-      layananPintasan('building', 'On Site Corporate', 'corporate') +
+      layananPintasan('homecare', 'Home Care', 'homecare') +
+      layananPintasan('klinik', 'On Site Klinik', 'klinik') +
+      layananPintasan('corporate', 'On Site Corporate', 'corporate') +
       '</div>' +
       '<div class="divider"></div>' +
       '<div class="row wrap g6 mid"><span class="tiny muted" style="font-weight:600;">Sudah termasuk:</span>' +
@@ -1196,8 +1888,8 @@
 
     body += '<button class="card rowlink" data-act="go" data-arg="tentang" style="padding:16px;">' +
       '<div class="icon-sq">' + ic('pin', 19) + '</div>' +
-      '<div class="grow"><div style="font-weight:700;font-size:13.5px;">' + K.klinik.length + ' klinik di Tanjungpinang</div>' +
-      '<div class="tiny muted">Alamat, dokter, dan alur reservasi</div></div>' +
+      '<div class="grow"><div style="font-weight:700;font-size:13.5px;">' + semuaKlinik().length + ' klinik mitra di ' + K.mitra.length + ' kota</div>' +
+      '<div class="tiny muted">' + h(K.mitra.map(function (m) { return m.kota.replace('Kota ', ''); }).join(' · ')) + ' — alamat, dokter, alur reservasi</div></div>' +
       '<span style="color:var(--ink-4);">' + ic('chevron', 16) + '</span></button>';
 
     body += '</div>';
@@ -1205,12 +1897,12 @@
   }
   function pintasan(icon, label, target) {
     return '<button class="stack mid g8 tap" style="flex:1;background:none;border:0;padding:4px 0;cursor:pointer;" data-act="go" data-arg="' + target + '">' +
-      '<div class="icon-sq" style="width:44px;height:44px;border-radius:13px;">' + ic(icon, 20) + '</div>' +
+      '<div class="ikon-menu" style="width:52px;height:52px;">' + icm(icon, 34) + '</div>' +
       '<span class="tiny" style="font-weight:700;text-align:center;line-height:1.3;">' + h(label) + '</span></button>';
   }
   function layananPintasan(icon, label, jenis) {
     return '<button class="stack mid g8 tap" style="flex:1;background:none;border:0;padding:4px 0;cursor:pointer;" data-act="mulai-booking" data-arg="' + jenis + '">' +
-      '<div class="icon-sq mag" style="width:44px;height:44px;border-radius:13px;">' + ic(icon, 20) + '</div>' +
+      ikonKotak(icon, '', 52) +
       '<span class="tiny" style="font-weight:700;text-align:center;line-height:1.3;">' + h(label) + '</span></button>';
   }
 
@@ -1218,7 +1910,8 @@
   var errB = {};
   function scBooking() {
     var d = draft(), b = hitungBiaya(d);
-    var body = topbar('Booking Vaksinasi', 'Isi data, kirim ke CS untuk dikonfirmasi', 'beranda');
+    var online = bookingOnline();
+    var body = topbar('Booking Vaksinasi', online ? 'Reservasi langsung terkirim ke klinik' : 'Isi data, kirim ke CS untuk dikonfirmasi', 'beranda');
     body += '<div class="pad stack g18">';
 
     if (errB.profil) body += '<div class="card" style="background:var(--danger-tint);border-color:transparent;"><div class="small" style="color:var(--danger);font-weight:700;">' + h(errB.profil) + '</div>' +
@@ -1227,9 +1920,9 @@
     // 1 layanan
     body += '<div class="stack g8"><label class="lbl">1. Jenis layanan<span class="req">*</span></label>' +
       '<div class="row g8">' +
-      ['homecare|house|Home Care', 'klinik|pin|On Site Klinik', 'corporate|building|On Site Corporate'].map(function (s) {
-        var p = s.split('|');
-        return '<button class="opt' + (d.layanan === p[0] ? ' on' : '') + '" data-act="set-layanan" data-arg="' + p[0] + '">' + ic(p[1], 20) + '<span>' + p[2] + '</span></button>';
+      ['homecare|homecare|Home Care', 'klinik|klinik|On Site Klinik', 'corporate|corporate|On Site Corporate'].map(function (s) {
+        var p = s.split('|'), on = d.layanan === p[0];
+        return '<button class="opt' + (on ? ' on' : '') + '" data-act="set-layanan" data-arg="' + p[0] + '">' + ikonKotak(p[1], on ? 'aktif' : '', 44) + '<span>' + p[2] + '</span></button>';
       }).join('') + '</div>' +
       (errB.layanan ? '<div class="errmsg">' + h(errB.layanan) + '</div>' : '') + '</div>';
 
@@ -1238,14 +1931,22 @@
     if (!d.layanan) {
       body += '<div class="card flat small muted" style="border-style:dashed;">Pilih jenis layanan dulu untuk menentukan lokasi.</div>';
     } else {
+      var kAkt = klinikAktif(), kota = kotaAktif();
       if (d.layanan === 'klinik') {
-        body += K.klinik.map(function (kl, i) {
-          return '<button class="checkrow' + (d.klinikIdx === i ? ' on' : '') + '" data-act="set-klinik" data-arg="' + i + '">' +
-            '<div class="box">' + (d.klinikIdx === i ? ic('check', 14, 3) : '') + '</div>' +
-            '<div class="grow"><div class="small" style="font-weight:700;">' + h(kl[0]) + '</div>' +
-            '<div class="tiny muted">' + h(kl[1]) + '</div></div></button>';
-        }).join('');
-      } else if (d.layanan === 'homecare') {
+        body += (kota ? kota.klinik : []).map(function (kl) {
+          var on = kAkt && kAkt.id === kl.id;
+          return '<button class="checkrow' + (on ? ' on' : '') + '" data-act="pilih-klinik" data-arg="' + kl.id + '">' +
+            '<div class="box">' + (on ? ic('check', 14, 3) : '') + '</div>' +
+            '<div class="grow"><div class="small" style="font-weight:700;">' + h(kl.nama) + '</div>' +
+            '<div class="tiny muted">' + h(kl.alamat || 'Alamat menyusul — dikonfirmasi CS') + '</div></div></button>';
+        }).join('') + lokasiChip();
+      } else if (kAkt) {
+        body += '<div class="tiny muted">Dilayani oleh <b>' + h(kAkt.nama) + '</b>, ' + h(kAkt.kotaNama) +
+          ' · <button class="linkbtn tiny" data-act="buka-lokasi">ganti</button></div>';
+      } else {
+        body += lokasiChip();
+      }
+      if (d.layanan === 'homecare') {
         body += S.alamat.map(function (a) {
           return '<button class="checkrow' + (d.alamatId === a.id ? ' on' : '') + '" data-act="set-alamat" data-arg="' + a.id + '">' +
             '<div class="box">' + (d.alamatId === a.id ? ic('check', 14, 3) : '') + '</div>' +
@@ -1253,7 +1954,7 @@
             '<div class="tiny muted">' + h(a.alamat + ', ' + a.kecamatan) + '</div></div></button>';
         }).join('');
         body += '<button class="btn outline sm" data-act="go" data-arg="alamat-form">' + ic('plus', 15, 2.2) + ' Tambah alamat</button>';
-      } else {
+      } else if (d.layanan === 'corporate') {
         body += '<input class="input" data-field="institusi" placeholder="Nama institusi / perusahaan" value="' + h(d.institusi) + '" style="margin-bottom:8px;">' +
           '<input class="input" data-field="institusiAlamat" placeholder="Alamat lokasi kegiatan" value="' + h(d.institusiAlamat) + '">' +
           '<div class="hint" style="margin-top:8px;">Untuk vaksinasi massal, jumlah peserta dan jadwal akan dikonfirmasi tim kami.</div>';
@@ -1297,7 +1998,7 @@
         var v = vaksinById(id); if (!v) return '';
         var hrg = hargaVaksin(v, d.dokter);
         return '<div class="row mid g10 card flat" style="padding:11px 13px;">' +
-          '<div class="grow"><div class="small" style="font-weight:700;">' + h(v.kategori) + '</div>' +
+          '<div class="grow"><div class="small" style="font-weight:700;">' + tautPanduan(v.kategori) + '</div>' +
           '<div class="tiny muted">' + h(v.sediaan === v.merk ? v.merk : v.sediaan + ' · ' + v.merk) + '</div></div>' +
           '<div class="disp nowrap" style="font-weight:800;color:var(--magenta-dark);">' + (hrg ? rp(hrg) : 'Hubungi CS') + '</div>' +
           '<button class="linkbtn" data-act="hapus-vaksin" data-arg="' + id + '" aria-label="Hapus" style="color:var(--ink-4);">' + ic('trash', 16) + '</button></div>';
@@ -1310,12 +2011,20 @@
     body += '<div class="stack g8"><label class="lbl">6. Jadwal vaksinasi<span class="req">*</span></label>' +
       '<input type="date" class="input" data-field="tanggal" min="' + min + '" value="' + h(d.tanggal) + '">' +
       '<div class="row wrap g8" style="margin-top:4px;">' + jamSlot(d) + '</div>' +
-      '<div class="hint" style="margin-top:6px;">Ketersediaan slot final dikonfirmasi oleh tim CS.</div>' +
+      '<div class="hint" style="margin-top:6px;">' + (online ? 'Kuota tiap jam dicek langsung oleh sistem klinik saat reservasi dikirim. Klinik libur hari Minggu.'
+        : 'Ketersediaan slot final dikonfirmasi oleh tim CS. Klinik libur hari Minggu.') + '</div>' +
       (errB.jadwal ? '<div class="errmsg">' + h(errB.jadwal) + '</div>' : '') + '</div>';
 
     // 7 catatan
     body += '<div class="stack g8"><label class="lbl">7. Catatan (opsional)</label>' +
       '<textarea class="input" data-field="catatan" placeholder="Riwayat alergi, kondisi khusus, patokan lokasi...">' + h(d.catatan) + '</textarea></div>';
+    if (online) {
+      body += '<button class="checkrow' + (d.bagikan ? ' on' : '') + '" data-act="toggle-bagikan">' +
+        '<div class="box">' + (d.bagikan ? ic('check', 14, 3) : '') + '</div>' +
+        '<div class="grow"><div class="small" style="font-weight:700;">Bagikan riwayat vaksin ke klinik (opsional)</div>' +
+        '<div class="tiny muted">Dokter klinik dapat melihat riwayat vaksin pasien yang dipilih untuk skrining dan mencegah dosis ganda.</div></div></button>';
+    }
+    if (errB.kirim) body += '<div class="errmsg">' + h(errB.kirim) + '</div>';
 
     // ringkasan
     body += '<div class="card tint stack g10">' +
@@ -1344,12 +2053,12 @@
     var foot = '<div class="sticky-foot">' +
       '<div class="stack" style="gap:1px;"><span class="tiny muted">Total estimasi</span>' +
       '<span class="disp" style="font-weight:800;font-size:15px;color:var(--magenta-dark);">' + rp(b.total) + '</span></div>' +
-      '<button class="btn primary grow" data-act="kirim-booking">Buat Reservasi</button></div>';
+      '<button class="btn primary grow" data-act="kirim-booking">' + (online ? 'Kirim Reservasi' : 'Buat Reservasi') + '</button></div>';
 
     return { body: body, foot: foot };
   }
   function jamSlot(d) {
-    var out = '', jams = ['08:00', '09:00', '10:00', '11:00', '13:00', '14:00', '15:00', '16:00'];
+    var out = '', jams = ['08:00', '09:00', '10:00', '11:00', '13:00', '14:00', '15:00'];
     var now = new Date(), sekarang = now.getHours() * 60 + now.getMinutes();
     jams.forEach(function (j) {
       var lewat = d.tanggal === hariIni() && (parseInt(j, 10) * 60) <= sekarang;
@@ -1361,34 +2070,41 @@
   /* --------- sheet pilih vaksin --------- */
   var cariVaksin = '';
   function sheetVaksin() {
-    var d = draft();
+    return '<div class="sheet" data-act="tutup-sheet"><div data-stop="1">' +
+      '<div class="row mid between" style="margin-bottom:12px;"><div class="sect-title">Pilih vaksin</div>' +
+      '<button type="button" class="linkbtn tombol-selesai" data-act="tutup-sheet">Selesai</button></div>' +
+      '<input class="input" id="cari-vaksin" placeholder="Cari vaksin, contoh: influenza" value="' + h(cariVaksin) + '" style="margin-bottom:12px;">' +
+      '<div class="stack g8" id="daftar-vaksin">' + daftarVaksinHTML() + '</div></div></div>';
+  }
+  // Isi daftar saja: saat mengetik di kolom cari, hanya bagian ini yang diganti agar
+  // tombol "Selesai" dan kolom cari tidak ikut digambar ulang di tengah ketukan
+  // (keyboard HP mengirim huruf terakhir tepat saat tombol lain disentuh).
+  function daftarVaksinHTML() {
+    var d = draft(), html = '';
     var q = cariVaksin.toLowerCase();
     var list = K.harga.filter(function (v) {
       return !q || (v.kategori + ' ' + v.sediaan + ' ' + v.merk).toLowerCase().indexOf(q) >= 0;
     });
-    var html = '<div class="sheet" data-act="tutup-sheet"><div data-stop="1">' +
-      '<div class="row mid between" style="margin-bottom:12px;"><div class="sect-title">Pilih vaksin</div>' +
-      '<button class="linkbtn" data-act="tutup-sheet">Selesai</button></div>' +
-      '<input class="input" id="cari-vaksin" placeholder="Cari vaksin, contoh: influenza" value="' + h(cariVaksin) + '" style="margin-bottom:12px;">' +
-      '<div class="stack g8">';
     if (!list.length) html += '<div class="small muted center" style="padding:20px 0;">Vaksin tidak ditemukan.</div>';
     list.forEach(function (v) {
       var on = d.vaksinIds.indexOf(v.id) >= 0;
       var hrg = hargaVaksin(v, d.dokter);
       html += '<button class="checkrow' + (on ? ' on' : '') + '" data-act="toggle-vaksin" data-arg="' + v.id + '">' +
         '<div class="box">' + (on ? ic('check', 14, 3) : '') + '</div>' +
+        ikonKotak(ikonKategori(v.kategori), on ? 'aktif' : '', 34) +
         '<div class="grow"><div class="small" style="font-weight:700;">' + h(v.kategori) + '</div>' +
-        '<div class="tiny muted">' + h(v.sediaan === v.merk ? v.merk : v.sediaan + ' · ' + v.merk) + '</div></div>' +
+        '<div class="tiny muted">' + h(v.sediaan === v.merk ? v.merk : v.sediaan + ' · ' + v.merk) + '</div>' +
+        (produkProgram(v) ? '<div style="margin-top:3px;">' + CHIP_PKM + '</div>' : '') + '</div>' +
         '<div class="disp nowrap small" style="font-weight:800;color:var(--magenta-dark);">' + (hrg ? rp(hrg) : 'Hubungi CS') + '</div></button>';
     });
-    return html + '</div></div></div>';
+    return html;
   }
 
   /* ============================ layar: detail booking ============================ */
   function scBookingDetail(id) {
     var b = S.booking.filter(function (x) { return x.id === id; })[0];
     if (!b) return { body: topbar('Reservasi', '', 'beranda') + empty('doc', 'Reservasi tidak ditemukan', 'Data mungkin sudah dihapus.') };
-    var st = { menunggu: ['mag', 'Menunggu konfirmasi'], selesai: ['green', 'Selesai'], batal: ['grey', 'Dibatalkan'] }[b.status];
+    var st = STATUS_BK[b.status] || STATUS_BK.menunggu;
     var body = topbar('Detail Reservasi', b.kode, 'beranda');
     body += '<div class="pad stack g14">';
     body += '<div class="card stack g12">' +
@@ -1412,13 +2128,26 @@
       '<div class="row between mid"><span class="disp" style="font-weight:800;">Total estimasi</span>' +
       '<span class="disp" style="font-weight:800;font-size:16px;color:var(--magenta-dark);">' + rp(b.total) + '</span></div></div>';
 
-    body += '<div class="card warn stack g8"><div class="row mid g8">' + ic('info', 16) + '<span class="small" style="font-weight:700;color:var(--amber);">Reservasi belum terjadwal otomatis</span></div>' +
-      '<div class="tiny" style="color:#8A6A21;line-height:1.6;">Aplikasi ini menyimpan data di perangkat Anda. Kirim ringkasan ke WhatsApp CS ' + h(K.brand.callCenter) + ' agar jadwal dikonfirmasi petugas.</div></div>';
+    if (b.serverId) {
+      body += '<div class="card tint stack g8"><div class="row mid g8">' + ic('checkc', 16) + '<span class="small" style="font-weight:700;color:var(--teal-dark);">Reservasi online diterima sistem klinik</span></div>' +
+        '<div class="tiny" style="color:var(--teal-dark);line-height:1.6;">Kuota jam sudah dicek dan tempat Anda tercatat dengan kode <b>' + h(b.kode) + '</b>. ' +
+        'Status diperbarui otomatis.' + (bookingAktif(b) ? ' Untuk konfirmasi lebih cepat, kirim juga ringkasannya ke WhatsApp CS ' + h(K.brand.callCenter) + '.' : '') + '</div>' +
+        (sesiAktif() ? '<button class="btn outline sm" data-act="sinkron-sekarang">Perbarui status</button>' : '') + '</div>';
+    } else {
+      body += '<div class="card warn stack g8"><div class="row mid g8">' + ic('info', 16) + '<span class="small" style="font-weight:700;color:var(--amber);">Reservasi belum terkirim ke sistem klinik</span></div>' +
+        '<div class="tiny" style="color:#8A6A21;line-height:1.6;">Reservasi ini hanya tersimpan di perangkat Anda.' +
+        (b.galatServer ? ' Penyebab: ' + h(b.galatServer) : '') +
+        (bookingAktif(b) && sesiAktif() ? ' Tekan <b>Kirim ulang ke server</b>, atau kirim ringkasan ke WhatsApp CS ' + h(K.brand.callCenter) + '.'
+          : ' Kirim ringkasan ke WhatsApp CS ' + h(K.brand.callCenter) + ' agar jadwal dikonfirmasi petugas.') + '</div>' +
+        (bookingAktif(b) && sesiAktif() ? '<button class="btn primary sm" data-act="kirim-ulang-booking" data-arg="' + b.id + '">Kirim ulang ke server</button>' : '') +
+        '</div>';
+    }
 
-    if (b.status === 'menunggu') {
+    if (bookingAktif(b)) {
       body += '<button class="btn teal" data-act="wa-booking" data-arg="' + b.id + '">' + ic('wa', 17) + ' Kirim ke WhatsApp CS</button>';
       body += '<button class="btn outline" data-act="selesai-booking" data-arg="' + b.id + '">' + ic('checkc', 16) + ' Tandai vaksinasi selesai</button>';
-      body += '<button class="btn danger" data-act="batal-booking" data-arg="' + b.id + '">Batalkan reservasi</button>';
+      if (!b.serverId || b.statusServer === 'baru') body += '<button class="btn danger" data-act="batal-booking" data-arg="' + b.id + '">Batalkan reservasi</button>';
+      else body += '<div class="tiny muted center">Reservasi sudah dikonfirmasi klinik. Untuk membatalkan atau mengubah jadwal, hubungi CS.</div>';
     } else if (b.status === 'selesai') {
       body += '<div class="card tint small" style="color:var(--teal-dark);">Vaksin dari reservasi ini sudah tercatat di Rekam Medis pasien.</div>';
       body += '<button class="btn outline" data-act="go" data-arg="rekam">Lihat rekam medis</button>';
@@ -1450,6 +2179,10 @@
     }
     body += '<div class="pad stack g14">' + pilihPasien(p);
     var r = ringkasJadwal(p);
+    if (r && r.jadwal.tipe === 'anak') {
+      body += jadwalAnakHTML(p, r) + kartuJadwalUmum() + '</div>';
+      return { body: body, nav: 'jadwal' };
+    }
     if (!r) {
       body += '<div class="card small muted">Tanggal lahir pasien belum diisi, jadi jadwal belum bisa dihitung. ' +
         '<button class="linkbtn" data-act="go" data-arg="pasien-form/' + p.id + '">Lengkapi data pasien</button></div>';
@@ -1485,6 +2218,515 @@
     body += kartuJadwalUmum() + '</div>';
     return { body: body, nav: 'jadwal' };
   }
+  /* ---------- tampilan jadwal anak: pilihan rujukan, ringkasan, tabel ceklis ---------- */
+  var LABEL_ST = { selesai: 'Sudah', tepat: 'Saatnya', boleh: 'Boleh dilengkapi', kejar: 'Imunisasi kejar',
+    terlewat: 'Terlewat', belum: 'Akan datang' };
+  var KONDISI = [
+    ['bblr', 'Berat lahir kurang dari 2.000 g', 'Hepatitis B 0 sebaiknya ditunda sampai usia 1 bulan atau saat pulang dari rumah sakit, kecuali ibu HBsAg positif.'],
+    ['hbsag', 'Ibu HBsAg positif', 'Bayi perlu vaksin Hepatitis B dan HBIg (di paha berbeda) dalam 24 jam setelah lahir, lalu cek anti-HBs & HBsAg di usia 9–12 bulan.'],
+    ['tbibu', 'Ibu menderita TB aktif', 'BCG ditunda sampai bayi terbukti tidak terinfeksi TB; bayi mendapat terapi pencegahan TB.'],
+    ['imuno', 'Gangguan sistem imun / terapi imunosupresan', 'Vaksin hidup (BCG, polio tetes, rotavirus, MR/MMR, varisela, dengue) hanya atas persetujuan dokter.'],
+    ['alergi', 'Pernah alergi berat setelah vaksin', 'Konsultasikan dengan dokter sebelum dosis berikutnya; vaksin dengan komponen yang sama mungkin tidak boleh diulang.']
+  ];
+  function jadwalAnakHTML(p, r) {
+    var j = r.jadwal, out = '';
+    // pilihan rujukan
+    out += '<div class="card stack g10"><div class="row mid between"><div class="sect-title">Jadwal yang diikuti</div>' +
+      '<button class="linkbtn tiny" data-act="go" data-arg="jadwal-banding">Bandingkan</button></div>' +
+      '<div class="row g8">' + [['idai', 'IDAI 2024', 'Rekomendasi dokter anak, lengkap'], ['kia', 'Buku KIA', 'Program pemerintah, gratis di Puskesmas']].map(function (o) {
+        var on = j.rujukan === o[0];
+        return '<button class="opt' + (on ? ' on' : '') + '" style="align-items:flex-start;text-align:left;" data-act="ganti-jadwal" data-arg="' + p.id + '|' + o[0] + '">' +
+          '<span style="font-size:13px;">' + o[1] + '</span><span class="tiny" style="font-weight:600;color:var(--ink-3);">' + o[2] + '</span></button>';
+      }).join('') + '</div>' +
+      '<div class="tiny muted">Bisa diganti kapan saja. Dosis yang sudah dicatat tetap tersimpan dan langsung terbaca di jadwal yang baru.</div></div>';
+
+    // kondisi khusus
+    var kon = KONDISI.filter(function (k) { return p.kondisi && p.kondisi[k[0]]; });
+    if (kon.length) {
+      out += '<div class="card warn stack g8"><div class="row mid g8">' + ic('info', 17) + '<b class="small" style="color:#8A6A21;">Kondisi khusus — konsultasikan dengan dokter</b></div>' +
+        kon.map(function (k) { return '<div class="tiny" style="color:#8A6A21;line-height:1.55;"><b>' + h(k[1]) + ':</b> ' + h(k[2]) + '</div>'; }).join('') +
+        '<button class="btn outline sm" data-act="tanya-dokter" data-arg="' + p.id + '">' + ic('chat', 15) + ' Tanya dokter</button></div>';
+    }
+
+    // ringkasan
+    out += '<div class="card stack g10">' +
+      '<div class="row mid"><div><div class="sect-title">Kelengkapan sesuai usia</div>' +
+      '<div class="tiny muted">' + h(j.judul) + ' · usia ' + h(umurTeks(j.bln)) + '</div></div>' +
+      '<div class="grow"></div><div class="disp" style="font-size:20px;font-weight:800;color:var(--teal-dark);">' + r.persen + '%</div></div>' +
+      '<div class="bar"><i style="width:' + r.persen + '%"></i></div>' +
+      '<div class="tiny muted">' + r.selesai + ' dari ' + r.total + ' dosis yang sudah waktunya telah dicatat.</div>' +
+      '<div class="row g6 wrap">' +
+      (r.belum.length - r.kejar ? '<span class="chip st-tepat">' + (r.belum.length - r.kejar) + ' saatnya</span>' : '') +
+      (r.kejar ? '<span class="chip st-kejar">' + r.kejar + ' perlu dikejar</span>' : '') +
+      (r.terlewat ? '<span class="chip grey">' + r.terlewat + ' terlewat, tidak diberikan lagi</span>' : '') +
+      (r.pkm ? '<span class="chip green">' + r.pkm + ' direncanakan di Puskesmas</span>' : '') + '</div>' +
+      (r.belum.length ? '<div class="row g8"><button class="btn primary sm grow" data-act="go" data-arg="booking">Booking di klinik</button>' +
+        '<button class="btn outline sm grow" data-act="pkm-semua" data-arg="' + p.id + '">Gratis di Puskesmas</button></div>' : '') +
+      '</div>';
+
+    // tabel ceklis
+    var tab = S.ui.tabJadwal === 'daftar' ? 'daftar' : 'tabel';
+    out += '<div class="card stack g10"><div class="row mid between"><div class="sect-title">Ceklis imunisasi</div>' +
+      '<div class="row g4">' + [['tabel', 'Tabel'], ['daftar', 'Daftar']].map(function (t) {
+        return '<button class="pill' + (tab === t[0] ? ' on' : '') + '" style="padding:6px 12px;font-size:12px;" data-act="tab-jadwal" data-arg="' + t[0] + '">' + t[1] + '</button>';
+      }).join('') + '</div></div>' +
+      '<div class="tiny muted" style="margin-top:-4px;">Ketuk dosis untuk mencatat tanggal, tempat, dan No. Batch.</div>' +
+      (tab === 'daftar' ? daftarDosisHTML(p, j) : j.rujukan === 'kia' ? tabelKIA(p, j) : tabelIDAI(p, j)) +
+      legendaJadwal(j.rujukan) + '</div>';
+    return out;
+  }
+  function tglPendek(iso) {
+    var d = new Date(iso + 'T00:00:00');
+    return isNaN(d) ? '' : d.getDate() + '/' + (d.getMonth() + 1) + '/' + String(d.getFullYear()).slice(2);
+  }
+  function umurPada(lahir, iso) {
+    var a = new Date(lahir + 'T00:00:00'), b = new Date(iso + 'T00:00:00');
+    var m = (b.getFullYear() - a.getFullYear()) * 12 + b.getMonth() - a.getMonth();
+    if (b.getDate() < a.getDate()) m--;
+    return Math.max(0, m);
+  }
+  // Tabel meniru Buku KIA: baris = dosis, kolom = usia; warna sel = jendela usia.
+  function tabelKIA(p, j) {
+    var kolom = K.kiaKolom, bayi = j.dosis.filter(function (x) { return x.d.mulai < 84; });
+    var bias = j.dosis.filter(function (x) { return x.d.mulai >= 84; });
+    function warna(d, c) {
+      var a = c === 59 ? 24 : c;
+      if (a < d.mulai || a > d.batas) return 'kia-abu';
+      return a <= d.tepat ? 'kia-putih' : a <= d.boleh ? 'kia-kuning' : 'kia-pink';
+    }
+    var kolSkrg = -1;
+    kolom.forEach(function (c, i) { if ((c === 59 ? 24 : c) <= j.bln) kolSkrg = i; });
+    var html = '<div class="kia-gulir"><table class="kia"><thead><tr><th class="kia-nama">Jenis vaksin</th>' +
+      kolom.map(function (c, i) { return '<th' + (i === kolSkrg ? ' class="kini"' : '') + '>' + (c === 59 ? '24–59' : c) + '</th>'; }).join('') +
+      '</tr></thead><tbody>';
+    bayi.forEach(function (x) {
+      var d = x.d, cat = x.st === 'selesai' && x.catatan, umurBeri = cat ? umurPada(p.tglLahir, cat.tanggal) : -1;
+      var kolBeri = -1;
+      kolom.forEach(function (c, i) { if ((c === 59 ? 24 : c) <= umurBeri) kolBeri = i; });
+      html += '<tr class="kia-baris' + (x.opsional ? ' ops' : '') + '" data-act="buka-dosis" data-arg="' + p.id + '|' + d.id + '">' +
+        '<td class="kia-nama"><b>' + h(d.label) + '</b><span>' +
+        (cat ? 'No. Batch: ' + h(cat.batch || '—') : x.opsional ? h(x.opsional) : x.lewatProgram ? 'Kejar di klinik' : h(LABEL_ST[x.st])) + '</span>' +
+        (x.pkm && x.st !== 'selesai' ? '<i class="pkm">Puskesmas</i>' : '') + '</td>' +
+        kolom.map(function (c, i) {
+          return '<td class="' + warna(d, c) + (i === kolSkrg ? ' kini' : '') + '">' +
+            (i === kolBeri ? '<span class="cek" title="' + h(tgl(cat.tanggal)) + '">' + ic('check', 11, 3.2) + '</span>' : '') + '</td>';
+        }).join('') + '</tr>';
+    });
+    html += '</tbody></table></div>';
+    if (bias.length) {
+      html += '<div class="small" style="font-weight:800;margin-top:4px;">BIAS — imunisasi anak sekolah</div>' +
+        '<div class="stack g6">' + bias.map(function (x) { return barisDosis(p, x); }).join('') + '</div>';
+    }
+    return html;
+  }
+  // Tabel versi IDAI: baris = jenis vaksin, sel = dosis dengan usia anjurannya.
+  function tabelIDAI(p, j) {
+    var grup = {}, urut = [];
+    j.dosis.forEach(function (x) {
+      if (!grup[x.d.baris]) { grup[x.d.baris] = []; urut.push(x.d.baris); }
+      grup[x.d.baris].push(x);
+    });
+    return '<div class="stack" style="border:1px solid var(--line);border-radius:14px;overflow:hidden;">' + urut.map(function (b, i) {
+      return '<div class="idai-baris"' + (i ? '' : ' style="border-top:0;"') + '><div class="idai-nama">' + h(b) + '</div><div class="idai-sel">' +
+        grup[b].map(function (x) {
+          var d = x.d, no = (d.label.match(/(\d+)$/) || [0, 1])[1];
+          var ke = d.ulang ? (d.ulang === 12 ? 'Tiap thn' : 'Tiap 3 thn') : d.jenis === 'booster' ? 'Booster' : 'Dosis ' + no;
+          if (d.id === 'hb0' || d.id === 'p0') ke = 'Dosis 0';
+          if (d.id === 'td1') ke = 'Td/Tdap';
+          return '<button class="idai-dosis st-' + x.st + (x.opsional ? ' ops' : '') + (d.jenis === 'booster' ? ' bst' : '') + '" data-act="buka-dosis" data-arg="' + p.id + '|' + d.id + '">' +
+            (x.st === 'selesai' ? '<span class="cek">' + ic('check', 10, 3.4) + '</span>' : '') +
+            '<b>' + h(ke) + '</b><span>' + h(usiaDosisTeks(d.mulai)) + '</span>' +
+            (x.pkm && x.st !== 'selesai' ? '<i class="pkm">PKM</i>' : '') + '</button>';
+        }).join('') + '</div></div>';
+    }).join('') + '</div>';
+  }
+  function barisDosis(p, x) {
+    var d = x.d;
+    return '<button class="checkrow' + (x.st === 'selesai' ? ' done' : '') + '" style="padding:9px 11px;' + (x.opsional ? 'opacity:.6;' : '') + '" data-act="buka-dosis" data-arg="' + p.id + '|' + d.id + '">' +
+      '<div class="box" style="width:19px;height:19px;border-radius:6px;">' + (x.st === 'selesai' ? ic('check', 12, 3) : '') + '</div>' +
+      '<div class="grow"><span class="small" style="font-weight:700;">' + h(d.label) + '</span>' +
+      '<div class="tiny muted">' + h(usiaDosisTeks(d.mulai)) +
+      (x.st === 'selesai' && x.catatan ? ' · diberikan ' + h(tgl(x.catatan.tanggal)) + (x.catatan.batch ? ' · Batch ' + h(x.catatan.batch) : '') : '') +
+      (x.berikut ? ' · berikutnya ' + h(tgl(x.berikut)) : '') + '</div></div>' +
+      (d.program && !x.lewatProgram && x.st !== 'selesai' ? '<span class="chip green" style="font-size:9.5px;padding:2px 7px;">' + (x.pkm ? 'Puskesmas' : 'Gratis PKM') + '</span>' : '') +
+      (x.st !== 'selesai' ? '<span class="chip st-' + x.st + '" style="font-size:9.5px;padding:2px 7px;">' + h(x.opsional ? 'Opsional' : LABEL_ST[x.st]) + '</span>' : '') +
+      '</button>';
+  }
+  function daftarDosisHTML(p, j) {
+    var kel = [['Perlu diberikan', function (x) { return !x.opsional && (x.st === 'tepat' || x.st === 'boleh' || x.st === 'kejar'); }],
+      ['Akan datang', function (x) { return !x.opsional && x.st === 'belum'; }],
+      ['Sudah dicatat', function (x) { return x.st === 'selesai'; }],
+      ['Opsional', function (x) { return x.opsional && x.st !== 'selesai' && x.st !== 'terlewat'; }],
+      ['Terlewat — tidak diberikan lagi', function (x) { return !x.opsional && x.st === 'terlewat'; }]];
+    return kel.map(function (k) {
+      var isi = j.dosis.filter(k[1]);
+      if (k[0] === 'Akan datang') isi = isi.slice(0, 6);
+      if (!isi.length) return '';
+      return '<div class="stack g6"><div class="tiny" style="font-weight:800;color:var(--ink-3);text-transform:uppercase;letter-spacing:.05em;">' + k[0] + ' · ' + isi.length + '</div>' +
+        isi.map(function (x) { return barisDosis(p, x); }).join('') + '</div>';
+    }).join('');
+  }
+  function legendaJadwal(rujukan) {
+    var item = rujukan === 'kia'
+      ? [['kia-putih', 'Usia tepat'], ['kia-kuning', 'Masih boleh dilengkapi'], ['kia-pink', 'Imunisasi kejar'], ['kia-abu', 'Tidak boleh diberikan']]
+      : [['st-tepat', 'Saatnya (primer)'], ['st-boleh', 'Catch-up'], ['st-kejar', 'Imunisasi kejar'], ['st-selesai', 'Sudah'], ['bst', 'Booster'], ['ops', 'Opsional / daerah endemis']];
+    return '<div class="legenda">' + item.map(function (i) {
+      return '<span><i class="' + i[0] + '"></i>' + h(i[1]) + '</span>';
+    }).join('') + '</div>';
+  }
+  // lembar catat dosis
+  var fotoDosis = null, dosisAktif = '';
+  function cariDosis(pid, doseId) {
+    var p = S.pasien.filter(function (x) { return x.id === pid; })[0];
+    if (!p) return null;
+    var j = jadwalPasien(p);
+    if (!j || j.tipe !== 'anak') return null;
+    var x = j.dosis.filter(function (y) { return y.d.id === doseId; })[0];
+    return x ? { p: p, j: j, x: x } : null;
+  }
+  function sheetDosis(pid, doseId) {
+    var c = cariDosis(pid, doseId);
+    if (!c) return '';
+    var p = c.p, x = c.x, d = x.d, cat = x.st === 'selesai' && !d.ulang ? x.catatan : null;
+    var html = '<div class="sheet" data-act="tutup-sheet"><div data-stop="1"><div class="stack g12">' +
+      '<div class="row mid g12">' + ikonKotak(ikonKategori(d.label), x.st === 'selesai' ? 'aktif' : '', 46) +
+      '<div class="grow"><div class="disp" style="font-size:17px;font-weight:800;line-height:1.2;">' + h(d.label) + '</div>' +
+      '<div class="tiny muted">' + h(p.nama) + ' · ' + h(NAMA_JADWAL[c.j.rujukan]) + ' · anjuran ' + h(usiaDosisTeks(d.mulai)) + '</div></div>' +
+      '<button class="linkbtn" data-act="tutup-sheet">' + ic('close', 18) + '</button></div>' +
+      '<div class="row g6 wrap"><span class="chip st-' + x.st + '">' + h(LABEL_ST[x.st]) + '</span>' +
+      (d.jenis === 'booster' ? '<span class="chip teal">Booster</span>' : '') +
+      (d.program && !x.lewatProgram ? '<span class="chip green">Gratis di Puskesmas</span>' : '') +
+      (x.opsional ? '<span class="chip grey">' + h(x.opsional) + '</span>' : '') + '</div>' +
+      (d.ket ? '<div class="small" style="color:var(--ink-2);line-height:1.55;">' + h(d.ket) + '</div>' : '') +
+      (idPanduan(d.label) ? '<button class="linkbtn small" style="align-self:flex-start;" data-act="go" data-arg="panduan/' + idPanduan(d.label) + '">' +
+        icm('panduan', 18) + ' Pelajari vaksin ini di Panduan</button>' : '') +
+      (x.lewatProgram ? '<div class="card warn tiny" style="color:#8A6A21;">Usia anak sudah melewati batas imunisasi kejar program pemerintah, sehingga dosis ini tidak lagi gratis di Puskesmas. Menurut IDAI dosis ini masih boleh dikejar di klinik.</div>' : '') +
+      (x.st === 'terlewat' ? '<div class="card warn tiny" style="color:#8A6A21;">Usia anak sudah melewati batas pemberian dosis ini, sehingga tidak dihitung kurang. Konsultasikan dengan dokter bila ragu.</div>' : '') +
+      (d.kunci.length > 1 ? '<div class="tiny muted">Satu suntikan ini sekaligus mencatat: ' + d.kunci.map(function (k) { return h(NAMA_ANTIGEN[antigenDari(k)] || k); }).join(', ') + '.</div>' : '');
+    if (d.program && x.st !== 'selesai' && !x.lewatProgram) {
+      html += '<button class="btn ' + (x.pkm ? 'outline' : 'teal') + ' sm" data-act="pkm-dosis" data-arg="' + p.id + '|' + d.id + '">' +
+        (x.pkm ? 'Batalkan rencana di Puskesmas' : 'Rencanakan gratis di Puskesmas') + '</button>';
+    }
+    if (cat && cat.sumber === 'klinik') {
+      return html + '<div class="card tint stack g6" style="border-top:1px solid var(--line);">' +
+        '<div class="row mid g6"><span class="chip teal">' + ic('checkc', 14) + ' Terverifikasi klinik</span></div>' +
+        '<div class="small" style="line-height:1.7;color:var(--ink-2);">' + h(tgl(cat.tanggal)) + ' · ' + h(cat.faskes || cat.tempat || 'Klinik') +
+        (cat.merek ? '<br>Merek: <b>' + h(cat.merek) + '</b>' : '') + (cat.batch ? '<br>No. Batch: <b>' + h(cat.batch) + '</b>' : '') + '</div>' +
+        '<div class="tiny muted">Dicatat petugas klinik saat vaksinasi, jadi tidak dapat diubah dari aplikasi. Hubungi klinik bila ada yang keliru.</div>' +
+        '</div></div></div></div>';
+    }
+    html += '<form id="form-dosis" class="stack g10" style="border-top:1px solid var(--line);padding-top:12px;">' +
+      '<div class="sect-title" style="font-size:14px;">' + (cat ? 'Catatan pemberian' : 'Catat sudah diberikan') + '</div>' +
+      '<input type="hidden" name="pid" value="' + p.id + '"><input type="hidden" name="dosis" value="' + d.id + '">' +
+      '<div class="row g8"><div class="grow"><label class="lbl">Tanggal</label><input class="input" type="date" name="tanggal" max="' + hariIni() + '" min="' + h(p.tglLahir) + '" value="' + h(cat ? cat.tanggal : hariIni()) + '"></div>' +
+      '<div class="grow"><label class="lbl">Tempat</label><select class="input" name="tempat">' +
+      ['Posyandu', 'Puskesmas', 'Klinik', 'Rumah sakit', 'Bidan / dokter praktik', 'Lainnya'].map(function (t) {
+        return '<option' + ((cat ? cat.tempat : 'Posyandu') === t ? ' selected' : '') + '>' + t + '</option>';
+      }).join('') + '</select></div></div>' +
+      '<div><label class="lbl">Nama fasilitas (opsional)</label><input class="input" name="faskes" value="' + h(cat && cat.faskes || '') + '" placeholder="mis. Puskesmas Batu 10"></div>' +
+      '<div class="row g8"><div class="grow"><label class="lbl">Merek vaksin</label><input class="input" name="merek" value="' + h(cat && cat.merek || '') + '" placeholder="mis. Pentabio"></div>' +
+      '<div class="grow"><label class="lbl">No. Batch</label><input class="input" name="batch" value="' + h(cat && cat.batch || '') + '" placeholder="Tertera di label/buku KIA"></div></div>' +
+      '<div><label class="lbl">Foto label / halaman buku KIA (opsional)</label>' +
+      '<input class="input" type="file" id="foto-dosis" accept="image/*" capture="environment" style="padding:9px;">' +
+      ((fotoDosis || (cat && cat.foto)) ? '<img src="' + (fotoDosis || cat.foto) + '" alt="Foto label vaksin" style="margin-top:8px;max-height:140px;border-radius:10px;border:1px solid var(--line);">' : '') +
+      '<div class="hint" style="margin-top:6px;">Foto dikecilkan otomatis dan disimpan di perangkat ini saja.</div></div>' +
+      '<button type="submit" class="btn primary">' + (cat ? 'Simpan perubahan' : 'Simpan catatan') + '</button>' +
+      (cat ? '<button type="button" class="btn danger sm" data-act="hapus-dosis" data-arg="' + p.id + '|' + d.id + '">Hapus catatan dosis ini</button>' : '') +
+      (x.st !== 'selesai' && !x.opsional ? '<button type="button" class="btn outline sm" data-act="go" data-arg="booking">Booking di klinik</button>' : '') +
+      '</form></div></div></div>';
+    return html;
+  }
+  var NAMA_ANTIGEN = { hepb: 'Hepatitis B', polio: 'Polio', ipv: 'Polio suntik (IPV)', bcg: 'BCG', dtp: 'DTP', hib: 'Hib',
+    pcv: 'PCV', rv: 'Rotavirus', flu: 'Influenza', mr: 'MR/MMR', je: 'JE', 'var': 'Varisela', hepa: 'Hepatitis A',
+    tif: 'Tifoid', dbd: 'Dengue', hpv: 'HPV', td: 'Td/Tdap', hfmd: 'Flu Singapura' };
+  function kecilkanFoto(berkas, selesai) {
+    var fr = new FileReader();
+    fr.onload = function () {
+      var img = new Image();
+      img.onload = function () {
+        var skala = Math.min(1, 640 / Math.max(img.width, img.height));
+        var cv = document.createElement('canvas');
+        cv.width = Math.round(img.width * skala); cv.height = Math.round(img.height * skala);
+        cv.getContext('2d').drawImage(img, 0, 0, cv.width, cv.height);
+        selesai(cv.toDataURL('image/jpeg', 0.6));
+      };
+      img.src = fr.result;
+    };
+    fr.readAsDataURL(berkas);
+  }
+  // Perbandingan per dosis: usia anjuran IDAI 2024 vs Buku KIA 2024.
+  function scJadwalBanding() {
+    var body = topbar('IDAI vs Buku KIA', 'Perbandingan jadwal imunisasi anak', 'jadwal');
+    var baris = [], sudah = {};
+    K.jadwalIDAI.concat(K.jadwalKIA).forEach(function (d) {
+      d.kunci.forEach(function (k) {
+        if (sudah[k] || k.split(':')[1] === 't') return;
+        sudah[k] = true;
+        var di = K.jadwalIDAI.filter(function (x) { return x.kunci.indexOf(k) >= 0; })[0];
+        var dk = K.jadwalKIA.filter(function (x) { return x.kunci.indexOf(k) >= 0; })[0];
+        baris.push({ k: k, idai: di, kia: dk });
+      });
+    });
+    var urutAg = ['hepb', 'polio', 'ipv', 'bcg', 'dtp', 'td', 'hib', 'pcv', 'rv', 'flu', 'mr', 'je', 'var', 'hepa', 'tif', 'dbd', 'hpv', 'hfmd'];
+    baris.sort(function (a, b) {
+      var x = urutAg.indexOf(antigenDari(a.k)) - urutAg.indexOf(antigenDari(b.k));
+      return x || (+a.k.split(':')[1] - +b.k.split(':')[1]);
+    });
+    function sel(d) {
+      if (!d) return '<td class="muted">—</td>';
+      return '<td>' + h(usiaDosisTeks(d.mulai)) + (d.syarat === 'endemis' ? '<div class="tiny muted">endemis</div>' : '') + '</td>';
+    }
+    body += '<div class="pad stack g12"><div class="card tint small" style="line-height:1.6;color:var(--ink-2);">' +
+      '<b>IDAI 2024</b> adalah rekomendasi lengkap Ikatan Dokter Anak Indonesia, termasuk vaksin pilihan berbayar. ' +
+      '<b>Buku KIA</b> memuat program imunisasi pemerintah yang gratis di Puskesmas/Posyandu. Baris yang berbeda ditandai.</div>' +
+      '<div class="card rapat" style="padding:0;overflow:hidden;"><table class="mk-banding"><tr><th>Dosis</th><th>IDAI 2024</th><th>Buku KIA</th></tr>' +
+      baris.map(function (b) {
+        var beda = !b.idai || !b.kia || b.idai.mulai !== b.kia.mulai;
+        return '<tr' + (beda ? ' class="beda"' : '') + '><td><b>' + h(NAMA_ANTIGEN[antigenDari(b.k)] || b.k) + ' ' + h(b.k.split(':')[1]) + '</b></td>' +
+          sel(b.idai) + sel(b.kia) + '</tr>';
+      }).join('') + '</table></div>' +
+      '<div class="tiny muted">Sumber: Jadwal Imunisasi Anak 0–18 Tahun IDAI 2024; Buku KIA 2024 (Kemenkes) dan jadwal BIAS.</div></div>';
+    return { body: body };
+  }
+  /* ============================ panduan vaksinasi di Indonesia ============================
+     Profil 21 jenis vaksin dan 7 jadwal rujukan (src/panduan_vaksin.py). Nama vaksin
+     di layar mana pun yang dapat dikenali menjadi tautan ke profilnya. */
+  var cariPanduan = '';
+  // urutan penting: yang lebih spesifik dulu (MMR sebelum MR, Hep A sebelum Hep B, Flu Singapura sebelum flu)
+  var KATA_PANDUAN = [
+    [/singapura|hfmd|ev71|inlive/i, ''], [/dpt|dtp|combo|infanrix|hexaxim|pentabio|tetraxim|\bdt\b/i, 'dtp'],
+    [/tdap|\btd\b|tetanus|adacel|boostrix/i, 'td'], [/mmr/i, 'mmr'], [/\bmr\b|campak|rubel/i, 'mr'],
+    [/hepatitis a|hep a|avaxim|havrix|healive/i, 'hepa'], [/hepatitis b|hep b|engerix|\bhb\b/i, 'hepb'],
+    [/polio|ipv|opv/i, 'polio'], [/bcg|tbc/i, 'bcg'], [/pcv|pneumo|prevenar|synflorix/i, 'pcv'], [/rota/i, 'rv'],
+    [/influenza|\bflu\b|vaxigrip|flubio|fluarix|influvac/i, 'flu'], [/japanese|\bje\b|imojev/i, 'je'],
+    [/varicella|varisela|cacar air|varivax|varilrix/i, 'var'], [/tifoid|typhoid|tipes|typhim/i, 'tif'],
+    [/hpv|gardasil|cervarix|serviks/i, 'hpv'], [/dengue|demam berdarah|qdenga|\bdbd\b/i, 'dbd'],
+    [/mening|menivax|menactra|menquadfi/i, 'men'], [/rabies|verorab/i, 'rabies'], [/yellow|demam kuning|stamaril/i, 'yf'],
+    [/zoster|cacar api|cacar ular|shingrix/i, 'zoster'], [/\brsv\b|arexvy|abrysvo/i, 'rsv']
+  ];
+  function idPanduan(teks) {
+    for (var i = 0; i < KATA_PANDUAN.length; i++) if (KATA_PANDUAN[i][0].test(teks)) return KATA_PANDUAN[i][1];
+    return '';
+  }
+  function panduanById(id) { return K.panduan.filter(function (v) { return v.id === id; })[0] || null; }
+  function tautPanduan(teks, label) {
+    var id = idPanduan(teks), t = h(label == null ? teks : label);
+    return id ? '<button class="link-vaksin" data-act="go" data-arg="panduan/' + id + '">' + t + '</button>' : t;
+  }
+  function norm(t) { return String(t).toLowerCase().replace(/\(.*?\)/g, '').replace(/[^a-z0-9]/g, ''); }
+  var ALIAS_MEREK = { bopv: 'poliotetes', ipv: 'polioinjeksi', mrbiofarma: 'mr', mmrii: 'mmr' };
+  // Merek ini ada di price list klinik terpilih? null = klinik belum dipilih / belum punya price list.
+  function merekDiKlinik(m) {
+    if (!punyaHarga()) return null;
+    var a = norm(m.nama); a = ALIAS_MEREK[a] || a;
+    return K.harga.some(function (x) {
+      return [norm(x.merk), norm(x.sediaan)].some(function (b) { return b && (b.indexOf(a) >= 0 || a.indexOf(b) >= 0); });
+    });
+  }
+  function produkPanduan(v) {
+    return K.harga.filter(function (x) {
+      if (v.kategori.indexOf(x.kategori) < 0) return false;
+      if (v.id === 'mmr') return /mmr|measles/i.test(x.merk + x.sediaan);
+      if (v.id === 'mr') return !/mmr|measles/i.test(x.merk + x.sediaan);
+      if (v.id === 'hepb' && x.kategori !== 'Hepatitis B') return false;
+      if (v.id === 'polio' && x.kategori !== 'Polio') return false;
+      return true;
+    });
+  }
+  function hargaMulai(v) {
+    var best = null;
+    produkPanduan(v).forEach(function (x) {
+      var hg = hargaVaksin(x, 'umum');
+      if (hg && (!best || hg < best.harga)) best = { harga: hg, produk: x };
+    });
+    return best;
+  }
+  function fotoMerek(m, w, hgt) {
+    var url = (K.fotoMerek || {})[m.foto];
+    if (url) return '<img class="pd-foto" src="' + url + '" alt="Kemasan ' + h(m.nama) + '" style="width:' + w + 'px;height:' + hgt + 'px;">';
+    return ilustrasiKemasan(m, w, hgt);
+  }
+  // Ilustrasi kemasan per merek (src/panduan_vaksin.py GAYA_MEREK): bentuk & warna
+  // khas kemasan digambar ulang sebagai SVG — bukan foto produk.
+  function ilustrasiKemasan(m, w, hgt) {
+    var g = m.gaya || ['kotak', '#56C3C7', '#E8488C'], bentuk = g[0], c1 = g[1], c2 = g[2];
+    var nama = m.nama.replace(/\s*\(.*\)$/, ''), fs = nama.length > 12 ? 6.6 : nama.length > 9 ? 7.6 : 8.8;
+    var teks = function (x, y, ukuran, warna, anchor) {
+      return '<text x="' + x + '" y="' + y + '" font-family="Plus Jakarta Sans,Arial,sans-serif" font-size="' + ukuran +
+        '" font-weight="800" fill="' + (warna || '#1E3A4C') + '"' + (anchor ? ' text-anchor="' + anchor + '"' : '') + '>' + h(nama) + '</text>';
+    };
+    var isi = '<rect width="120" height="80" rx="12" fill="#F4FAFA"/><ellipse cx="60" cy="72" rx="46" ry="3.5" fill="#000" opacity=".07"/>';
+    function kotak(dx, dy) {
+      return '<g transform="translate(' + dx + ' ' + dy + ')">' +
+        '<path d="M8 18 20 10h78l-12 8z" fill="#F3F6F7" stroke="#D5DCDF" stroke-width=".8"/>' +
+        '<path d="M86 18 98 10v48l-12 8z" fill="#E6EBED" stroke="#D5DCDF" stroke-width=".8"/>' +
+        '<path d="M86 18 98 10v10l-12 8z" fill="' + c1 + '" opacity=".75"/>' +
+        '<rect x="8" y="18" width="78" height="48" fill="#fff" stroke="#D5DCDF" stroke-width=".8"/>' +
+        '<rect x="8" y="18" width="78" height="11" fill="' + c1 + '"/>' +
+        '<rect x="8" y="58" width="78" height="4" fill="' + c2 + '"/>' +
+        '<rect x="14" y="48" width="34" height="2.2" rx="1" fill="#C9D2D6"/><rect x="14" y="52" width="24" height="2.2" rx="1" fill="#DDE3E6"/>' +
+        teks(14, 42, fs) + '</g>';
+    }
+    if (bentuk === 'vial') {
+      [0, 1, 2].forEach(function (i) {
+        var x = 26 + i * 25, tinggi = i === 1 ? 0 : 4;
+        isi += '<rect x="' + x + '" y="' + (13 + tinggi) + '" width="17" height="7" rx="1.5" fill="' + c1 + '"/>' +
+          '<rect x="' + (x + 3) + '" y="' + (20 + tinggi) + '" width="11" height="4" fill="#C9D2D6"/>' +
+          '<rect x="' + (x - 1) + '" y="' + (24 + tinggi) + '" width="19" height="' + (44 - tinggi) + '" rx="4" fill="#fff" stroke="#B8C2C6" stroke-width=".9"/>' +
+          '<rect x="' + (x - 1) + '" y="' + (37 + tinggi) + '" width="19" height="17" fill="' + c2 + '"/>' +
+          '<rect x="' + (x + 2) + '" y="' + (41 + tinggi) + '" width="13" height="2" rx="1" fill="' + c1 + '" opacity=".8"/>';
+      });
+      isi += '<rect x="22" y="58" width="76" height="11" rx="3" fill="#fff" opacity=".92"/>' + teks(60, 66.5, Math.min(fs, 7.6), '#1E3A4C', 'middle');
+    } else if (bentuk === 'tube') {
+      isi += '<rect x="9" y="25" width="102" height="30" rx="7" fill="' + c2 + '" stroke="#B8C2C6" stroke-width=".8"/>' +
+        '<rect x="9" y="25" width="26" height="30" rx="7" fill="' + c1 + '"/><rect x="28" y="25" width="7" height="30" fill="' + c1 + '"/>' +
+        '<path d="M100 27v26M104 27v26" stroke="#fff" stroke-width="1.4" opacity=".7"/>' +
+        '<circle cx="22" cy="40" r="6" fill="#fff" opacity=".85"/>' + teks(42, 43.5, fs);
+    } else {
+      var spuit = bentuk === 'kotak-spuit';
+      isi += kotak(spuit ? 2 : 4, spuit ? -4 : 0);
+      if (spuit) {
+        isi += '<g transform="translate(30 63) rotate(-6)">' +
+          '<rect x="-12" y="0" width="3" height="9" rx="1" fill="#AEB8BC"/><rect x="-10" y="3" width="11" height="3" fill="#C9D2D6"/>' +
+          '<rect x="0" y="0.5" width="50" height="8" rx="2.5" fill="#fff" stroke="#9AA6AB" stroke-width=".9"/>' +
+          '<rect x="16" y="2.5" width="30" height="4" rx="1" fill="' + c2 + '" opacity=".55"/>' +
+          '<rect x="50" y="1.5" width="20" height="6" rx="2.5" fill="' + c1 + '"/></g>';
+      }
+    }
+    return '<svg class="pd-foto" width="' + w + '" height="' + hgt + '" viewBox="0 0 120 80" role="img" aria-label="Ilustrasi kemasan ' + h(m.nama) + '">' + isi + '</svg>';
+  }
+  var PANDUAN_JADWAL = [
+    ['pasien', 'Anak · IDAI 2024', '0–18 tahun', 'panduan-jadwal/idai'],
+    ['rekam', 'Anak · Buku KIA', 'Program pemerintah', 'panduan-jadwal/kia'],
+    ['profil', 'Dewasa · PAPDI 2025', '19 tahun ke atas', 'panduan-jadwal/dewasa'],
+    ['pengingat', 'Ibu Hamil · POGI 2026', 'Flu, Tdap, RSV', 'panduan-jadwal/hamil'],
+    ['tentang', 'Pra Nikah', 'Calon pengantin', 'panduan-jadwal/pranikah'],
+    ['jadwal', 'Lansia', '60 tahun ke atas', 'panduan-jadwal/lansia'],
+    ['internasional', 'Internasional', 'Haji, umrah, perjalanan', 'internasional']
+  ];
+  function scPanduan() {
+    var body = topbar('Panduan Vaksinasi', 'Di Indonesia · ' + K.panduan.length + ' jenis vaksin', 'beranda');
+    var q = cariPanduan.toLowerCase();
+    var daftar = K.panduan.filter(function (v) {
+      return !q || (v.nama + ' ' + v.mencegah + ' ' + v.merek.map(function (m) { return m.nama; }).join(' ')).toLowerCase().indexOf(q) >= 0;
+    });
+    body += '<div class="pad stack g14">' +
+      '<div style="position:relative;"><input class="input" id="cari-panduan" placeholder="Cari vaksin, penyakit, atau merek…" value="' + h(cariPanduan) + '" style="padding-left:38px;">' +
+      '<span style="position:absolute;left:12px;top:12px;color:var(--ink-4);">' + ic('search', 18) + '</span></div>';
+    if (!q) {
+      body += '<div class="stack g8"><div class="row mid between"><div class="sect-title">Jadwal vaksinasi</div><span class="tiny muted">' + PANDUAN_JADWAL.length + ' jadwal</span></div>' +
+        '<div class="pd-grid3">' + PANDUAN_JADWAL.map(function (j) {
+          return '<button class="pd-tile" data-act="go" data-arg="' + j[3] + '">' + ikonKotak(j[0], '', 44) + '<b>' + h(j[1]) + '</b><span>' + h(j[2]) + '</span></button>';
+        }).join('') + '</div></div>';
+    }
+    body += '<div class="stack g8"><div class="sect-title">Jenis vaksin</div>' +
+      (daftar.length ? '<div class="pd-grid2">' + daftar.map(function (v) {
+        return '<button class="card pd-vk" data-act="go" data-arg="panduan/' + v.id + '">' + ikonKotak(ikonKategori(v.nama), '', 38) +
+          '<div><b>' + h(v.nama) + '</b><span>' + h(v.mencegah) + '</span></div>' +
+          '<span class="row g4 wrap"><span class="chip teal" style="font-size:10px;padding:2px 8px;">' + v.merek.length + ' merek</span>' +
+          (v.program ? '<span class="chip green" style="font-size:10px;padding:2px 8px;">Program</span>' : '') + '</span></button>';
+      }).join('') + '</div>' : '<div class="small muted center" style="padding:16px 0;">Tidak ditemukan. Coba nama penyakit, misalnya "diare" atau "kanker serviks".</div>') +
+      '</div><div class="tiny muted">Informasi ini tidak menggantikan anjuran dokter. Sumber: Buku Vaksin Indonesia (2024), IDAI 2024, Buku KIA 2024, PAPDI 2025, POGI 2026.</div></div>';
+    return { body: body };
+  }
+  function bagian(judul, isi, buka) {
+    if (!isi) return '';
+    return '<details class="card pd-acc"' + (buka ? ' open' : '') + '><summary><b>' + h(judul) + '</b>' + ic('chevron', 16) + '</summary>' +
+      '<div class="pd-isi">' + isi + '</div></details>';
+  }
+  function butir(arr) {
+    return arr && arr.length ? '<ul class="pd-ul">' + arr.map(function (t) { return '<li>' + h(t) + '</li>'; }).join('') + '</ul>' : '';
+  }
+  function scPanduanVaksin(id) {
+    var v = panduanById(id);
+    if (!v) return scPanduan();
+    var kl = klinikAktif(), mulai = hargaMulai(v);
+    var body = topbar('Vaksin ' + v.nama, 'Panduan Vaksinasi', 'panduan');
+    body += '<div class="pd-hero">' + ikonKotak(ikonKategori(v.nama), '', 58) +
+      '<div class="grow"><div class="disp" style="font-size:20px;font-weight:800;line-height:1.2;">' + h(v.nama) + '</div>' +
+      '<div class="small" style="color:var(--ink-2);margin-top:2px;">Mencegah ' + h(v.mencegah.charAt(0).toLowerCase() + v.mencegah.slice(1)) + '</div>' +
+      '<div class="row g6 wrap" style="margin-top:8px;">' + (v.program ? '<span class="chip green">Gratis di Puskesmas</span>' : '') +
+      '<span class="chip teal">' + h(v.untuk) + '</span></div></div></div>';
+    body += '<div class="pad stack g10">' +
+      '<div class="pd-fakta">' + v.fakta.map(function (f) { return '<div><span>' + h(f[0]) + '</span><b>' + h(f[1]) + '</b></div>'; }).join('') + '</div>';
+    body += '<div class="card stack g8"><div class="row mid between"><b>Merek tersedia di Indonesia</b><span class="tiny muted">' + v.merek.length + ' merek</span></div>' +
+      v.merek.map(function (m) {
+        var ada = merekDiKlinik(m);
+        return '<div class="row mid g12 pd-merek">' + fotoMerek(m, 84, 56) +
+          '<div class="grow"><b>' + h(m.nama) + '</b><div class="tiny muted">' + h(m.jenis) + '</div><div class="tiny muted">Produksi ' + h(m.produsen) + '</div></div>' +
+          (ada === true ? '<span class="chip teal" style="font-size:9.5px;padding:2px 7px;" title="Ada di price list ' + h(kl.nama) + '">Tersedia</span>'
+            : ada === false ? '<span class="chip grey" style="font-size:9.5px;padding:2px 7px;">Tanya klinik</span>' : '') + '</div>';
+      }).join('') +
+      (v.beda.length ? '<div class="tiny" style="color:var(--ink-2);line-height:1.6;border-top:1px solid var(--line);padding-top:8px;">' + v.beda.map(h).join('<br>') + '</div>' : '') +
+      '</div>';
+    body += bagian('Manfaat', v.manfaat.map(function (t) { return '<p>' + h(t) + '</p>'; }).join('')) +
+      bagian('Jadwal pemberian', v.jadwal.map(function (j) {
+        return '<div class="pd-jdl"><b>' + h(j[0]) + '</b>' + butir(j[1]) + '</div>';
+      }).join(''), true) +
+      bagian('Siapa yang tidak boleh', butir(v.kontra) + '<p class="tiny muted">Bila ragu, konsultasikan dengan dokter.</p>') +
+      bagian('Perlu diperhatikan', butir(v.perhatian)) +
+      bagian('Reaksi setelah vaksin', butir(v.reaksi)) +
+      bagian('Bila tidak divaksin', butir(v.bahaya)) +
+      bagian('Pertanyaan umum', v.faq.length ? v.faq.map(function (f) {
+        return '<div class="pd-faq"><b>' + h(f[0]) + '</b><span>' + h(f[1]) + '</span></div>';
+      }).join('') : '') +
+      '<div class="tiny muted">Informasi ini tidak menggantikan anjuran dokter.</div></div>';
+    body += '<div class="pd-cta"><div class="grow"><div class="tiny muted">' + (kl ? (mulai ? 'Mulai dari · ' : '') + h(namaPendek(kl)) : 'Pilih klinik mitra untuk melihat harga') + '</div>' +
+      (mulai ? '<b class="disp" style="font-size:16px;color:var(--magenta-dark);">' + rp(mulai.harga) + '</b>'
+        : (kl ? '<b class="small">Harga dikonfirmasi klinik</b>' : '')) + '</div>' +
+      '<button class="btn primary sm" data-act="booking-panduan" data-arg="' + v.id + '">Booking vaksin ini</button></div>';
+    return { body: body };
+  }
+  function scPanduanJadwal(jenis) {
+    var body, isi = '';
+    if (jenis === 'idai' || jenis === 'kia') {
+      var dosis = jenis === 'kia' ? K.jadwalKIA : K.jadwalIDAI, grup = {}, urut = [];
+      body = topbar(jenis === 'kia' ? 'Jadwal Buku KIA' : 'Jadwal IDAI 2024', jenis === 'kia' ? 'Program imunisasi pemerintah · gratis' : 'Anak usia 0–18 tahun', 'panduan');
+      dosis.forEach(function (d) {
+        var g = jenis === 'kia' ? (d.mulai >= 84 ? 'BIAS — anak sekolah' : usiaDosisTeks(d.mulai)) : d.baris;
+        if (!grup[g]) { grup[g] = []; urut.push(g); }
+        grup[g].push(d);
+      });
+      isi += '<div class="card tint small" style="line-height:1.6;color:var(--ink-2);">' + (jenis === 'kia'
+        ? 'Imunisasi program pemerintah di Buku KIA 2024, tersedia gratis di Puskesmas dan Posyandu, ditambah imunisasi anak sekolah (BIAS).'
+        : 'Rekomendasi Ikatan Dokter Anak Indonesia 2024, termasuk vaksin pilihan di luar program pemerintah.') + '</div>';
+      isi += urut.map(function (g) {
+        return '<div class="card stack g6"><div class="sect-title" style="font-size:14px;">' + h(g) + '</div>' +
+          grup[g].map(function (d) {
+            var perUsia = jenis === 'kia' && d.mulai < 84;
+            return '<div class="row g10 small" style="padding:6px 0;border-top:1px solid var(--line);align-items:flex-start;">' +
+              (perUsia ? '' : '<span style="width:78px;flex-shrink:0;font-weight:700;color:var(--teal-deep);">' + h(usiaDosisTeks(d.mulai)) + '</span>') +
+              '<span class="grow">' + tautPanduan(d.label) +
+              (d.ket ? '<div class="tiny muted">' + h(d.ket) + '</div>' : '') +
+              (d.syarat === 'endemis' ? '<div class="tiny" style="color:var(--amber);">Daerah endemis</div>' : '') +
+              (d.syarat === 'tambahan' ? '<div class="tiny" style="color:var(--amber);">Vaksin tambahan</div>' : '') + '</span></div>';
+          }).join('') + '</div>';
+      }).join('');
+      isi += '<button class="btn outline" data-act="go" data-arg="jadwal-banding">Bandingkan IDAI dan Buku KIA</button>';
+    } else if (jenis === 'dewasa') {
+      body = topbar('Jadwal Dewasa', 'Rekomendasi PAPDI 2025', 'panduan');
+      isi += K.jadwalDewasa.map(function (b) {
+        return '<div class="card stack g6"><div class="sect-title" style="font-size:14px;">' + h(b.usia) + '</div>' +
+          b.items.map(function (it) {
+            return '<div class="row g10 small" style="padding:6px 0;border-top:1px solid var(--line);"><span class="grow">' + tautPanduan(it.nama) + '</span>' +
+              '<span class="tiny muted kanan" style="max-width:52%;">' + h(it.dosis) + '</span></div>';
+          }).join('') + '</div>';
+      }).join('') + '<div class="card warn tiny" style="color:#8A6A21;line-height:1.6;">' + h(K.catatanDewasa) + '</div>';
+    } else if (jenis === 'hamil') {
+      body = topbar('Jadwal Ibu Hamil', 'Rekomendasi POGI 2026', 'panduan');
+      isi += '<div class="card tint small" style="line-height:1.6;color:var(--ink-2);">Vaksin yang aman dan dianjurkan selama kehamilan, diberikan pada setiap kehamilan.</div>' +
+        K.jadwalHamil.map(function (x) {
+          return '<div class="card stack g8"><div class="row mid g10">' + ikonKotak(ikonKategori(x[0]), '', 40) +
+            '<div class="grow"><div style="font-weight:800;">' + tautPanduan(x[0]) + '</div><div class="small" style="color:var(--teal-deep);font-weight:700;">' + h(x[1]) + '</div></div></div>' +
+            '<div class="small" style="color:var(--ink-2);line-height:1.6;">' + h(x[2]) + '</div></div>';
+        }).join('') +
+        '<div class="tiny muted">Sumber: konsensus POGI, IDAI, PAPDI & PERALMUNI 2025; UK JCVI 2026.</div>';
+    } else if (jenis === 'pranikah' || jenis === 'lansia') {
+      var r = scJadwalInfo(jenis);
+      return { body: r.body.replace('data-arg="jadwal"', 'data-arg="panduan"') };
+    } else return scPanduan();
+    return { body: body + '<div class="pad stack g12">' + isi + '</div>' };
+  }
   function pilihPasien(aktif) {
     return '<div class="tabs">' + S.pasien.map(function (p) {
       return '<button class="pill' + (p.id === aktif.id ? ' on' : '') + '" data-act="pilih-pasien" data-arg="' + p.id + '">' + h(p.nama.split(' ')[0]) + '</button>';
@@ -1507,8 +2749,8 @@
       body = topbar('Vaksin Pranikah', 'Persiapan sebelum menikah', 'jadwal');
       isi += '<div class="card stack g10"><div class="sect-title">Vaksin yang dianjurkan</div>' +
         K.pranikahVaksin.map(function (v) {
-          return '<div class="row g12" style="align-items:flex-start;"><div class="icon-sq mag" style="width:32px;height:32px;border-radius:9px;">' + ic('syringe', 16) + '</div>' +
-            '<div class="grow"><div class="small" style="font-weight:700;">' + h(v[0]) + '</div>' +
+          return '<div class="row g12" style="align-items:flex-start;">' + ikonKotak(ikonKategori(v[0]), '', 34) +
+            '<div class="grow"><div class="small" style="font-weight:700;">' + tautPanduan(v[0]) + '</div>' +
             '<div class="tiny muted">' + h(v[1] + ' · ' + v[2]) + '</div></div></div>';
         }).join('') + '</div>';
       isi += '<div class="card stack g10"><div class="sect-title">Jadwal pemberian</div>' +
@@ -1520,7 +2762,7 @@
     } else {
       body = topbar('Vaksin Lansia', '50 tahun ke atas', 'jadwal');
       isi += K.lansia.map(function (v) {
-        return '<div class="card stack g8"><div class="row mid g10">' + ic('checkc', 18) + '<span style="font-weight:700;">' + h(v[0]) + '</span></div>' +
+        return '<div class="card stack g8"><div class="row mid g10">' + ic('checkc', 18) + '<span style="font-weight:700;">' + tautPanduan(v[0]) + '</span></div>' +
           '<span class="chip teal">' + h(v[1]) + '</span>' +
           '<div class="small" style="color:var(--ink-2);line-height:1.6;">' + h(v[2]) + '</div></div>';
       }).join('');
@@ -1566,8 +2808,11 @@
       body += riw.map(function (x) {
         return '<div class="row g12" style="align-items:flex-start;padding:8px 0;border-top:1px solid var(--line);">' +
           '<div class="icon-sq" style="width:32px;height:32px;border-radius:9px;background:var(--green-tint);color:var(--green);">' + ic('checkc', 16) + '</div>' +
-          '<div class="grow"><div class="small" style="font-weight:700;">' + h(x.label) + '</div>' +
-          '<div class="tiny muted">' + tgl(x.tanggal) + ' · ' + h(x.sumber === 'booking' ? 'dari reservasi' : 'dicatat manual') + '</div></div>' +
+          '<div class="grow"><div class="small" style="font-weight:700;">' + tautPanduan(x.label) + '</div>' +
+          '<div class="tiny muted">' + tgl(x.tanggal) + ' · ' + h(x.tempat || (x.sumber === 'booking' ? 'dari reservasi' : 'dicatat manual')) +
+          (x.faskes ? ' · ' + h(x.faskes) : '') + (x.merek && x.label.indexOf(x.merek) < 0 ? ' · ' + h(x.merek) : '') + '</div>' +
+          (x.batch ? '<div class="tiny" style="color:var(--teal-dark);font-weight:700;">No. Batch ' + h(x.batch) + '</div>' : '') +
+          (x.foto ? '<img src="' + x.foto + '" alt="Foto label vaksin" style="margin-top:6px;max-height:70px;border-radius:8px;border:1px solid var(--line);">' : '') + '</div>' +
           '<button class="linkbtn" data-act="hapus-riwayat" data-arg="' + x.id + '" style="color:var(--ink-4);">' + ic('trash', 15) + '</button></div>';
       }).join('');
     }
@@ -1631,8 +2876,12 @@
   /* ============================ layar: harga ============================ */
   var tarif = 'umum', cariHarga = '', fokusHarga = false;
   function scHarga() {
-    var body = topbar('Daftar Harga Vaksinasi', 'Price list terbuka', 'beranda');
-    body += '<div class="pad stack g12">' +
+    var kl = klinikAktif();
+    var body = topbar('Daftar Harga Vaksinasi', kl ? kl.nama : 'Pilih klinik mitra', 'beranda');
+    body += '<div class="pad stack g12">' + lokasiChip() +
+      (kl && !kl.harga ? '<div class="card warn tiny" style="color:#8A6A21;line-height:1.6;">Price list ' + h(kl.nama) +
+        ' sedang disiapkan. Jenis vaksin di bawah adalah daftar umum; harga dan ketersediaannya dikonfirmasi klinik saat reservasi.</div>' : '') +
+      (!kl ? '<div class="card warn tiny" style="color:#8A6A21;line-height:1.6;">Pilih kota dan klinik mitra untuk melihat harga yang berlaku di sana.</div>' : '') +
       '<div class="card tint row mid g8" style="padding:12px 14px;">' + ic('checkc', 16) +
       '<span class="tiny" style="color:var(--teal-dark);font-weight:600;line-height:1.5;">Harga sudah termasuk jasa dokter, vaksin, bahan habis pakai &amp; administrasi.</span></div>' +
       '<div class="row g8">' +
@@ -1658,13 +2907,14 @@
     if (!urut.length) body += '<div class="small muted center" style="padding:24px 0;">Vaksin tidak ditemukan.</div>';
     urut.forEach(function (nama) {
       body += '<div class="card stack g6" style="padding:14px 16px;">' +
-        '<div class="row mid g8"><div class="icon-sq" style="width:30px;height:30px;border-radius:9px;">' + ic('syringe', 16) + '</div>' +
-        '<span style="font-weight:700;font-size:13.5px;">' + h(nama) + '</span></div>' +
+        '<div class="row mid g10">' + ikonKotak(ikonKategori(nama), '', 38) +
+        '<span class="grow" style="font-weight:700;font-size:13.5px;">' + tautPanduan(nama) + '</span>' +
+        (grup[nama].some(produkProgram) ? CHIP_PKM : '') + '</div>' +
         '<table class="price">' + grup[nama].map(function (v) {
-          var hrg = tarif === 'spesialis' ? v.spesialis : v.umum;
+          var hrg = hargaVaksin(v, tarif);
           return '<tr><td><div style="font-weight:600;">' + h(v.sediaan) + '</div>' +
             (v.merk !== v.sediaan ? '<div class="tiny muted">' + h(v.merk) + '</div>' : '') + '</td>' +
-            '<td class="p">' + (hrg ? rp(angka(hrg)) : '<span class="muted" style="font-weight:600;">Hubungi CS</span>') + '</td></tr>';
+            '<td class="p">' + (hrg ? rp(hrg) : '<span class="muted" style="font-weight:600;">' + (punyaHarga() ? 'Hubungi CS' : 'Dikonfirmasi klinik') + '</span>') + '</td></tr>';
         }).join('') + '</table></div>';
     });
     body += '<div class="tiny muted" style="padding:0 4px;">Harga dapat berubah sewaktu-waktu. Konfirmasi terakhir saat reservasi melalui ' + h(K.brand.callCenter) + '.</div>';
@@ -1682,18 +2932,22 @@
       K.internasionalWajib.map(function (v) {
         return '<div class="row g12" style="align-items:flex-start;padding-top:10px;border-top:1px solid var(--line);">' +
           '<div class="icon-sq" style="width:32px;height:32px;border-radius:9px;">' + ic('shield', 16) + '</div>' +
-          '<div class="grow"><div class="small" style="font-weight:700;">' + h(v[0]) + '</div>' +
+          '<div class="grow"><div class="small" style="font-weight:700;">' + tautPanduan(v[0]) + '</div>' +
           '<div class="tiny muted" style="line-height:1.55;">' + h(v[1]) + '</div></div></div>';
       }).join('') + '</div>';
     body += '<div class="card stack g10"><div class="row mid g8"><div class="sect-title">Vaksin tambahan</div><span class="chip amber">Rekomendasi WHO</span></div>' +
       K.internasionalTambahan.map(function (v) {
         return '<div class="row g12" style="align-items:flex-start;padding-top:10px;border-top:1px solid var(--line);">' +
           '<div class="icon-sq mag" style="width:32px;height:32px;border-radius:9px;">' + ic('plus', 16) + '</div>' +
-          '<div class="grow"><div class="small" style="font-weight:700;">' + h(v[0]) + '</div>' +
+          '<div class="grow"><div class="small" style="font-weight:700;">' + tautPanduan(v[0]) + '</div>' +
           '<div class="tiny muted" style="line-height:1.55;">' + h(v[1]) + '</div></div></div>';
       }).join('') + '</div>';
-    body += '<div class="sect-title" style="padding-top:2px;">Harga</div>';
-    K.hargaInternasional.forEach(function (x) {
+    body += '<div class="sect-title" style="padding-top:2px;">Harga' + (klinikAktif() ? ' · ' + h(namaPendek(klinikAktif())) : '') + '</div>';
+    if (promoKlinik() !== 'alrasha') {
+      body += '<div class="card warn tiny" style="color:#8A6A21;line-height:1.6;">' + (klinikAktif()
+        ? 'Harga vaksin internasional di ' + h(klinikAktif().nama) + ' dikonfirmasi klinik saat reservasi.'
+        : 'Pilih klinik mitra untuk melihat harga vaksin internasional.') + '</div>' + lokasiChip();
+    } else K.hargaInternasional.forEach(function (x) {
       body += '<div class="card row mid g12" style="padding:15px 16px;">' +
         '<div class="grow"><div class="row mid g7"><span style="font-weight:700;font-size:13px;">' + h(x.nama) + '</span>' +
         (x.coret ? '<span class="chip mag" style="padding:2px 8px;font-size:9.5px;margin-left:7px;">PROMO</span>' : '') + '</div>' +
@@ -1701,7 +2955,7 @@
         '<div class="disp nowrap" style="font-size:16px;font-weight:800;color:var(--magenta-dark);">' + rp(angka(x.harga)) + '</div></div>';
     });
     var pt = K.paketTriple;
-    body += '<div class="card stack g10" style="border:1.6px solid var(--magenta);">' +
+    if (promoKlinik() === 'alrasha') body += '<div class="card stack g10" style="border:1.6px solid var(--magenta);">' +
       '<div class="row mid g8"><span class="disp" style="font-size:15px;font-weight:800;">' + h(pt.nama) + '</span>' +
       '<span class="chip mag" style="padding:2px 8px;font-size:9.5px;">HEMAT</span></div>' +
       pt.isi.map(function (i) { return '<div class="row mid g8">' + ic('checkc', 15) + '<span class="small" style="color:var(--ink-2);">' + h(i) + '</span></div>'; }).join('') +
@@ -1744,19 +2998,28 @@
           '<div class="disp" style="width:24px;height:24px;border-radius:50%;background:var(--teal);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0;">' + (i + 1) + '</div>' +
           '<span class="small" style="color:var(--ink-2);line-height:1.55;padding-top:2px;">' + h(s) + '</span></div>';
       }).join('') + '</div>';
-    body += '<div class="card stack g4"><div class="sect-title" style="margin-bottom:6px;">Dokter vaksinasi</div>' +
-      K.dokter.map(function (d) {
+    var aktifK = klinikAktif();
+    var dokK = dokterKlinik();
+    if (dokK.length) body += '<div class="card stack g4"><div class="sect-title" style="margin-bottom:6px;">Dokter vaksinasi · ' + h(namaPendek(aktifK)) + '</div>' +
+      dokK.map(function (d) {
         return '<div class="row mid g12" style="padding:9px 0;border-top:1px solid var(--line);">' +
           '<div class="avatar" style="width:36px;height:36px;font-size:12px;">' + h(d[2]) + '</div>' +
           '<div class="grow"><div class="small" style="font-weight:700;">' + h(d[0]) + '</div>' +
           '<div class="tiny muted">' + h(d[1]) + '</div></div></div>';
       }).join('') + '</div>';
-    body += '<div class="card stack g4"><div class="sect-title" style="margin-bottom:6px;">Lokasi klinik</div>' +
-      K.klinik.map(function (kl) {
-        return '<div class="row g12" style="align-items:flex-start;padding:10px 0;border-top:1px solid var(--line);">' +
-          '<div class="icon-sq mag" style="width:32px;height:32px;border-radius:9px;">' + ic('pin', 16) + '</div>' +
-          '<div class="grow"><div class="small" style="font-weight:700;">' + h(kl[0]) + '</div>' +
-          '<div class="tiny muted" style="line-height:1.5;">' + h(kl[1]) + '</div></div></div>';
+    body += '<div class="card stack g4"><div class="sect-title" style="margin-bottom:2px;">Klinik mitra VaksinKu</div>' +
+      '<div class="tiny muted" style="margin-bottom:6px;">Harga, ketersediaan vaksin, dan promo mengikuti klinik yang dipilih.</div>' +
+      K.mitra.map(function (m) {
+        return '<div class="tiny" style="font-weight:800;color:var(--ink-3);text-transform:uppercase;letter-spacing:.05em;padding-top:8px;">' + h(m.kota) + '</div>' +
+          m.klinik.map(function (kl) {
+            var on = aktifK && aktifK.id === kl.id;
+            return '<div class="row g12" style="align-items:flex-start;padding:10px 0;border-top:1px solid var(--line);">' +
+              ikonKotak('klinik', on ? 'aktif' : '', 34) +
+              '<div class="grow"><div class="small" style="font-weight:700;">' + h(kl.nama) + '</div>' +
+              '<div class="tiny muted" style="line-height:1.5;">' + h(kl.alamat || 'Alamat menyusul') + '</div></div>' +
+              (on ? '<span class="chip mag" style="font-size:10px;">Dipilih</span>'
+                : '<button class="linkbtn tiny" data-act="pilih-klinik" data-arg="' + kl.id + '">Pilih</button>') + '</div>';
+          }).join('');
       }).join('') + '</div>';
     body += '<div class="card stack g12" style="background:var(--teal-dark);border-color:transparent;color:#fff;">' +
       '<div class="row mid g12"><div class="icon-sq" style="background:rgba(255,255,255,.16);color:#fff;border-radius:50%;">' + ic('wa', 19) + '</div>' +
@@ -1772,6 +3035,19 @@
   function scProfil() {
     var body = topbar('Profil', 'Data pendaftar & pengaturan');
     body += '<div class="pad stack g14">';
+    body += S.akun.masuk && S.akun.metode === 'google'
+      ? '<div class="card row mid g12">' +
+        (S.akun.foto ? '<img src="' + h(S.akun.foto) + '" alt="" referrerpolicy="no-referrer" style="width:40px;height:40px;border-radius:50%;">'
+          : '<span class="icon-sq">' + LOGO_G + '</span>') +
+        '<div class="grow" style="min-width:0;"><div class="tiny muted">Masuk dengan Google</div>' +
+        '<div class="small" style="font-weight:700;overflow:hidden;text-overflow:ellipsis;">' + h(S.akun.email) + '</div>' +
+        '<div class="tiny" style="margin-top:2px;color:' + (sesiAktif() ? 'var(--teal-dark)">Tersambung ke server VaksinKu'
+          : 'var(--ink-3)">Belum tersambung ke server — data di perangkat ini') + '</div></div>' +
+        '<button class="btn outline sm" data-act="keluar-akun">Keluar</button></div>'
+      : '<div class="card stack g8"><div class="small" style="font-weight:700;">Belum masuk</div>' +
+        '<div class="tiny muted" style="line-height:1.6;">Masuk dengan akun Google untuk menyimpan akun VaksinKu Anda.</div>' +
+        '<button class="btn outline sm" data-act="go" data-arg="masuk">' + LOGO_G + ' Masuk dengan Google</button></div>';
+    body += statusSinkronHTML();
     body += '<div class="card stack g10"><div class="sect-title">Data pendaftar</div>' +
       '<div class="hint">Dipakai sebagai penerima invoice dan kontak yang dihubungi CS.</div>' +
       '<div><label class="lbl">Nama lengkap<span class="req">*</span></label>' +
@@ -1789,25 +3065,27 @@
       '<div class="tiny" style="color:#8A6A21;">+10 poin setiap vaksinasi selesai</div></div></div>';
 
     body += '<div class="card stack g4">' +
-      menuRow('family', 'Daftar Pasien', S.pasien.length + ' orang terdaftar', 'pasien') +
+      menuRow('pasien', 'Daftar Pasien', S.pasien.length + ' orang terdaftar', 'pasien') +
       '<div class="divider"></div>' +
-      menuRow('pin', 'Daftar Alamat', S.alamat.length + ' alamat tersimpan', 'alamat') +
+      menuRow('alamat', 'Daftar Alamat', S.alamat.length + ' alamat tersimpan', 'alamat') +
       '<div class="divider"></div>' +
-      menuRow('doc', 'Riwayat Reservasi', S.booking.length + ' reservasi', 'riwayat-booking') +
+      menuRow('riwayat', 'Riwayat Reservasi', S.booking.length + ' reservasi', 'riwayat-booking') +
       '<div class="divider"></div>' +
-      menuRow('calendar', 'Jadwal Vaksin', 'IDAI 2024 & PAPDI 2025', 'jadwal') +
+      menuRow('jadwal', 'Jadwal Vaksin', 'IDAI 2024 & PAPDI 2025', 'jadwal') +
       '<div class="divider"></div>' +
-      menuRow('bell', 'Pengingat & Notifikasi', jumlahBaru() + ' pengingat baru', 'notifikasi') +
+      menuRow('pengingat', 'Pengingat & Notifikasi', jumlahBaru() + ' pengingat baru', 'notifikasi') +
       '<div class="divider"></div>' +
-      menuRow('chat', 'Konsultasi Dokter', S.konsultasi.length + ' konsultasi', 'chat') +
+      menuRow('konsultasi', 'Konsultasi Dokter', S.konsultasi.length + ' konsultasi', 'chat') +
       '<div class="divider"></div>' +
-      menuRow('chart', 'Korporat / Sekolah',
+      menuRow('korporat', 'Korporat / Sekolah',
         S.korporat.nama ? S.korporat.nama + ' · ' + korPeserta().length + ' peserta' : 'Vaksinasi massal karyawan atau siswa',
         S.korporat.nama ? 'korporat' : 'korporat-setup') +
       '<div class="divider"></div>' +
-      menuRow('tag', 'Daftar Harga', 'Price list lengkap', 'harga') +
+      menuRow('panduan', 'Panduan Vaksinasi', K.panduan.length + ' jenis vaksin, merek & 7 jadwal', 'panduan') +
       '<div class="divider"></div>' +
-      menuRow('info', 'Tentang & Lokasi', 'Klinik, dokter, kontak', 'tentang') +
+      menuRow('harga', 'Daftar Harga', 'Price list lengkap', 'harga') +
+      '<div class="divider"></div>' +
+      menuRow('tentang', 'Tentang & Lokasi', 'Klinik, dokter, kontak', 'tentang') +
       '</div>';
 
     body += '<div class="card stack g10"><div class="sect-title">Data aplikasi</div>' +
@@ -1816,6 +3094,7 @@
       '<button class="btn outline sm" data-act="impor">' + ic('upload', 16) + ' Pulihkan dari cadangan</button>' +
       (S.pasien.length ? '' : '<button class="btn outline sm" data-act="contoh">Muat data contoh</button>') +
       '<button class="btn danger sm" data-act="reset">Hapus semua data</button>' +
+      '<a class="tiny" href="' + h(K.google.situs) + '/privasi.html" target="_blank" rel="noopener">Kebijakan Privasi</a>' +
       '<input type="file" id="file-impor" accept="application/json,.json" class="hide"></div>';
 
     if (!storageOk) {
@@ -1829,7 +3108,7 @@
   }
   function menuRow(icon, judul, sub, target) {
     return '<button class="rowlink" data-act="go" data-arg="' + target + '">' +
-      '<div class="icon-sq" style="width:34px;height:34px;border-radius:10px;">' + ic(icon, 17) + '</div>' +
+      '<div class="ikon-menu">' + icm(icon, 26) + '</div>' +
       '<div class="grow"><div class="small" style="font-weight:700;">' + h(judul) + '</div>' +
       '<div class="tiny muted">' + h(sub) + '</div></div>' +
       '<span style="color:var(--ink-4);">' + ic('chevron', 15) + '</span></button>';
@@ -1902,6 +3181,7 @@
       korAngka(total, 'Total Peserta', 'var(--ink)') +
       korAngka(sudah, 'Sudah Divaksin', 'var(--teal-dark)') +
       korAngka(korPersen() + '%', 'Coverage', 'var(--magenta-dark)') + '</div>';
+    if (kor().jenis !== 'perusahaan') body += kartuBIAS();
 
     if (!total) {
       body += empty('family', 'Belum ada peserta', 'Tambahkan daftar siswa atau karyawan terlebih dahulu. Semua angka di dashboard dihitung dari daftar itu.',
@@ -1931,6 +3211,19 @@
     }
     body += '</div>';
     return body;
+  }
+  // BIAS: imunisasi program pemerintah yang diberikan Puskesmas di sekolah dasar.
+  function kartuBIAS() {
+    var baris = [['Kelas 1', 'Campak-Rubella (MR) dan DT'], ['Kelas 2', 'Td'],
+      ['Kelas 5', 'Td, dan HPV dosis 1 untuk siswi'], ['Kelas 6', 'HPV dosis 2 untuk siswi']];
+    return '<div class="card stack g10"><div class="row mid g10">' + ikonKotak('jadwal', '', 40) +
+      '<div class="grow"><div class="sect-title">Jadwal BIAS</div><div class="tiny muted">Bulan Imunisasi Anak Sekolah · program pemerintah</div></div>' +
+      '<span class="chip green" style="font-size:10px;">Gratis</span></div>' +
+      baris.map(function (b) {
+        return '<div class="row g10 small" style="padding:7px 0;border-top:1px solid var(--line);"><b style="width:62px;flex-shrink:0;">' + b[0] + '</b>' +
+          '<span style="color:var(--ink-2);">' + h(b[1]) + '</span></div>';
+      }).join('') +
+      '<div class="tiny muted" style="line-height:1.55;">Dilaksanakan Puskesmas setempat di sekolah. Vaksin di luar program — misalnya influenza, tifoid, atau dengue — dapat diajukan lewat booking massal.</div></div>';
   }
   function korAngka(nilai, label, warna) {
     return '<div class="card center" style="flex:1;padding:14px 8px;">' +
@@ -2190,11 +3483,30 @@
       }).join('') + '</select></div>' +
       '<div><label class="lbl">Hubungan keluarga</label>' +
       '<input class="input" name="hubungan" value="' + h(p.hubungan) + '" placeholder="Anak, istri, orang tua..."></div>' +
+      '<div class="card flat stack g10" style="padding:14px;"><div class="small" style="font-weight:800;">Untuk anak (0–18 tahun)</div>' +
+      '<div><label class="lbl">Jadwal imunisasi yang diikuti</label><select class="input" name="jadwalAnak">' +
+      [['idai', 'IDAI 2024 — rekomendasi dokter anak (lengkap)'], ['kia', 'Buku KIA — program pemerintah (gratis di Puskesmas)']].map(function (o) {
+        return '<option value="' + o[0] + '"' + ((p.jadwalAnak || 'idai') === o[0] ? ' selected' : '') + '>' + o[1] + '</option>';
+      }).join('') + '</select><div class="hint" style="margin-top:6px;">Bisa diganti kapan saja di halaman Jadwal Vaksin.</div></div>' +
+      '<label class="row mid g8 small"><input type="checkbox" name="endemis"' + (p.endemis ? ' checked' : '') + '> Tinggal di / akan bepergian ke daerah endemis Japanese Encephalitis</label>' +
+      '<div><div class="lbl">Kondisi khusus (opsional)</div><div class="stack g6">' +
+      KONDISI.map(function (k) {
+        return '<label class="row mid g8 small"><input type="checkbox" name="kondisi-' + k[0] + '"' + (p.kondisi && p.kondisi[k[0]] ? ' checked' : '') + '> ' + h(k[1]) + '</label>';
+      }).join('') + '</div><div class="hint" style="margin-top:6px;">Membantu aplikasi menampilkan peringatan yang perlu dikonsultasikan dengan dokter.</div></div></div>' +
       '<input type="hidden" name="pid" value="' + h(p.id) + '">' +
       '<button type="submit" class="btn primary">' + (id ? 'Simpan perubahan' : 'Simpan pasien') + '</button>' +
       (id ? '<button type="button" class="btn danger" data-act="hapus-pasien" data-arg="' + id + '">Hapus pasien</button>' : '') +
       '</form></div>';
     return { body: body };
+  }
+  function bacaFieldAnak(p, f) {
+    if (f.elements.jadwalAnak) p.jadwalAnak = f.elements.jadwalAnak.value;
+    p.endemis = !!(f.elements.endemis && f.elements.endemis.checked);
+    p.kondisi = {};
+    KONDISI.forEach(function (k) {
+      var el = f.elements['kondisi-' + k[0]];
+      if (el && el.checked) p.kondisi[k[0]] = true;
+    });
   }
   function scAlamat() {
     var body = topbar('Daftar Alamat', 'Untuk layanan Home Care', 'profil');
@@ -2250,10 +3562,10 @@
     if (!S.booking.length) body += empty('doc', 'Belum ada reservasi', 'Reservasi yang Anda buat akan tersimpan di sini.',
       '<button class="btn primary" data-act="go" data-arg="booking">Buat reservasi</button>');
     S.booking.forEach(function (b) {
-      var st = { menunggu: ['mag', 'Menunggu'], selesai: ['green', 'Selesai'], batal: ['grey', 'Batal'] }[b.status];
+      var st = STATUS_BK[b.status] || STATUS_BK.menunggu;
       body += '<button class="card row mid g12 tap" style="text-align:left;width:100%;border-width:1px;" data-act="go" data-arg="booking-detail/' + b.id + '">' +
-        '<div class="stack grow g4"><div class="row mid g8"><span class="chip ' + st[0] + '">' + st[1] + '</span>' +
-        '<span class="tiny muted">' + h(b.kode) + '</span></div>' +
+        '<div class="stack grow g4"><div class="row mid g8"><span class="chip ' + st[0] + '">' + st[2] + '</span>' +
+        '<span class="tiny muted">' + h(b.kode) + '</span>' + (b.serverId ? '<span class="tiny" style="color:var(--teal-dark);font-weight:700;">Online</span>' : '') + '</div>' +
         '<div class="small" style="font-weight:700;">' + h(b.pasienIds.map(namaPasien).join(', ')) + '</div>' +
         '<div class="tiny muted">' + tgl(b.tanggal) + ' · ' + h(b.jam) + ' · ' + rp(b.total) + '</div></div>' +
         '<span style="color:var(--ink-4);">' + ic('chevron', 16) + '</span></button>';
@@ -2263,55 +3575,7 @@
   }
 
   /* ============================ render ============================ */
-  var sheetHTML = '';
-  /* Geser banner memakai scroll-snap bawaan browser; JS hanya menyinkronkan
-     titik indikator, menangani ketukan titik, dan menjalankan putar otomatis. */
-  var jedaBanner = 0;
-  function pasangBanner() {
-    clearInterval(jedaBanner);
-    var pita = document.getElementById('banner');
-    if (!pita) return;
-    var titik = document.getElementById('banner-titik');
-    var slide = pita.querySelectorAll('.banner-slide');
-    if (!slide.length) return;
-    var manual = false;
-
-    function indeksSekarang() {
-      var lebar = slide[0].offsetWidth + 10;
-      return Math.min(slide.length - 1, Math.round(pita.scrollLeft / lebar));
-    }
-    function sorot() {
-      if (!titik) return;
-      var n = indeksSekarang();
-      [].forEach.call(titik.children, function (t, i) { t.classList.toggle('on', i === n); });
-    }
-    function keSlide(n, halus) {
-      var lebar = slide[0].offsetWidth + 10;
-      pita.scrollTo({ left: n * lebar, behavior: halus === false ? 'auto' : 'smooth' });
-    }
-    pita.addEventListener('scroll', sorot, { passive: true });
-    // sentuhan pengguna menghentikan putar otomatis supaya tidak saling rebut
-    ['pointerdown', 'touchstart', 'wheel'].forEach(function (ev) {
-      pita.addEventListener(ev, function () { manual = true; clearInterval(jedaBanner); }, { passive: true });
-    });
-    if (titik) {
-      titik.addEventListener('click', function (ev) {
-        var b = ev.target.closest('[data-slide]');
-        if (!b) return;
-        manual = true; clearInterval(jedaBanner);
-        keSlide(+b.getAttribute('data-slide'));
-      });
-    }
-    var diam = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (slide.length > 1 && !diam) {
-      jedaBanner = setInterval(function () {
-        if (manual || !document.getElementById('banner')) { clearInterval(jedaBanner); return; }
-        keSlide((indeksSekarang() + 1) % slide.length);
-      }, 5000);
-    }
-    sorot();
-  }
-
+  var sheetHTML = '', layarTerakhir = '';
   function render() {
     var r;
     // layar awal hanya dipaksa saat benar-benar pemakaian pertama; pengguna lama
@@ -2338,6 +3602,9 @@
       case 'harga-fokus': fokusHarga = true; route.name = 'harga'; r = scHarga(); break;
       case 'internasional': r = scInternasional(); break;
       case 'tentang': r = scTentang(); break;
+      case 'jadwal-banding': r = scJadwalBanding(); break;
+      case 'panduan': r = route.param ? scPanduanVaksin(route.param) : scPanduan(); break;
+      case 'panduan-jadwal': r = scPanduanJadwal(route.param); break;
       case 'profil': r = scProfil(); break;
       case 'korporat': r = scKorporat(); break;
       case 'korporat-setup': r = scKorporatSetup(); break;
@@ -2351,21 +3618,179 @@
       case 'riwayat-booking': r = scRiwayatBooking(); break;
       default: r = scBeranda();
     }
+    // Posisi gulir dipertahankan saat layar yang sama digambar ulang (mis. mencentang
+    // pilihan); pindah layar tetap mulai dari atas (lihat hashchange).
+    var kunciLayar = route.name + '/' + route.param, gulirLama = document.getElementById('scroll');
+    var posLayar = gulirLama && kunciLayar === layarTerakhir ? gulirLama.scrollTop : 0;
+    var sheetLama = document.querySelector('.sheet > div'), posSheet = sheetLama ? sheetLama.scrollTop : 0;
+    layarTerakhir = kunciLayar;
+    var sedangCari = !!(document.activeElement && document.activeElement.id === 'cari-vaksin');
     app.innerHTML = '<div class="device">' +
       '<div class="scroll' + (r.penuh ? ' penuh' : '') + '" id="scroll">' + r.body + '</div>' +
       (r.foot || '') + (r.nav ? navbar(r.nav) : '') + sheetHTML + '</div>';
+    if (posLayar) document.getElementById('scroll').scrollTop = posLayar;
+    var sheetBaru = document.querySelector('.sheet > div');
+    if (sheetBaru && posSheet) sheetBaru.scrollTop = posSheet;
+    // kolom cari vaksin hanya difokuskan lagi bila sedang dipakai mengetik
     var s = document.getElementById('cari-vaksin');
-    if (s) { s.focus(); s.setSelectionRange(s.value.length, s.value.length); }
+    if (s && sedangCari) { s.focus({ preventScroll: true }); s.setSelectionRange(s.value.length, s.value.length); }
     pasangBanner();
+    if (route.name === 'masuk') pasangTombolGoogle();
+    // tabel KIA lebar: gulir otomatis ke kolom usia anak saat ini
+    var gulir = document.querySelector(".kia-gulir"), kini = gulir && gulir.querySelector("th.kini");
+    if (kini) gulir.scrollLeft = Math.max(0, kini.offsetLeft - 190);
     if (route.name === 'splash') {
       // splash berpindah sendiri; ketuk di mana saja untuk langsung lanjut
       clearTimeout(jedaSplash);
       jedaSplash = setTimeout(function () {
-        if (route.name === 'splash') location.hash = '#/onboarding';
-      }, 1800);
+        if (route.name === 'splash') lewatiSplash();
+      }, perluOnboarding() ? 4500 : 3600);
     }
   }
   var jedaSplash = 0;
+  // Cover → perkenalan (pemakaian pertama) atau langsung beranda; cover tidak masuk riwayat "kembali".
+  function lewatiSplash() {
+    clearTimeout(jedaSplash);
+    location.replace(perluOnboarding() ? '#/onboarding' : '#/beranda');
+  }
+  // Dipakai uji otomatis untuk mensimulasikan balasan Google; tidak memberi
+  // akses lebih dari yang sudah dimiliki skrip apa pun di halaman ini.
+  window.VaksinKuUji = { terimaGoogle: terimaGoogle, aturState: function (f) { f(S); simpanLokal(); } };
+
+  /* ====================== banner promo beranda ======================
+     Dokter tinggal menambah atau mengurangi baris di sini. Tiap baris:
+
+       mata   label kecil di atas judul (boleh dikosongkan)
+       judul  satu baris, maksimal sekitar 38 huruf agar tidak terpotong
+       teks   satu baris penjelas (boleh dikosongkan)
+       ajak   tulisan pada tautan kecil di bawahnya
+       warna  dua warna gradasi, dipakai bila 'gambar' kosong
+       gambar alamat gambar banner, perbandingan sisi 20:9 (ideal 1200x540).
+              Berkas di folder app/banner/ ditanam ke VaksinKu-App.html saat
+              build_bundle.py dijalankan, jadi tetap tampil tanpa internet.
+              Boleh juga alamat https.
+       alt    isi gambar dalam satu kalimat, dibacakan pembaca layar.
+              Banner bergambar yang sudah memuat tulisan sendiri cukup
+              diisi gambar + alt; mata/judul/teks/ajak dikosongkan.
+       klinik daftar id klinik mitra yang menampilkan banner ini (promo
+              berlaku per klinik); kosongkan agar tampil di semua klinik
+       act    'go' pindah layar, atau 'wa-umum' membuka WhatsApp klinik
+       arg    tujuan untuk 'go' — mis. 'harga', 'internasional', 'booking'
+
+     Banner yang sudah lewat masanya cukup dihapus barisnya. Kosongkan
+     seluruh daftar dan bagian ini hilang dari Beranda dengan sendirinya. */
+  var ALRASHA = ['alrasha-hcc', 'alrasha-ibumas'];
+  var BANNER_SEMUA = [
+    {
+      gambar: 'banner/bundling-hpv.webp',
+      alt: 'Bundling HPV 3 dosis: HPV 4 Rp1,7 juta, HPV 9 Rp6,8 juta. Konsultasi sekarang.',
+      act: 'go', arg: 'chat-baru', klinik: ALRASHA
+    },
+    {
+      gambar: 'banner/hpv4-diperpanjang.webp',
+      alt: 'Promo diperpanjang: vaksin HPV 4 Rp650 ribu per dosis, diskon 50%.',
+      act: 'go', arg: 'booking', klinik: ALRASHA
+    },
+    {
+      gambar: 'banner/little-protection.webp',
+      alt: 'Little Protection Package: PCV, Rotavirus, dan Infanrix Hexa Rp2.825.000.',
+      act: 'go', arg: 'booking', klinik: ALRASHA
+    },
+    {
+      gambar: 'banner/influenza-bareng.webp',
+      alt: 'Vaksin influenza bareng: 1 vaksin Rp345.000, duo Rp670.000, triple Rp1.000.000.',
+      act: 'go', arg: 'booking', klinik: ALRASHA
+    },
+    {
+      gambar: 'banner/vaksin-dewasa.webp',
+      alt: 'Vaksin dewasa: Hepatitis B Rp900.000, HPV 9 Rp6.800.000, HPV 4 Rp1.800.000 untuk 3 dosis.',
+      act: 'go', arg: 'booking', klinik: ALRASHA
+    }
+  ];
+
+  function bannerHTML() {
+    var kl = klinikAktif();
+    // Belum pilih klinik: semua promo tetap tampil sebagai etalase, tetapi
+    // ketukan membuka pilihan klinik dulu karena promo berlaku per klinik.
+    var BANNER = BANNER_SEMUA.filter(function (b) { return !b.klinik || !kl || b.klinik.indexOf(kl.id) >= 0; });
+    if (!BANNER.length) return '';
+    var klinikPromo = [];
+    if (!kl) BANNER.forEach(function (b) {
+      (b.klinik || []).forEach(function (id) { if (klinikPromo.indexOf(id) < 0) klinikPromo.push(id); });
+    });
+    return '<div class="promo">' +
+      '<div class="promo-rel" id="promo-rel">' +
+      BANNER.map(function (b) {
+        var latar = b.gambar
+          ? ''
+          : 'background:linear-gradient(115deg,' + b.warna[0] + ' 0%,' + b.warna[1] + ' 100%);';
+        return '<button class="promo-kartu" style="' + latar + '"' +
+          (!kl && b.klinik ? ' data-act="buka-lokasi" data-arg=""' : ' data-act="' + h(b.act) + '" data-arg="' + h(b.arg || '') + '"') +
+          (b.alt ? ' aria-label="' + h(b.alt) + '"' : '') + '>' +
+          (b.gambar ? '<img src="' + h(b.gambar) + '" alt="" loading="lazy">' : '') +
+          // tirai gelap hanya perlu bila aplikasi menulis teks di atas gambar
+          (b.judul || b.teks || b.mata ? '<span class="tirai"></span>' : '') +
+          (b.mata ? '<span class="promo-mata">' + h(b.mata) + '</span>' : '') +
+          '<span class="promo-judul">' + h(b.judul) + '</span>' +
+          (b.teks ? '<span class="promo-teks">' + h(b.teks) + '</span>' : '') +
+          (b.ajak ? '<span class="promo-ajak">' + h(b.ajak) + ic('chevron', 13) + '</span>' : '') +
+          '</button>';
+      }).join('') +
+      '</div>' +
+      (BANNER.length > 1
+        ? '<div class="promo-titik" id="promo-titik">' +
+            BANNER.map(function (_, i) { return '<i' + (i === 0 ? ' class="on"' : '') + '></i>'; }).join('') +
+            '</div>'
+        : '') +
+      (klinikPromo.length
+        ? '<button class="linkbtn tiny promo-catatan" data-act="buka-lokasi">' + ic('pin', 13) + ' Promo klinik mitra di ' +
+            h(semuaKlinik().filter(function (k) { return klinikPromo.indexOf(k.id) >= 0; })
+              .map(function (k) { return k.kotaNama.replace('Kota ', ''); })
+              .filter(function (n, i, a) { return a.indexOf(n) === i; }).join(' & ')) + ' · pilih klinik untuk memesan</button>'
+        : '') +
+      '</div>';
+  }
+
+  // Dipasang ulang tiap kali layar digambar. Pengatur waktunya disimpan
+  // di luar supaya yang lama selalu dimatikan - tanpa itu, berpindah
+  // layar bolak-balik meninggalkan beberapa pengatur yang berjalan
+  // bersamaan dan banner meloncat-loncat.
+  var bannerJam = 0;
+  function pasangBanner() {
+    clearInterval(bannerJam);
+    var rel = document.getElementById('promo-rel');
+    if (!rel) return;
+    var titik = document.getElementById('promo-titik');
+    var n = rel.children.length;
+
+    function tandai() {
+      if (!titik) return;
+      var ke = Math.round(rel.scrollLeft / Math.max(1, rel.clientWidth + 10));
+      for (var i = 0; i < titik.children.length; i++) {
+        titik.children[i].className = (i === ke ? 'on' : '');
+      }
+    }
+    rel.addEventListener('scroll', tandai, { passive: true });
+
+    if (n < 2) return;
+    // Yang memilih "kurangi gerak" di setelan HP-nya tidak dijalankan
+    // otomatis sama sekali.
+    var diam = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (diam) return;
+
+    // Berhenti SELAMANYA begitu disentuh. Banner yang terus bergeser
+    // sesudah seseorang memilih membacanya adalah gangguan.
+    function berhenti() { clearInterval(bannerJam); }
+    rel.addEventListener('pointerdown', berhenti, { passive: true });
+    rel.addEventListener('touchstart', berhenti, { passive: true });
+
+    bannerJam = setInterval(function () {
+      if (!document.body.contains(rel)) return clearInterval(bannerJam);
+      var lebar = rel.clientWidth + 10;
+      var ke = Math.round(rel.scrollLeft / Math.max(1, lebar));
+      rel.scrollTo({ left: ((ke + 1) % n) * lebar, behavior: 'smooth' });
+    }, 5000);
+  }
 
   /* ============================ aksi ============================ */
   function konfirmasi(pesan) { return window.confirm(pesan); }
@@ -2374,11 +3799,16 @@
     var el = ev.target.closest('[data-act]');
     if (!el) return;
     var act = el.getAttribute('data-act'), arg = el.getAttribute('data-arg') || '';
-    if (act === 'tutup-sheet' && ev.target.closest('[data-stop]')) return;
+    // ketukan di dalam isi sheet tidak menutupnya lewat latar; tombol "Selesai"/tutup di dalamnya tetap bekerja
+    if (act === 'tutup-sheet' && el.classList.contains('sheet') && ev.target.closest('[data-stop]')) return;
     var d = draft();
 
     switch (act) {
-      case 'go': location.hash = '#/' + arg; return;
+      case 'lewati-splash': lewatiSplash(); return;
+      case 'go':
+        sheetHTML = ''; dosisAktif = '';
+        if (location.hash === '#/' + arg) render(); else location.hash = '#/' + arg;
+        return;
       case 'toggle-fokus': {
         var fk = S.onboarding.fokus, fi = fk.indexOf(arg);
         if (fi >= 0) fk.splice(fi, 1); else fk.push(arg);
@@ -2443,13 +3873,41 @@
         window.open('https://wa.me/' + WA + '?text=' + encodeURIComponent(pesanKorporat()), '_blank');
         return;
       }
+      case 'sinkron-sekarang': jalankanSinkron(true); return;
+      case 'pakai-data-akun':
+        if (!konfirmasi('Hapus data keluarga di perangkat ini lalu muat data akun ' + S.akun.email + ' dari server?')) return;
+        S.pasien = []; S.riwayat = []; S.ui.pasienAktif = '';
+        S.sinkron = { akunId: S.akun.sesi.id, dikenal: {} };
+        S.profil.hp = '';
+        simpanLokal(); jalankanSinkron(true); return;
+      case 'keluar-akun':
+        if (!konfirmasi('Keluar dari akun Google ' + S.akun.email + '? Data di perangkat ini tetap tersimpan.')) return;
+        if (window.google && google.accounts) google.accounts.id.disableAutoSelect();
+        S.akun = { masuk: false, metode: '' };
+        simpan(); location.hash = '#/masuk'; return;
       case 'masuk-tamu': selesaikanOnboarding('tamu'); location.hash = '#/beranda';
         toast('Nama dan nomor bisa diisi kapan saja lewat Profil.'); return;
       case 'mulai-booking': d.layanan = arg; simpan(); location.hash = '#/booking'; return;
       case 'pilih-pasien': S.ui.pasienAktif = arg; simpan(); render(); return;
       case 'pasien-jadwal': S.ui.pasienAktif = arg; simpan(); location.hash = '#/jadwal'; return;
       case 'set-layanan': d.layanan = arg; simpan(); render(); return;
-      case 'set-klinik': d.klinikIdx = parseInt(arg, 10); simpan(); render(); return;
+      case 'buka-lokasi': sheetHTML = sheetLokasi(); render(); return;
+      case 'booking-panduan': {
+        var vp = panduanById(arg), mp = vp && hargaMulai(vp), dp = draft();
+        if (mp && dp.vaksinIds.indexOf(mp.produk.id) < 0) dp.vaksinIds.push(mp.produk.id);
+        simpan(); location.hash = '#/booking';
+        toast(mp ? mp.produk.kategori + ' — ' + mp.produk.merk + ' ditambahkan ke reservasi. Merek bisa diganti di langkah Vaksin.'
+          : 'Pilih vaksin ' + (vp ? vp.nama : '') + ' di langkah Vaksin; harga dikonfirmasi klinik.');
+        return;
+      }
+      case 'pilih-klinik': {
+        var kp = klinikById(arg);
+        if (!kp) return;
+        S.lokasi = { kota: kp.kota, klinik: kp.id };
+        simpan(); sheetHTML = ''; render();
+        toast(kp.nama + ' dipilih. ' + (kp.harga ? 'Harga mengikuti price list klinik ini.' : 'Harga dikonfirmasi klinik saat reservasi.'));
+        return;
+      }
       case 'set-alamat': d.alamatId = arg; simpan(); render(); return;
       case 'set-dokter': d.dokter = arg; simpan(); render(); return;
       case 'set-jam': d.jam = arg; simpan(); render(); return;
@@ -2462,7 +3920,58 @@
         simpan(); render(); return;
       }
       case 'buka-vaksin': cariVaksin = ''; sheetHTML = sheetVaksin(); render(); return;
-      case 'tutup-sheet': sheetHTML = ''; render(); return;
+      case 'buka-dosis': {
+        var bd = arg.split('|');
+        dosisAktif = arg; fotoDosis = null; sheetHTML = sheetDosis(bd[0], bd[1]); render(); return;
+      }
+      case 'tab-jadwal': S.ui.tabJadwal = arg; simpan(); render(); return;
+      case 'ganti-jadwal': {
+        var gj = arg.split('|'), pg = S.pasien.filter(function (x) { return x.id === gj[0]; })[0];
+        if (!pg || rujukanAnak(pg) === gj[1]) return;
+        if (!konfirmasi('Ganti ke jadwal ' + NAMA_JADWAL[gj[1]] + '? Dosis yang sudah dicatat tetap tersimpan dan dibaca ulang sesuai jadwal baru.')) return;
+        var tercatat = S.riwayat.filter(function (r) { return r.pasienId === pg.id && r.kunci && r.kunci.length; }).length;
+        pg.jadwalAnak = gj[1];
+        var rb = ringkasJadwal(pg);
+        simpan(); render();
+        toast('Jadwal ' + NAMA_JADWAL[gj[1]] + ' dipakai. ' + (tercatat ? rb.selesai + ' dosis tercatat terbaca di jadwal baru.' : ''));
+        return;
+      }
+      case 'pkm-dosis': {
+        var pk = cariDosis.apply(null, arg.split('|'));
+        if (!pk) return;
+        var kk = pk.x.d.kunci.join('+');
+        pk.p.pkm = pk.p.pkm || {};
+        if (pk.p.pkm[kk]) delete pk.p.pkm[kk]; else pk.p.pkm[kk] = true;
+        simpan(); sheetHTML = sheetDosis(pk.p.id, pk.x.d.id); render();
+        toast(pk.p.pkm[kk] ? pk.x.d.label + ' direncanakan gratis di Puskesmas.' : 'Rencana Puskesmas dibatalkan.');
+        return;
+      }
+      case 'pkm-semua': {
+        var ps = S.pasien.filter(function (x) { return x.id === arg; })[0];
+        var js = ps && jadwalPasien(ps);
+        if (!js || js.tipe !== 'anak') return;
+        var calon = js.dosis.filter(function (x) {
+          return x.d.program && !x.opsional && !x.lewatProgram && x.st !== 'selesai' && x.st !== 'terlewat';
+        });
+        ps.pkm = ps.pkm || {};
+        var semua = calon.length && calon.every(function (x) { return ps.pkm[x.d.kunci.join('+')]; });
+        calon.forEach(function (x) { if (semua) delete ps.pkm[x.d.kunci.join('+')]; else ps.pkm[x.d.kunci.join('+')] = true; });
+        simpan(); render();
+        toast(semua ? 'Rencana Puskesmas dibatalkan.' : calon.length + ' dosis program ditandai gratis di Puskesmas. Vaksin lainnya bisa dibooking di klinik.');
+        return;
+      }
+      case 'hapus-dosis': {
+        var hd = cariDosis.apply(null, arg.split('|'));
+        if (!hd || !konfirmasi('Hapus catatan ' + hd.x.d.label + '?')) return;
+        S.riwayat = S.riwayat.filter(function (r) {
+          if (r.pasienId !== hd.p.id || !r.kunci || r.sumber === 'klinik') return true;
+          r.kunci = r.kunci.filter(function (k) { return hd.x.d.kunci.indexOf(k) < 0; });
+          return r.kunci.length > 0;
+        });
+        simpan(); sheetHTML = ''; render(); toast('Catatan dosis dihapus.');
+        return;
+      }
+      case 'tutup-sheet': sheetHTML = ''; dosisAktif = ''; fotoDosis = null; render(); return;
       case 'toggle-vaksin': {
         var j = d.vaksinIds.indexOf(arg);
         if (j >= 0) d.vaksinIds.splice(j, 1); else d.vaksinIds.push(arg);
@@ -2482,12 +3991,20 @@
           toast('Lengkapi bagian yang ditandai merah.');
           return;
         }
+        if (bookingOnline()) { kirimBookingServer(); return; }
         var rec = buatBooking();
         errB = {};
         location.hash = '#/booking-detail/' + rec.id;
         setTimeout(function () { toast('Reservasi ' + rec.kode + ' tersimpan. Kirim ke CS untuk konfirmasi.'); }, 60);
         return;
       }
+      case 'kirim-ulang-booking': {
+        var bk = S.booking.filter(function (x) { return x.id === arg; })[0];
+        if (bk && !bk.serverId) kirimUlangBooking(bk);
+        return;
+      }
+      case 'toggle-bagikan':
+        d.bagikan = !d.bagikan; simpan(); render(); return;
       case 'wa-booking': {
         var b1 = S.booking.filter(function (x) { return x.id === arg; })[0];
         if (b1) kirimWA(b1);
@@ -2582,12 +4099,17 @@
         return;
       case 'selesai-booking': {
         var b2 = S.booking.filter(function (x) { return x.id === arg; })[0];
-        if (!b2 || b2.status !== 'menunggu') return;
+        if (!b2 || !bookingAktif(b2)) return;
         if (!konfirmasi('Tandai vaksinasi ini sudah selesai? Vaksin akan dicatat di rekam medis pasien.')) return;
         b2.status = 'selesai';
         b2.pasienIds.forEach(function (pid) {
-          b2.rincian.concat(b2.tanpaHarga.map(function (n) { return { nama: n }; })).forEach(function (r) {
-            S.riwayat.push({ id: uid(), pasienId: pid, label: r.nama, tanggal: b2.tanggal, sumber: 'booking', bookingId: b2.id });
+          var pp = S.pasien.filter(function (x) { return x.id === pid; })[0];
+          (b2.vaksinIds || []).forEach(function (vid) {
+            var anak = pp && catatDariProduk(pp, vid, b2.tanggal, { bookingId: b2.id, tempat: 'Klinik', faskes: b2.lokasi });
+            if (anak) return;
+            var v = K.harga.filter(function (x) { return x.id === vid; })[0];
+            S.riwayat.push({ id: uid(), pasienId: pid, label: v ? v.kategori + ' — ' + v.merk : 'Vaksin', merek: v ? v.merk : '',
+              tanggal: b2.tanggal, sumber: 'booking', bookingId: b2.id });
           });
         });
         S.poin += 10;
@@ -2597,11 +4119,17 @@
       case 'batal-booking': {
         var b3 = S.booking.filter(function (x) { return x.id === arg; })[0];
         if (!b3 || !konfirmasi('Batalkan reservasi ' + b3.kode + '?')) return;
+        if (b3.serverId) { batalkanBookingServer(b3); return; }
         b3.status = 'batal'; simpan(); render(); toast('Reservasi dibatalkan.');
         return;
       }
       case 'hapus-booking': {
         if (!konfirmasi('Hapus reservasi ini dari daftar?')) return;
+        S.booking.forEach(function (x) {
+          if (x.id !== arg || !x.serverId) return;
+          S.sinkron = S.sinkron || {};
+          (S.sinkron.bookingTersembunyi = S.sinkron.bookingTersembunyi || {})[x.serverId] = 1;
+        });
         S.booking = S.booking.filter(function (x) { return x.id !== arg; });
         simpan(); location.hash = '#/riwayat-booking'; toast('Reservasi dihapus.');
         return;
@@ -2662,7 +4190,19 @@
 
   document.addEventListener('input', function (ev) {
     var el = ev.target;
-    if (el.id === 'cari-vaksin') { cariVaksin = el.value; sheetHTML = sheetVaksin(); render(); return; }
+    if (el.id === 'cari-vaksin') {
+      cariVaksin = el.value; sheetHTML = sheetVaksin();
+      var dv = document.getElementById('daftar-vaksin');
+      if (dv) dv.innerHTML = daftarVaksinHTML(); else render();
+      return;
+    }
+    if (el.id === 'cari-panduan') {
+      cariPanduan = el.value;
+      var pp = el.selectionStart; render();
+      var np = document.getElementById('cari-panduan');
+      if (np) { np.focus(); np.setSelectionRange(pp, pp); }
+      return;
+    }
     if (el.id === 'cari-harga') {
       cariHarga = el.value;
       var pos = el.selectionStart; render();
@@ -2705,6 +4245,18 @@
   });
 
   document.addEventListener('change', function (ev) {
+    if (ev.target.id === 'foto-dosis' && ev.target.files.length && dosisAktif) {
+      var form = document.getElementById('form-dosis'), simpanan = {};
+      if (form) ['tanggal', 'tempat', 'faskes', 'merek', 'batch'].forEach(function (n) { simpanan[n] = form.elements[n].value; });
+      kecilkanFoto(ev.target.files[0], function (url) {
+        fotoDosis = url;
+        var bd = dosisAktif.split('|');
+        sheetHTML = sheetDosis(bd[0], bd[1]); render();
+        var f2 = document.getElementById('form-dosis');
+        if (f2) for (var n in simpanan) f2.elements[n].value = simpanan[n];
+      });
+      return;
+    }
     if (ev.target.id !== 'file-impor' || !ev.target.files.length) return;
     var fr = new FileReader();
     fr.onload = function () {
@@ -2712,7 +4264,7 @@
         var data = JSON.parse(fr.result);
         if (!data || typeof data !== 'object' || !('pasien' in data)) throw new Error('bukan cadangan VaksinKu');
         for (var k in kosong) if (!(k in data)) data[k] = JSON.parse(JSON.stringify(kosong[k]));
-        S = data; simpan(); render(); toast('Data berhasil dipulihkan.');
+        S = data; migrasiRiwayat(); simpan(); render(); toast('Data berhasil dipulihkan.');
       } catch (e) { toast('Berkas tidak dikenali sebagai cadangan VaksinKu.'); }
     };
     fr.readAsText(ev.target.files[0]);
@@ -2725,6 +4277,26 @@
     var f = ev.target, formId = f.getAttribute('id');
     var get = function (n) { return (f.elements[n] ? f.elements[n].value : '').trim(); };
     formErr = {};
+    if (formId === 'form-dosis') {
+      var cd = cariDosis(get('pid'), get('dosis'));
+      if (!cd) return;
+      var tgD = get('tanggal') || hariIni();
+      if (tgD > hariIni()) { toast('Tanggal pemberian tidak boleh di masa depan.'); return; }
+      var dd0 = cd.x.d, lama = cd.x.st === 'selesai' && !dd0.ulang ? cd.x.catatan : null;
+      var rec = lama && lama.id ? lama : { id: uid(), pasienId: cd.p.id, sumber: 'jadwal' };
+      rec.label = dd0.label; rec.tanggal = tgD; rec.tempat = get('tempat'); rec.faskes = get('faskes');
+      rec.merek = get('merek'); rec.batch = get('batch');
+      rec.kunci = dd0.ulang ? [dd0.kunci[0]] : dd0.kunci.slice();
+      if (fotoDosis) rec.foto = fotoDosis;
+      if (!lama || !lama.id) S.riwayat.push(rec);
+      if (/rotarix/i.test(rec.merek)) cd.p.rv = 'rv1';
+      if (cd.p.pkm) delete cd.p.pkm[dd0.kunci.join('+')];
+      storageOk = true; simpan();
+      if (!storageOk && rec.foto) { delete rec.foto; simpan(); toast('Penyimpanan perangkat penuh — foto tidak disimpan, catatan lainnya tersimpan.'); }
+      else toast(dd0.label + ' dicatat' + (rec.batch ? ' · Batch ' + rec.batch : '') + '.');
+      sheetHTML = ''; dosisAktif = ''; fotoDosis = null; render();
+      return;
+    }
     if (formId === 'form-pasien') {
       if (!get('nama')) formErr.nama = 'Nama pasien wajib diisi.';
       if (!get('tglLahir')) formErr.tglLahir = 'Tanggal lahir wajib diisi.';
@@ -2736,25 +4308,15 @@
           if (p.id !== id) return;
           p.nama = get('nama'); p.tglLahir = get('tglLahir');
           p.jenisKelamin = get('jenisKelamin'); p.hubungan = get('hubungan');
+          bacaFieldAnak(p, f);
         });
       } else {
         var baru = { id: uid(), nama: get('nama'), tglLahir: get('tglLahir'), jenisKelamin: get('jenisKelamin'), hubungan: get('hubungan') };
+        bacaFieldAnak(baru, f);
         S.pasien.push(baru);
         if (!S.ui.pasienAktif) S.ui.pasienAktif = baru.id;
       }
       simpan(); location.hash = '#/pasien'; toast(id ? 'Data pasien diperbarui.' : 'Pasien ditambahkan.');
-      return;
-    }
-    if (formId === 'form-masuk') {
-      var nm = get('nama'), hp = get('hp'), digit = hp.replace(/\D/g, '');
-      if (!nm) formErr.nama = 'Nama wajib diisi.';
-      if (!hp) formErr.hp = 'Nomor HP wajib diisi.';
-      else if (digit.length < 9 || digit.length > 15) formErr.hp = 'Nomor HP tidak valid — isi 9–15 digit, contoh 081234567890.';
-      if (Object.keys(formErr).length) { render(); return; }
-      S.profil.nama = nm; S.profil.hp = hp;
-      selesaikanOnboarding('hp');
-      location.hash = '#/beranda';
-      toast('Selamat datang, ' + nm.split(' ')[0] + '.');
       return;
     }
     if (formId === 'form-korporat') {
@@ -2843,7 +4405,7 @@
     S = JSON.parse(JSON.stringify(kosong));
     S.profil = { nama: 'Contoh Pengguna', hp: '0812xxxxxxx', jenisKelamin: 'Perempuan' };
     S.onboarding = { selesai: true, langkah: 2, fokus: ['anak'], layanan: 'homecare' };
-    S.akun = { masuk: true, metode: 'hp' };
+    S.akun = { masuk: false, metode: 'contoh' };
     var anak = { id: uid(), nama: 'Nadia Contoh', tglLahir: (thn - 5) + '-05-12', jenisKelamin: 'Perempuan', hubungan: 'Anak' };
     var ayah = { id: uid(), nama: 'Bayu Contoh', tglLahir: (thn - 34) + '-02-08', jenisKelamin: 'Laki-laki', hubungan: 'Ayah' };
     S.pasien = [anak, ayah];
@@ -2852,6 +4414,7 @@
     ['Hep B 0', 'Polio 0', 'BCG', 'Combo DPT 1', 'PCV 1', 'Rotavirus 1', 'Combo DPT 2'].forEach(function (lb, i) {
       S.riwayat.push({ id: uid(), pasienId: anak.id, label: lb, tanggal: (thn - 5) + '-0' + Math.min(9, 5 + i) + '-20', sumber: 'jadwal' });
     });
+    migrasiRiwayat();
     S.pertumbuhan = [
       { id: uid(), pasienId: anak.id, tanggal: (thn - 1) + '-06-10', berat: '15.2', tinggi: '102', kepala: '49' },
       { id: uid(), pasienId: anak.id, tanggal: thn + '-01-15', berat: '16.8', tinggi: '106', kepala: '49.5' },
@@ -2870,8 +4433,12 @@
     var sc = document.getElementById('scroll');
     if (sc) sc.scrollTop = 0;
   });
+  // Cover tampil sebentar setiap aplikasi dibuka sebelum beranda
+  if (!perluOnboarding() && /^(#\/?(beranda)?)?$/.test(location.hash)) location.replace('#/splash');
   bacaRoute();
   render();
+  // aplikasi dibuka kembali: ambil perubahan dari perangkat lain
+  jalankanSinkron();
   // pengingat penting ditampilkan sebagai notifikasi browser saat aplikasi dibuka,
   // lalu diperiksa ulang tiap 30 menit selama aplikasi tetap terbuka
   setTimeout(tampilkanNotifBrowser, 1200);

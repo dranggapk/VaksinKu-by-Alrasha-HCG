@@ -1,6 +1,8 @@
-/* VaksinKu by Alrasha Ibumas — Dashboard Manajemen klinik.
+/* VaksinKu by Alrasha Health Care Group — Dashboard Manajemen klinik.
    Booking, pendaftaran, penjadwalan, pelayanan, persediaan, dan transaksi.
-   Data disimpan lokal di perangkat (localStorage). Tanpa server. */
+   Dibuka dari berkas: data disimpan lokal di perangkat (localStorage).
+   Di vaksinku.app/klinik.html: petugas masuk dengan Google dan data dibaca/ditulis
+   ke server VaksinKu (admin/server.js) — lihat bagian "mode server". */
 (function () {
   'use strict';
 
@@ -29,6 +31,7 @@
     warn: '<path d="M12 4.2 21 19.5H3L12 4.2Z"/><path d="M12 10v4.2M12 17v.4"/>',
     info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v5.5M12 7.6v.6"/>',
     user: '<circle cx="12" cy="8" r="3.6"/><path d="M5 20c1.2-4 4-6 7-6s5.8 2 7 6"/>',
+    chat: '<path d="M4 5.5h16v10.5H9.5L5 19.5V16H4V5.5Z"/><path d="M8 9.5h8M8 12.5h5"/>',
     money: '<rect x="2.8" y="6" width="18.4" height="12" rx="2.2"/><circle cx="12" cy="12" r="2.8"/><path d="M6.2 9.6v4.8M17.8 9.6v4.8"/>'
   };
   function ic(name, size, sw) {
@@ -102,13 +105,15 @@
     jadwal: { buka: '08:00', tutup: '16:00', durasi: 30, kapasitas: 3, libur: [0] },
     pasien: [], booking: [], layanan: [], stok: [], mutasi: [], transaksi: [],
     urut: { rm: 0, booking: 0, invoice: 0 },
+    // khusus mode server: data tampilan yang hanya disimpan di perangkat ini
+    ekstraPasien: {}, minimumStok: {}, klinikId: '',
     ui: { tanggalJadwal: '', filterBooking: 'semua', cariPasien: '', cariBooking: '', rentangOmzet: 14 }
   };
   var S, storageOk = true;
 
-  function baca() {
+  function baca(kunci) {
     try {
-      var raw = localStorage.getItem(KEY);
+      var raw = localStorage.getItem(kunci || KEY);
       if (!raw) return salin(kosong);
       var d = JSON.parse(raw);
       for (var k in kosong) {
@@ -122,10 +127,27 @@
     } catch (e) { storageOk = false; return salin(kosong); }
   }
   function simpan() {
-    try { localStorage.setItem(KEY, JSON.stringify(S)); }
+    try { localStorage.setItem(modeServer() ? KEY_SRV : KEY, JSON.stringify(S)); }
     catch (e) { storageOk = false; }
   }
-  S = baca();
+
+  /* sesi petugas (mode server) — token sesi VaksinKu dari /auth/google */
+  var KEY_SESI = 'vaksinku.admin.sesi', KEY_SRV = 'vaksinku.admin.server.v1';
+  function bacaSesi() { try { return JSON.parse(localStorage.getItem(KEY_SESI)) || null; } catch (e) { return null; } }
+  var SESI = bacaSesi();
+  function simpanSesi() {
+    try { if (SESI) localStorage.setItem(KEY_SESI, JSON.stringify(SESI)); else localStorage.removeItem(KEY_SESI); } catch (e) {}
+  }
+  function sesiBerlaku() { return !!(SESI && SESI.token && SESI.exp * 1000 > Date.now()); }
+  function modeServer() { return sesiBerlaku() && !!SESI.klinik && !!window.VaksinKuKlinik; }
+  function adminKlinik() { return modeServer() && SESI.peran === 'admin'; }
+  // Di situs resmi petugas wajib masuk; dibuka dari berkas = mode perangkat (cadangan/demo).
+  function wajibMasuk() {
+    var lokal = /^(localhost|127\.0\.0\.1)$/.test(location.hostname);
+    return !!(K.google && K.google.clientId && window.VaksinKuKlinik) &&
+      (location.protocol === 'https:' || (lokal && location.protocol === 'http:'));
+  }
+  S = baca(modeServer() ? KEY_SRV : KEY);
 
   function nomorRM() {
     S.urut.rm++;
@@ -177,9 +199,12 @@
     for (var i = 0; i < S.booking.length; i++) if (S.booking[i].id === id) return S.booking[i];
     return null;
   }
+  // harga dibekukan server saat booking (b.harga) bila ada; selain itu price list
   function totalBooking(b) {
     var t = 0;
-    (b.vaksinIds || []).forEach(function (id) { t += hargaVaksin(id, b.dokterTarif); });
+    (b.vaksinIds || []).forEach(function (id) {
+      t += b.harga && b.harga[id] != null ? b.harga[id] : hargaVaksin(id, b.dokterTarif);
+    });
     return t;
   }
   function bookingTanggal(iso) {
@@ -401,10 +426,16 @@
           '</button>';
       });
     });
-    out += '<div class="kaki">' + h(S.klinik.nama) + '<br>Data tersimpan di perangkat ini</div></aside>';
+    out += modeServer()
+      ? '<div class="kaki kaki-srv">' + h(S.klinik.nama || SESI.klinikNama) + '<br>Tersambung ke server VaksinKu<br>' + h(SESI.email || '') +
+        '<div class="row g6" style="margin-top:8px;"><button class="linkbtn" data-act="muat-ulang">Muat ulang</button>' +
+        '<button class="linkbtn" data-act="keluar">Keluar</button></div></div></aside>'
+      : '<div class="kaki">' + h(S.klinik.nama) + '<br>Data tersimpan di perangkat ini</div></aside>';
     return out;
   }
+  var ruteTerakhir = '';
   function render() {
+    if (wajibMasuk() && !modeServer()) { app.innerHTML = layarMasuk(); pasangTombolGoogle(); return; }
     var isi;
     switch (route) {
       case 'booking': isi = scBooking(); break;
@@ -417,12 +448,19 @@
       default: isi = scRingkasan();
     }
     var j = JUDUL[route];
+    // posisi gulir layar & panel dipertahankan saat layar yang sama digambar ulang
+    var isiLama = document.querySelector('.isi'), badanLama = document.querySelector('.panel .badan');
+    var posIsi = isiLama && route === ruteTerakhir ? isiLama.scrollTop : 0, posBadan = badanLama ? badanLama.scrollTop : 0;
+    ruteTerakhir = route;
     app.innerHTML = '<div class="shell">' + sidebar() +
       '<main class="utama"><header class="topbar">' +
       '<div class="grow"><h1>' + h(j[0]) + '</h1><div class="sub">' + h(j[1]) + '</div></div>' +
       (isi.aksi || '') + '</header>' +
       '<div class="isi">' + isi.body + '</div></main>' +
       (panel ? panelHTML() : '') + '</div>';
+    if (posIsi) document.querySelector('.isi').scrollTop = posIsi;
+    var badanBaru = document.querySelector('.panel .badan');
+    if (badanBaru && posBadan) badanBaru.scrollTop = posBadan;
     pasangGrafik();
   }
   function toast(pesan) {
@@ -682,13 +720,16 @@
       });
     }
     body += '</tbody></table></div></section>';
-    body += '<div class="hint">Booking dari aplikasi pasien tiba lewat WhatsApp, lalu dicatat di sini oleh petugas — ' +
-      'belum ada sambungan otomatis karena dashboard ini berjalan tanpa server. Cadangan .json dari aplikasi pasien ' +
-      'bisa diimpor lewat Pengaturan.</div>';
+    if (modeServer()) body += '<div class="hint">Reservasi online dari aplikasi pasien langsung muncul di sini (data diperbarui tiap menit). ' +
+      'Pesan WhatsApp dari pasien yang belum memakai akun tetap bisa dicatat lewat <b>Tempel dari WhatsApp</b>.</div>';
+    else body += '<div class="hint">Booking dari aplikasi pasien tiba lewat WhatsApp. Salin pesannya lalu pilih ' +
+      '<b>Tempel dari WhatsApp</b>: pasien didaftarkan dan booking dibuat dari kode data di akhir pesan, tanpa mengetik ulang. ' +
+      'Cadangan .json dari aplikasi pasien bisa diimpor lewat Pengaturan.</div>';
     body += '</div>';
     return {
       body: body,
-      aksi: '<button class="btn primary" data-act="form-booking">' + ic('plus', 16) + ' Booking baru</button>'
+      aksi: '<button class="btn outline" data-act="form-tempel-wa">' + ic('chat', 16) + ' Tempel dari WhatsApp</button>' +
+        '<button class="btn primary" data-act="form-booking">' + ic('plus', 16) + ' Booking baru</button>'
     };
   }
 
@@ -983,6 +1024,7 @@
 
   /* ============================ layar: pengaturan ============================ */
   function scPengaturan() {
+    if (modeServer()) return scPengaturanServer();
     var body = '<div class="lebar grid g-2">';
     body += '<section class="kartu stack g12"><div class="judul-sec">Identitas klinik</div>' +
       '<div><label class="lbl">Nama klinik</label>' +
@@ -1036,6 +1078,44 @@
     return { body: body };
   }
 
+  // Pengaturan saat tersambung ke server: identitas & jam layanan milik klinik (admin),
+  // daftar petugas, dan akun yang sedang masuk.
+  function scPengaturanServer() {
+    var bisa = adminKlinik(), kunci = bisa ? '' : ' disabled';
+    var body = '<div class="lebar grid g-2">';
+    body += '<section class="kartu stack g12"><div class="judul-sec">Identitas klinik</div>' +
+      '<div><label class="lbl">Nama klinik</label><div class="small" style="font-weight:700;">' + h(S.klinik.nama) + '</div></div>' +
+      '<div><label class="lbl">Alamat</label><input class="input" data-field="klinik.alamat" value="' + h(S.klinik.alamat) + '"' + kunci + '></div>' +
+      '<div><label class="lbl">Telepon / WhatsApp</label><input class="input" data-field="klinik.telp" value="' + h(S.klinik.telp) + '"' + kunci + '></div>' +
+      (bisa ? '' : '<div class="hint">Hanya admin klinik yang dapat mengubah pengaturan ini.</div>') + '</section>';
+    body += '<section class="kartu stack g12"><div class="judul-sec">Jam layanan &amp; kapasitas</div>' +
+      '<div class="hint">Berlaku juga untuk reservasi online di aplikasi pasien: server menolak reservasi di luar jam, pada hari libur, ' +
+      'atau bila kuota per jam penuh.</div>' +
+      '<div class="grid g-2">' +
+      '<div><label class="lbl">Jam buka</label><input class="input" type="time" data-field="jadwal.buka" value="' + h(S.jadwal.buka) + '"' + kunci + '></div>' +
+      '<div><label class="lbl">Jam tutup</label><input class="input" type="time" data-field="jadwal.tutup" value="' + h(S.jadwal.tutup) + '"' + kunci + '></div>' +
+      '<div><label class="lbl">Durasi slot (menit)</label><input class="input" type="number" min="5" step="5" data-field="jadwal.durasi" value="' + h(S.jadwal.durasi) + '"' + kunci + '></div>' +
+      '<div><label class="lbl">Kapasitas per slot</label><input class="input" type="number" min="1" data-field="jadwal.kapasitas" value="' + h(S.jadwal.kapasitas) + '"' + kunci + '></div>' +
+      '</div>' +
+      '<div><label class="lbl">Hari libur</label><div class="row g6 wrap">' +
+      HARI.map(function (nm, i) {
+        var on = (S.jadwal.libur || []).indexOf(i) >= 0;
+        return '<button class="pill' + (on ? ' on' : '') + '" data-act="toggle-libur" data-arg="' + i + '"' + kunci + '>' + h(nm.slice(0, 3)) + '</button>';
+      }).join('') + '</div></div></section>';
+    body += '<section class="kartu stack g12"><div class="judul-sec">Petugas klinik</div>' + petugasHTML() + '</section>';
+    body += '<section class="kartu stack g12"><div class="judul-sec">Akun &amp; data</div>' +
+      '<div class="small" style="line-height:1.7;">Masuk sebagai <b>' + h(SESI.email) + '</b> (' + h(SESI.peran) + ') · ' + h(S.klinik.nama) + '</div>' +
+      '<div class="hint">Booking, pasien, stok, pelayanan, dan tagihan tersimpan di server VaksinKu dan dicadangkan setiap malam. ' +
+      'Catatan stok minimum serta wali & alamat pasien hanya tersimpan di perangkat ini.' +
+      (S.terakhirMuat ? ' Data dimuat ' + h(new Date(S.terakhirMuat).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })) + '.' : '') + '</div>' +
+      '<div class="row g8 wrap"><button class="btn outline sm" data-act="muat-ulang">Muat ulang data</button>' +
+      ((SESI.daftar || []).length > 1 ? '<button class="btn outline sm" data-act="ganti-klinik">Ganti klinik</button>' : '') +
+      '<button class="btn outline sm" data-act="ekspor-tx">' + ic('download', 15) + ' Rekap transaksi .csv</button>' +
+      '<button class="btn danger sm" data-act="keluar">Keluar</button></div></section>';
+    body += '</div>';
+    return { body: body };
+  }
+
   /* ============================ panel ============================ */
   function bukaPanel(jenis, arg, awal) {
     panel = { jenis: jenis, arg: arg || '', d: awal || {} };
@@ -1050,6 +1130,7 @@
     switch (panel.jenis) {
       case 'pasien': p = pnPasien(); break;
       case 'booking': p = pnBooking(); break;
+      case 'tempel-wa': p = pnTempelWA(); break;
       case 'detail-booking': p = pnDetailBooking(); break;
       case 'layanan': p = pnLayanan(); break;
       case 'stok': p = pnStok(); break;
@@ -1071,18 +1152,23 @@
 
   function pnPasien() {
     var p = pasienById(panel.arg) || { id: '', nama: '', tglLahir: '', jk: '', hp: '', alamat: '', wali: '' };
-    var badan = '<form id="form-pasien" class="stack g14">' +
+    // pasien yang punya akun aplikasi: data utamanya dikelola keluarga di aplikasi
+    var milikAkun = modeServer() && p.akun, kunci = milikAkun ? ' readonly' : '';
+    var badan = (milikAkun ? '<div class="kartu" style="background:var(--teal-tint);border-color:transparent;padding:12px 14px;margin-bottom:14px;">' +
+      '<div class="small" style="color:var(--teal-deep);line-height:1.6;">Pasien ini terdaftar lewat aplikasi VaksinKu. Nama, tanggal lahir, ' +
+      'dan HP dikelola keluarganya di aplikasi; di sini hanya wali &amp; alamat yang dapat diubah.</div></div>' : '') +
+      '<form id="form-pasien" class="stack g14">' +
       medan('nama', 'Nama lengkap *',
-        '<input class="input' + (formErr.nama ? ' err' : '') + '" name="nama" value="' + h(p.nama) + '" placeholder="Nama sesuai identitas">', formErr.nama) +
+        '<input class="input' + (formErr.nama ? ' err' : '') + '" name="nama" value="' + h(p.nama) + '" placeholder="Nama sesuai identitas"' + kunci + '>', formErr.nama) +
       medan('tglLahir', 'Tanggal lahir *',
-        '<input class="input' + (formErr.tglLahir ? ' err' : '') + '" type="date" name="tglLahir" max="' + hariIni() + '" value="' + h(p.tglLahir) + '">',
+        '<input class="input' + (formErr.tglLahir ? ' err' : '') + '" type="date" name="tglLahir" max="' + hariIni() + '" value="' + h(p.tglLahir) + '"' + kunci + '>',
         formErr.tglLahir, 'Dipakai menghitung usia dan memilih jadwal vaksin yang sesuai.') +
       medan('jk', 'Jenis kelamin',
-        '<select class="input" name="jk">' + ['', 'Perempuan', 'Laki-laki'].map(function (o) {
+        '<select class="input" name="jk"' + (milikAkun ? ' disabled' : '') + '>' + ['', 'Perempuan', 'Laki-laki'].map(function (o) {
           return '<option value="' + o + '"' + (p.jk === o ? ' selected' : '') + '>' + (o || 'Pilih...') + '</option>';
         }).join('') + '</select>') +
       medan('hp', 'Nomor HP / WhatsApp',
-        '<input class="input' + (formErr.hp ? ' err' : '') + '" type="tel" name="hp" value="' + h(p.hp) + '" placeholder="08xxxxxxxxxx">', formErr.hp) +
+        '<input class="input' + (formErr.hp ? ' err' : '') + '" type="tel" name="hp" value="' + h(p.hp) + '" placeholder="08xxxxxxxxxx"' + kunci + '>', formErr.hp) +
       medan('wali', 'Nama wali / penanggung jawab',
         '<input class="input" name="wali" value="' + h(p.wali) + '" placeholder="Diisi bila pasien anak-anak">') +
       medan('alamat', 'Alamat',
@@ -1201,6 +1287,95 @@
     };
   }
 
+  function pnTempelWA() {
+    var d = pd();
+    var badan = '<div class="stack g14">' +
+      medan('teks', 'Pesan reservasi dari WhatsApp',
+        '<textarea class="input' + (formErr.teks ? ' err' : '') + '" id="teks-wa" data-pd="teks" rows="6" style="word-break:break-all;" ' +
+        'placeholder="Salin seluruh pesan reservasi dari WhatsApp, lalu tempel di sini.">' + h(d.teks || '') + '</textarea>',
+        formErr.teks, 'Yang dibaca hanya baris kode data (diawali VKD1.) di akhir pesan.');
+    var r = String(d.teks || '').trim() ? bacaKodeData(d.teks) : null;
+    var kaki = '<button class="btn outline" data-act="tutup-panel">Batal</button>';
+
+    if (r && r.galat) {
+      badan += '<div class="kartu" style="background:var(--danger-tint);border-color:transparent;padding:12px 14px;">' +
+        '<div class="small" style="color:var(--danger);">' + h(r.galat) + '</div></div>';
+    } else if (r) {
+      var x = r.data, kap = Math.max(1, +S.jadwal.kapasitas || 1), slots = slotJam();
+      if (d.kode !== x.kode) {
+        // jadwal yang diminta pasien jadi nilai awal; petugas boleh menggesernya
+        d.kode = x.kode; d.tanggal = x.tanggal;
+        d.jam = slots.indexOf(x.jam) >= 0 ? x.jam : '';
+      }
+      var baru = x.pasien.filter(function (p) {
+        var ada = pasienCocok(p);
+        return !(ada && sudahDiterima(x.kode, ada.id));
+      });
+      var baris = function (l, v) {
+        return '<div class="row between g12" style="padding:8px 0;border-bottom:1px solid var(--line);">' +
+          '<span class="small muted">' + h(l) + '</span><span class="small kanan" style="font-weight:600;">' + v + '</span></div>';
+      };
+      badan += '<div><div class="judul-sec">Reservasi ' + h(x.kode) + '</div>' +
+        baris('Pendaftar', h(x.pendaftar.nama) + '<br><span class="muted">' + h(x.pendaftar.hp) + '</span>') +
+        baris('Layanan', h(x.layanan)) +
+        (x.lokasi ? baris('Lokasi', h(x.lokasi)) : '') +
+        baris('Diminta', h((x.tanggal ? tgl(x.tanggal, 'panjang') : '-') + ' · ' + (x.jam || '-'))) +
+        baris('Tarif', x.dokterTarif === 'spesialis' ? 'Dokter spesialis' : 'Dokter umum') +
+        (x.catatan ? baris('Catatan', h(x.catatan)) : '') + '</div>';
+
+      badan += '<div><div class="judul-sec">Pasien (' + x.pasien.length + ')</div><div class="stack g6" style="margin-top:8px;">' +
+        x.pasien.map(function (p) {
+          var ada = pasienCocok(p), ket;
+          if (ada && sudahDiterima(x.kode, ada.id)) ket = '<span class="chip grey">Sudah dicatat</span>';
+          else if (ada) ket = '<span class="chip teal">Terdaftar · ' + h(ada.noRM) + '</span>';
+          else ket = '<span class="chip mag">Pasien baru</span>';
+          return '<div class="row mid between g10"><div><div class="small" style="font-weight:700;">' + h(p.nama) + '</div>' +
+            '<div class="tiny muted">' + h(p.tglLahir ? tgl(p.tglLahir) + ' · ' + umurTeks(p.tglLahir) : 'Tanggal lahir tidak dikirim') +
+            (p.jk ? ' · ' + h(p.jk) : '') + '</div></div>' + ket + '</div>';
+        }).join('') + '</div></div>';
+
+      var perPasien = x.vaksinIds.reduce(function (n, id) { return n + hargaVaksin(id, x.dokterTarif); }, 0);
+      badan += '<div><div class="judul-sec">Vaksin</div><div class="stack g6" style="margin-top:8px;">' +
+        x.vaksinIds.map(function (id) {
+          var hg = hargaVaksin(id, x.dokterTarif);
+          return '<div class="row mid between g10"><span class="small">' + h(vaksinNama(id)) + '</span>' +
+            '<span class="small" style="font-weight:700;">' + h(hg ? rp(hg) : 'Hubungi CS') + '</span></div>';
+        }).join('') +
+        (x.takDikenal ? '<div class="hint">' + x.takDikenal + ' vaksin tidak ada di price list dashboard ini dan dilewati.</div>' : '') +
+        '<div class="row mid between" style="margin-top:6px;padding-top:10px;border-top:1px solid var(--line);">' +
+        '<span class="small" style="font-weight:700;">Estimasi tagihan</span>' +
+        '<span class="disp" style="font-size:18px;font-weight:800;">' + h(rp(perPasien * x.pasien.length)) + '</span></div>' +
+        '</div></div>';
+
+      if (!baru.length) {
+        badan += '<div class="hint">Semua pasien pada reservasi ini sudah tercatat sebagai booking.</div>';
+      } else {
+        var libur = d.tanggal && hariLibur(d.tanggal);
+        badan += medan('tanggal', 'Tanggal booking *',
+          '<input class="input' + (formErr.tanggal ? ' err' : '') + '" type="date" min="' + hariIni() + '" data-pd="tanggal" value="' + h(d.tanggal || '') + '">',
+          formErr.tanggal, d.tanggal && d.tanggal < hariIni() ? 'Tanggal yang diminta sudah lewat — pilih tanggal baru.' : '');
+        if (libur) {
+          badan += '<div class="kartu" style="background:var(--danger-tint);border-color:transparent;padding:12px 14px;">' +
+            '<div class="small" style="color:var(--danger);">Tanggal ini hari libur klinik. Pilih tanggal lain.</div></div>';
+        } else if (d.tanggal) {
+          badan += '<div><label class="lbl">Jam * <span class="muted" style="font-weight:600;">— butuh ' + baru.length + ' tempat</span></label><div class="row g6 wrap">' +
+            slots.map(function (jam) {
+              var isiJ = isiSlot(d.tanggal, jam), cukup = isiJ + baru.length <= kap;
+              return '<button class="pill' + (d.jam === jam ? ' on' : '') + '"' + (!cukup && d.jam !== jam ? ' disabled' : '') +
+                ' data-act="pd-jam" data-arg="' + jam + '" title="' + isiJ + ' dari ' + kap + ' terisi">' +
+                h(jam) + ' <span style="opacity:.6;font-weight:600;">' + isiJ + '/' + kap + '</span></button>';
+            }).join('') + '</div>' +
+            (formErr.jam ? '<div class="errmsg">' + h(formErr.jam) + '</div>' : '') +
+            (x.jam && slots.indexOf(x.jam) < 0 ? '<div class="hint" style="margin-top:6px;">Jam yang diminta (' + h(x.jam) + ') tidak ada di slot klinik.</div>' : '') +
+            '</div>';
+        }
+        kaki += '<button class="btn primary" data-act="simpan-tempel">Simpan ' + baru.length + ' booking</button>';
+      }
+    }
+    badan += '</div>';
+    return { judul: 'Tempel dari WhatsApp', sub: 'Reservasi yang dikirim pasien lewat aplikasi VaksinKu', badan: badan, kaki: kaki };
+  }
+
   function pnDetailBooking() {
     var b = bookingById(panel.arg);
     if (!b) return { judul: 'Booking', badan: kosongPesan('Booking tidak ditemukan.') };
@@ -1216,6 +1391,12 @@
       baris('Pasien', h(namaPasien(b.pasienId))) +
       baris('Jadwal', h(tgl(b.tanggal, 'panjang') + ' · ' + (b.jam || '-'))) +
       baris('Layanan', h(b.layanan || '-')) +
+      (b.lokasi ? baris('Lokasi', h(b.lokasi)) : '') +
+      (b.asal ? baris('Asal', 'Aplikasi pasien · ' + h(b.asal)) : '') +
+      (b.srv && b.sumber === 'aplikasi pasien' ? baris('Asal', 'Reservasi online dari aplikasi pasien' +
+        (b.bagikan ? ' · riwayat vaksin dibagikan' : '')) : '') +
+      (b.srv && catatanKeluarga(b) ? baris('Keluarga', h(S.booking.filter(function (x) { return x.srv === b.srv; })
+        .map(function (x) { return namaPasien(x.pasienId); }).join(', '))) : '') +
       baris('Dokter', h(b.dokter || '-') + ' <span class="muted">(' + h(b.dokterTarif) + ')</span>') +
       baris('Vaksin', (b.vaksinIds || []).map(function (v) { return h(vaksinNama(v)); }).join('<br>') || '-') +
       baris('Estimasi tagihan', h(rp(totalBooking(b)))) +
@@ -1292,7 +1473,7 @@
       medan('catatan', 'Catatan pelayanan',
         '<textarea class="input" data-pd="catatan" rows="2">' + h(d.catatan) + '</textarea>');
 
-    var total = (b.vaksinIds || []).reduce(function (n, id) { return n + hargaVaksin(id, b.dokterTarif); }, 0);
+    var total = totalBooking(b);
     badan += '<div class="kartu" style="padding:14px;"><div class="row mid between">' +
       '<span class="small" style="font-weight:700;">Tagihan yang akan terbit</span>' +
       '<span class="disp" style="font-size:18px;font-weight:800;">' + h(rp(total)) + '</span></div>' +
@@ -1440,8 +1621,18 @@
     if (!el) return;
     var act = el.getAttribute('data-act'), arg = el.getAttribute('data-arg') || '';
     if (act === 'tutup-panel' && ev.target.closest('[data-stop]') && el.classList.contains('tirai')) return;
+    if (modeServer() && ['contoh', 'reset', 'impor', 'impor-pasien'].indexOf(act) >= 0) return;
+    if (sibuk && /^(checkin|aksi-booking|simpan-|kirim-form|tambah-petugas|cabut-petugas)/.test(act)) {
+      toast('Sedang menyimpan ke server, tunggu sebentar…'); return;
+    }
 
     switch (act) {
+      case 'keluar': if (konfirmasi('Keluar dari dashboard klinik?')) keluar(); return;
+      case 'muat-ulang': muatServer().then(function (ok) { if (ok) toast('Data terbaru dimuat.'); }); return;
+      case 'pilih-klinik': pilihKlinik(arg); return;
+      case 'ganti-klinik': SESI.klinik = ''; simpanSesi(); S = baca(KEY); render(); return;
+      case 'tambah-petugas': tambahPetugas(); return;
+      case 'cabut-petugas': cabutPetugas(arg); return;
       case 'go': location.hash = '#/' + arg; return;
       case 'tutup-panel': tutupPanel(); return;
       case 'rentang': S.ui.rentangOmzet = +arg; simpan(); render(); return;
@@ -1450,12 +1641,14 @@
       case 'geser-hari': S.ui.tanggalJadwal = geserHari(S.ui.tanggalJadwal || hariIni(), +arg); simpan(); render(); return;
       case 'jadwal-hari-ini': S.ui.tanggalJadwal = hariIni(); simpan(); render(); return;
       case 'toggle-libur': {
+        if (modeServer() && !adminKlinik()) return;
         var lb = S.jadwal.libur, i = lb.indexOf(+arg);
         if (i >= 0) lb.splice(i, 1); else lb.push(+arg);
-        simpan(); render(); return;
+        simpan(); render(); jadwalkanSimpanKlinik(); return;
       }
       case 'form-pasien': bukaPanel('pasien', arg); return;
       case 'form-booking': bukaPanel('booking', '', {}); return;
+      case 'form-tempel-wa': bukaPanel('tempel-wa', '', {}); return;
       case 'buka-booking': bukaPanel('detail-booking', arg); return;
       case 'form-layanan': bukaPanel('layanan', arg, {}); return;
       case 'form-stok': bukaPanel('stok'); return;
@@ -1463,17 +1656,22 @@
       case 'form-bayar': bukaPanel('bayar', arg); return;
       case 'checkin': {
         var bc = bookingById(arg);
+        if (bc && modeServer()) { kerja(ubahStatusServer(bc, 'hadir'), namaPasien(bc.pasienId) + ' ditandai hadir' + catatanKeluarga(bc) + '.'); return; }
         if (bc) { bc.status = 'hadir'; simpan(); render(); toast(namaPasien(bc.pasienId) + ' ditandai hadir.'); }
         return;
       }
       case 'aksi-booking': {
-        var bagian = arg.split('/'), bb = bookingById(bagian[1] || panel.arg);
+        // 'layani/<id booking>' atau 'ubah-status/<status>' untuk booking di panel detail
+        var bagian = arg.split('/');
+        var bb = bookingById(bagian[0] === 'layani' ? bagian[1] : (panel || {}).arg);
         if (!bb) return;
         if (bagian[0] === 'layani') { bukaPanel('layanan', bb.id, {}); return; }
         var st = bagian[1];
-        bb = bookingById(panel.arg);
-        if (!bb) return;
         if (st === 'batal' && !konfirmasi('Batalkan booking ' + bb.kode + '?')) return;
+        if (modeServer()) {
+          kerja(ubahStatusServer(bb, st), 'Status ' + bb.kode + ' menjadi ' + (STATUS[st] || {}).label + catatanKeluarga(bb) + '.');
+          return;
+        }
         bb.status = st;
         simpan(); render();
         toast('Status ' + bb.kode + ' menjadi ' + (STATUS[st] || {}).label + '.');
@@ -1487,6 +1685,7 @@
         render(); return;
       }
       case 'simpan-booking': simpanBooking(); return;
+      case 'simpan-tempel': simpanTempelWA(); return;
       case 'simpan-layanan': simpanLayanan(); return;
       case 'kirim-form': {
         var f = document.getElementById(arg);
@@ -1531,6 +1730,7 @@
     var pdf = el.getAttribute('data-pd');
     if (pdf && panel) {
       pd()[pdf] = el.value;
+      if (pdf === 'teks') { formErr = {}; render(); fokusLagi('teks-wa'); return; }
       if (pdf === 'tanggal') { pd().jam = ''; render(); }
       return;
     }
@@ -1543,9 +1743,11 @@
     var f = el.getAttribute('data-field');
     if (f) {
       var bagian = f.split('.');
+      if (modeServer() && !adminKlinik()) return;
       S[bagian[0]][bagian[1]] = bagian[0] === 'jadwal' && ['durasi', 'kapasitas'].indexOf(bagian[1]) >= 0
         ? (parseInt(el.value, 10) || 0) : el.value;
       simpan();
+      jadwalkanSimpanKlinik();
       if (bagian[0] === 'jadwal') { render(); }
       return;
     }
@@ -1569,6 +1771,7 @@
       if (get('hp') && (hp.length < 9 || hp.length > 15)) formErr.hp = 'Nomor HP tidak valid — isi 9–15 digit.';
       if (Object.keys(formErr).length) { render(); return; }
       var pid = get('pid');
+      if (modeServer()) { simpanPasienServer(pid, get); return; }
       if (pid) {
         var pp = pasienById(pid);
         if (pp) {
@@ -1594,6 +1797,15 @@
       var jml = parseInt(get('jumlah'), 10);
       if (!jml || jml < 1) formErr.jumlah = 'Jumlah dosis minimal 1.';
       if (Object.keys(formErr).length) { render(); return; }
+      if (modeServer()) {
+        var minS = get('minimum');
+        kerja(rpc('terima_stok', { p_klinik: SESI.klinik, p_vaksin: get('vaksinId'), p_no_batch: get('batch'),
+          p_kedaluwarsa: get('kedaluwarsa'), p_jumlah: jml }).then(function (st) {
+          if (minS) S.minimumStok[st.id] = parseInt(minS, 10) || 0;
+          return st;
+        }), jml + ' dosis masuk ke persediaan.', true);
+        return;
+      }
       var sudahAda = S.stok.filter(function (s) {
         return s.vaksinId === get('vaksinId') && s.batch === get('batch');
       })[0];
@@ -1622,6 +1834,13 @@
       else if (jenis !== 'masuk' && s2 && jp > s2.sisa) formErr.jumlah = 'Melebihi sisa batch (' + s2.sisa + ' dosis).';
       if (!get('ket')) formErr.ket = 'Alasan wajib diisi agar mutasi bisa ditelusuri.';
       if (Object.keys(formErr).length) { render(); return; }
+      if (modeServer()) {
+        if (get('minimum') !== '') S.minimumStok[s2.id] = parseInt(get('minimum'), 10) || 0;
+        // koreksi hitung di dashboard berarti pengurangan
+        kerja(rpc('sesuaikan_stok', { p_stok: s2.id, p_jenis: jenis, p_jumlah: jenis === 'koreksi' ? -jp : jp, p_keterangan: get('ket') }),
+          'Penyesuaian stok tercatat.', true);
+        return;
+      }
       if (jenis === 'masuk') { s2.sisa += jp; s2.jumlahAwal += jp; }
       else s2.sisa -= jp;
       if (get('minimum') !== '') s2.minimum = parseInt(get('minimum'), 10) || 0;
@@ -1636,6 +1855,11 @@
     if (formId === 'form-bayar') {
       var tx = S.transaksi.filter(function (x) { return x.id === get('tid'); })[0];
       if (!tx) { tutupPanel(); return; }
+      if (modeServer()) {
+        kerja(rpc('terima_pembayaran', { p_tagihan: tx.id, p_jumlah: tx.total - (tx.dibayar || 0), p_metode: get('metode') || 'Tunai' }),
+          'Pembayaran ' + tx.nomor + ' dicatat lunas.', true);
+        return;
+      }
       tx.status = 'lunas';
       tx.dibayar = tx.total;
       tx.metode = get('metode') || 'Tunai';
@@ -1656,6 +1880,14 @@
     else if (isiSlot(d.tanggal, d.jam) >= Math.max(1, +S.jadwal.kapasitas || 1)) formErr.jam = 'Slot sudah penuh.';
     if (!d.vaksinIds.length) formErr.vaksinIds = 'Pilih minimal satu vaksin.';
     if (Object.keys(formErr).length) { render(); return; }
+    if (modeServer()) {
+      kerja(rpc('buat_booking', {
+        p_klinik: SESI.klinik, p_layanan: VaksinKuKlinik.LAYANAN_KODE[d.layanan] || 'klinik', p_lokasi: '',
+        p_tanggal: d.tanggal, p_jam: d.jam, p_tarif: d.dokterTarif, p_catatan: d.catatan || '', p_bagikan_riwayat: false,
+        p_item: d.vaksinIds.map(function (v) { return { pasien_id: d.pasienId, vaksin_id: v }; })
+      }), function (b) { return 'Booking ' + b.kode + ' dibuat untuk ' + namaPasien(d.pasienId) + '.'; }, true, galatForm('jam'));
+      return;
+    }
     var b = {
       id: uid(), kode: nomorBooking(), pasienId: d.pasienId, layanan: d.layanan,
       tanggal: d.tanggal, jam: d.jam, dokter: d.dokter, dokterTarif: d.dokterTarif,
@@ -1667,6 +1899,27 @@
     toast('Booking ' + b.kode + ' dibuat untuk ' + namaPasien(b.pasienId) + '.');
   }
 
+  function simpanTempelWA() {
+    var d = pd(), r = bacaKodeData(d.teks);
+    formErr = {};
+    if (r.galat) { formErr.teks = r.galat; render(); return; }
+    var x = r.data;
+    var baru = x.pasien.filter(function (p) {
+      var ada = pasienCocok(p);
+      return !(ada && sudahDiterima(x.kode, ada.id));
+    }).length;
+    if (!d.tanggal) formErr.tanggal = 'Tanggal wajib diisi.';
+    else if (hariLibur(d.tanggal)) formErr.tanggal = 'Tanggal ini hari libur.';
+    if (!d.jam) formErr.jam = 'Pilih slot jam.';
+    else if (isiSlot(d.tanggal, d.jam) + baru > Math.max(1, +S.jadwal.kapasitas || 1)) formErr.jam = 'Slot ini tidak cukup untuk ' + baru + ' pasien.';
+    if (Object.keys(formErr).length) { render(); return; }
+    if (modeServer()) { tempelWAServer(x, d); return; }
+    x.tanggal = d.tanggal; x.jam = d.jam;
+    var n = terimaReservasi(x);
+    simpan(); tutupPanel();
+    toast(n.booking + ' booking dari ' + x.kode + ' dicatat' + (n.pasien ? ', ' + n.pasien + ' pasien baru didaftarkan' : '') + '.');
+  }
+
   function simpanLayanan() {
     var b = bookingById(panel.arg), d = pd();
     if (!b) { tutupPanel(); return; }
@@ -1674,6 +1927,20 @@
     var kurang = (b.vaksinIds || []).filter(function (id) { return !d.pilih[id]; });
     if (kurang.length) {
       toast('Stok belum tersedia untuk ' + (vaksinById(kurang[0]) || {}).kategori + '.');
+      return;
+    }
+    if (modeServer()) {
+      var siap = b.statusServer === 'hadir' ? Promise.resolve() : ubahStatusServer(b, 'hadir');
+      kerja(siap.then(function () {
+        return rpc('catat_pelayanan', {
+          p_booking: b.srv, p_pasien: b.pasienId, p_dokter: null, p_kipi: d.kipi || '',
+          p_catatan: 'Vaksinator: ' + (d.petugas || '') + '\n' + (d.catatan || ''),
+          p_item: b.vaksinIds.map(function (id) { return { vaksin_id: id, stok_id: d.pilih[id], kunci: [] }; })
+        });
+      }), function () {
+        var tx = S.transaksi.filter(function (t) { return t.bookingId === b.id; })[0];
+        return 'Vaksinasi tercatat' + (tx ? '. Tagihan ' + tx.nomor + ' terbit ' + rp(tx.total) : '') + '. Riwayat terkirim ke aplikasi pasien.';
+      }, true);
       return;
     }
     var item = [], catatan = [];
@@ -1713,38 +1980,107 @@
   }
   function imporDariAplikasiPasien(data) {
     if (!(data.pasien instanceof Array)) throw new Error('bukan cadangan aplikasi pasien');
-    var petaPasien = {}, pBaru = 0, bBaru = 0;
+    var prof = data.profil || {}, alamat = ((data.alamat || [])[0] || {}).alamat || '';
+    var kontak = { hp: prof.hp || '', wali: prof.nama || '', alamat: alamat };
+    var awal = S.pasien.length, bBaru = 0;
     data.pasien.forEach(function (p) {
-      var ada = S.pasien.filter(function (x) {
-        return x.nama.toLowerCase() === String(p.nama || '').toLowerCase() && x.tglLahir === p.tglLahir;
-      })[0];
-      if (ada) { petaPasien[p.id] = ada.id; return; }
-      var baru = {
-        id: uid(), noRM: nomorRM(), nama: p.nama, tglLahir: p.tglLahir,
-        jk: p.jenisKelamin || '', hp: (data.profil || {}).hp || '', wali: (data.profil || {}).nama || '',
-        alamat: ((data.alamat || [])[0] || {}).alamat || '', dibuat: new Date().toISOString()
-      };
-      S.pasien.push(baru);
-      petaPasien[p.id] = baru.id;
-      pBaru++;
+      daftarkanPasien({ nama: p.nama, tglLahir: p.tglLahir, jk: p.jenisKelamin }, kontak);
     });
     (data.booking || []).forEach(function (b) {
-      if (S.booking.some(function (x) { return x.asal === b.kode; })) return;
-      var pid = petaPasien[(b.pasienIds || [])[0]];
-      if (!pid) return;
-      S.booking.push({
-        id: uid(), kode: nomorBooking(), pasienId: pid,
-        layanan: b.layanan === 'homecare' ? 'Home Care' : (b.layanan === 'corporate' ? 'On Site Corporate' : 'On Site Klinik'),
-        tanggal: b.tanggal, jam: b.jam, dokter: b.dokter === 'spesialis' ? K.dokter[0][0] : K.dokter[3][0],
-        dokterTarif: b.dokter === 'spesialis' ? 'spesialis' : 'umum',
-        vaksinIds: (b.vaksinIds || []).slice(), catatan: b.catatan || '',
-        status: b.status === 'selesai' ? 'selesai' : 'baru', sumber: 'aplikasi pasien',
-        asal: b.kode, dibuat: hariIni()
-      });
-      bBaru++;
+      var pasien = (b.pasienIds || []).map(function (id) {
+        var p = data.pasien.filter(function (x) { return x.id === id; })[0];
+        return p ? { nama: p.nama, tglLahir: p.tglLahir, jk: p.jenisKelamin } : null;
+      }).filter(Boolean);
+      if (!pasien.length) return;
+      bBaru += terimaReservasi({
+        kode: b.kode, pendaftar: { nama: (b.pendaftar || {}).nama || prof.nama || '', hp: (b.pendaftar || {}).hp || prof.hp || '' },
+        layanan: LAYANAN_PASIEN[b.layanan] || 'On Site Klinik', lokasi: b.lokasi || '',
+        tanggal: b.tanggal, jam: b.jam, dokterTarif: b.dokter === 'spesialis' ? 'spesialis' : 'umum',
+        catatan: b.catatan || '', pasien: pasien,
+        vaksinIds: (b.vaksinIds || []).filter(vaksinById),
+        status: b.status === 'selesai' ? 'selesai' : 'baru'
+      }, kontak).booking;
     });
     simpan(); render();
-    toast(pBaru + ' pasien dan ' + bBaru + ' booking diimpor dari aplikasi pasien.');
+    toast((S.pasien.length - awal) + ' pasien dan ' + bBaru + ' booking diimpor dari aplikasi pasien.');
+  }
+
+  /* ============================ reservasi dari aplikasi pasien ============================ */
+  var LAYANAN_PASIEN = { homecare: 'Home Care', klinik: 'On Site Klinik', corporate: 'On Site Corporate' };
+  var ISO = /^\d{4}-\d{2}-\d{2}$/;
+
+  // Membaca baris "VKD1.<base64url JSON>" yang disisipkan aplikasi pasien di
+  // akhir pesan WhatsApp reservasi (lihat kodeData di app/app.js).
+  function bacaKodeData(teks) {
+    var m = String(teks || '').match(/VKD1\.([A-Za-z0-9_-]+)/);
+    if (!m) return { galat: 'Kode data tidak ditemukan. Pastikan seluruh pesan tersalin, termasuk baris terakhir yang diawali VKD1. ' +
+      'Pesan yang diketik sendiri (bukan dari aplikasi) dicatat lewat Booking baru.' };
+    var d;
+    try {
+      var b64 = m[1].replace(/-/g, '+').replace(/_/g, '/');
+      while (b64.length % 4) b64 += '=';
+      d = JSON.parse(decodeURIComponent(escape(atob(b64))));
+    } catch (e) { d = null; }
+    if (!d || typeof d !== 'object' || !d.k || !(d.p instanceof Array) || !d.p.length || !(d.v instanceof Array)) {
+      return { galat: 'Kode data rusak atau terpotong. Minta pasien mengirim ulang pesan dari aplikasi.' };
+    }
+    var pasien = d.p.map(function (p) {
+      p = p instanceof Array ? p : [];
+      return { nama: String(p[0] || '').trim(), tglLahir: ISO.test(p[1]) ? p[1] : '', jk: String(p[2] || '') };
+    }).filter(function (p) { return p.nama; });
+    if (!pasien.length) return { galat: 'Kode data tidak memuat nama pasien.' };
+    var vaksinIds = d.v.filter(vaksinById);
+    if (!vaksinIds.length) return { galat: 'Tidak ada vaksin pada reservasi ini yang dikenali price list dashboard.' };
+    return {
+      data: {
+        kode: String(d.k), pendaftar: { nama: String(d.n || ''), hp: String(d.h || '') },
+        layanan: LAYANAN_PASIEN[d.l] || 'On Site Klinik', lokasi: String(d.lo || ''),
+        tanggal: ISO.test(d.t) ? d.t : '', jam: String(d.j || ''),
+        dokterTarif: d.d === 'spesialis' ? 'spesialis' : 'umum', catatan: String(d.c || ''),
+        pasien: pasien, vaksinIds: vaksinIds, takDikenal: d.v.length - vaksinIds.length, status: 'baru'
+      }
+    };
+  }
+  function pasienCocok(p) {
+    var nama = String(p.nama || '').trim().toLowerCase();
+    return S.pasien.filter(function (x) {
+      return x.nama.toLowerCase() === nama && x.tglLahir === p.tglLahir;
+    })[0] || null;
+  }
+  function sudahDiterima(kode, pasienId) {
+    return S.booking.some(function (b) { return b.asal === kode && b.pasienId === pasienId; });
+  }
+  function daftarkanPasien(p, kontak) {
+    var ada = pasienCocok(p);
+    if (ada) return ada;
+    var baru = {
+      id: uid(), noRM: nomorRM(), nama: String(p.nama).trim(), tglLahir: p.tglLahir || '', jk: p.jk || '',
+      hp: kontak.hp || '', wali: kontak.wali || '', alamat: kontak.alamat || '', dibuat: new Date().toISOString()
+    };
+    S.pasien.push(baru);
+    return baru;
+  }
+  // Satu booking dashboard per pasien: antrean, slot, dan tagihan di dashboard
+  // dihitung per orang, sedangkan reservasi aplikasi bisa memuat sekeluarga.
+  function terimaReservasi(x, kontak) {
+    kontak = kontak || {
+      hp: x.pendaftar.hp, wali: x.pendaftar.nama,
+      alamat: x.layanan === 'Home Care' ? x.lokasi : ''
+    };
+    var awal = S.pasien.length, n = 0;
+    x.pasien.forEach(function (p) {
+      var ps = daftarkanPasien(p, kontak);
+      if (sudahDiterima(x.kode, ps.id)) return;
+      S.booking.push({
+        id: uid(), kode: nomorBooking(), pasienId: ps.id, layanan: x.layanan, lokasi: x.lokasi,
+        tanggal: x.tanggal, jam: x.jam,
+        dokter: x.dokterTarif === 'spesialis' ? K.dokter[0][0] : K.dokter[3][0], dokterTarif: x.dokterTarif,
+        vaksinIds: x.vaksinIds.slice(), catatan: x.catatan, status: x.status,
+        sumber: 'aplikasi pasien', asal: x.kode, dibuat: hariIni()
+      });
+      n++;
+    });
+    return { booking: n, pasien: S.pasien.length - awal };
   }
 
   /* ============================ data contoh ============================ */
@@ -1818,6 +2154,345 @@
     toast('Data contoh dimuat. Hapus kapan saja lewat Pengaturan.');
   }
 
+  /* ============================ mode server ============================ */
+  // Petugas masuk dengan Google → sesi VaksinKu → klinik dari anggota_klinik.
+  // Data dibaca ulang dari server setelah setiap tindakan (admin/server.js).
+  var LOGO_G = '<svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true">' +
+    '<path fill="#EA4335" d="M24 9.5c3.4 0 6.4 1.2 8.8 3.5l6.5-6.5C35.3 2.6 30 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.6 5.9C12.1 13 17.5 9.5 24 9.5z"/>' +
+    '<path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.2-.4-4.7H24v9h12.7c-.5 3-2.2 5.5-4.7 7.2l7.3 5.7c4.3-4 6.8-9.9 6.8-17.2z"/>' +
+    '<path fill="#FBBC05" d="M10.2 19.1a14.5 14.5 0 0 0 0 9.8l-7.6 5.9a24 24 0 0 1 0-21.6l7.6 5.9z"/>' +
+    '<path fill="#34A853" d="M24 48c6 0 11.3-2 15-5.4l-7.3-5.7c-2 1.4-4.7 2.2-7.7 2.2-6.5 0-12-4.4-13.8-10.3l-7.6 5.9C6.5 42.6 14.6 48 24 48z"/></svg>';
+  var pesanMasuk = '', sibuk = false;
+
+  function ambil(u, o) { return window.fetch(u, o); }
+  function api(metode, jalur, isi, prefer) {
+    return VaksinKuKlinik.klien({ api: '/api', token: SESI.token, fetch: ambil })(metode, jalur, isi, prefer);
+  }
+  function rpc(nama, isi) { return api('POST', '/rpc/' + nama, isi); }
+
+  function layarMasuk() {
+    var isi;
+    if (!sesiBerlaku()) {
+      isi = '<div class="stack g8" style="align-items:center;">' +
+        '<div class="disp" style="font-size:20px;font-weight:800;">Dashboard Klinik</div>' +
+        '<div class="small muted center" style="line-height:1.6;">Masuk dengan akun Google yang sudah didaftarkan admin klinik.</div></div>' +
+        '<div id="tombol-google" class="tombol-google"><div class="tiny muted">Memuat tombol Google…</div></div>';
+    } else if (!(SESI.daftar || []).length) {
+      isi = '<div class="stack g10"><div class="disp" style="font-size:18px;font-weight:800;">Akun belum terdaftar sebagai petugas</div>' +
+        '<div class="small" style="line-height:1.7;">Akun <b>' + h(SESI.email) + '</b> sudah masuk, tetapi belum terdaftar di klinik mana pun. ' +
+        'Minta admin klinik menambahkan email ini di <b>Pengaturan → Petugas</b>, lalu tekan <b>Periksa lagi</b>.</div>' +
+        '<div class="row g8"><button class="btn primary" data-act="periksa-lagi">Periksa lagi</button>' +
+        '<button class="btn outline" data-act="keluar-langsung">Ganti akun</button></div></div>';
+    } else {
+      isi = '<div class="stack g10"><div class="disp" style="font-size:18px;font-weight:800;">Pilih klinik</div>' +
+        '<div class="small muted">Masuk sebagai ' + h(SESI.email) + '</div>' +
+        SESI.daftar.map(function (k) {
+          return '<button class="btn outline block" data-act="pilih-klinik" data-arg="' + h(k.klinik) + '">' + h(k.nama) +
+            ' <span class="tiny muted">(' + (k.peran === 'admin' ? 'admin' : 'petugas') + ')</span></button>';
+        }).join('') +
+        '<button class="linkbtn" data-act="keluar-langsung">Ganti akun</button></div>';
+    }
+    return '<div class="layar-masuk"><div class="kartu stack g18 kotak-masuk">' +
+      '<img src="' + K.logoMark + '" alt="VaksinKu" style="height:40px;width:auto;align-self:center;">' + isi +
+      (pesanMasuk ? '<div class="errmsg" style="text-align:center;">' + h(pesanMasuk) + '</div>' : '') +
+      '<div class="tiny muted center" style="line-height:1.6;">Data pasien hanya bisa dibuka petugas klinik yang terdaftar. ' +
+      'Setiap pembukaan data tercatat di jejak audit. <a href="/privasi.html">Kebijakan Privasi</a></div></div></div>';
+  }
+  var gisDimuat = false;
+  function pasangTombolGoogle() {
+    if (!document.getElementById('tombol-google')) return;
+    function gambar() {
+      var el = document.getElementById('tombol-google');
+      if (!window.google || !google.accounts || !el) return;
+      google.accounts.id.initialize({ client_id: K.google.clientId, callback: terimaGoogle, ux_mode: 'popup' });
+      google.accounts.id.renderButton(el, { theme: 'outline', size: 'large', shape: 'pill', text: 'signin_with', locale: 'id', width: 300 });
+    }
+    if (window.google && google.accounts) { gambar(); return; }
+    if (gisDimuat) return;
+    gisDimuat = true;
+    var sc = document.createElement('script');
+    sc.src = 'https://accounts.google.com/gsi/client';
+    sc.async = true;
+    sc.onload = gambar;
+    sc.onerror = function () {
+      gisDimuat = false;
+      var t = document.getElementById('tombol-google');
+      if (t) t.innerHTML = '<div class="tiny" style="color:var(--danger);">Tidak dapat memuat layanan Google. Periksa koneksi internet lalu muat ulang.</div>';
+    };
+    document.head.appendChild(sc);
+  }
+  function bacaJwt(token) {
+    try {
+      var b = String(token).split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+      while (b.length % 4) b += '=';
+      return JSON.parse(decodeURIComponent(escape(atob(b))));
+    } catch (e) { return null; }
+  }
+  // tukar(credential) → Promise<{status, data}>; bisa diganti saat uji
+  function tukarSesi(credential) {
+    return ambil('/auth/google', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ credential: credential }) })
+      .then(function (r) { return r.json().catch(function () { return {}; }).then(function (d) { return { status: r.status, data: d }; }); },
+        function () { return { status: 0, data: {} }; });
+  }
+  function terimaGoogle(resp, tukar) {
+    var d = bacaJwt(resp && resp.credential);
+    var sah = d && d.aud === K.google.clientId && /^(https:\/\/)?accounts\.google\.com$/.test(d.iss) &&
+      d.exp * 1000 > Date.now() && d.email && d.email_verified !== false;
+    if (!sah) { pesanMasuk = 'Gagal masuk dengan Google. Silakan coba lagi.'; render(); return Promise.resolve(); }
+    return (tukar || tukarSesi)(resp.credential).then(function (r) {
+      if (r.status !== 200 || !r.data || !r.data.token) {
+        pesanMasuk = r.status === 0 ? 'Server VaksinKu belum dapat dihubungi. Periksa internet lalu coba lagi.'
+          : r.status === 429 ? 'Terlalu banyak percobaan masuk. Coba lagi sebentar.'
+          : 'Akun Google tidak dapat diverifikasi oleh server VaksinKu.';
+        render(); return;
+      }
+      pesanMasuk = '';
+      SESI = { token: r.data.token, exp: r.data.exp, id: (r.data.akun || {}).id || '', email: d.email, nama: d.name || '', daftar: [] };
+      simpanSesi();
+      return muatKeanggotaan();
+    });
+  }
+  function muatKeanggotaan() {
+    return api('GET', '/anggota_klinik?select=klinik_id,peran,klinik(nama)&user_id=eq.' + SESI.id).then(function (baris) {
+      SESI.daftar = (baris || []).map(function (a) { return { klinik: a.klinik_id, peran: a.peran, nama: (a.klinik || {}).nama || a.klinik_id }; });
+      simpanSesi();
+      if (SESI.daftar.length === 1) return pilihKlinik(SESI.daftar[0].klinik);
+      render();
+    }, function (e) {
+      if (e.status === 401) { SESI = null; simpanSesi(); }
+      pesanMasuk = 'Server VaksinKu belum dapat dihubungi. Coba lagi sebentar.';
+      render();
+    });
+  }
+  function pilihKlinik(id) {
+    var k = (SESI.daftar || []).filter(function (x) { return x.klinik === id; })[0];
+    if (!k) return Promise.resolve();
+    SESI.klinik = k.klinik; SESI.klinikNama = k.nama; SESI.peran = k.peran;
+    simpanSesi();
+    S = baca(KEY_SRV);
+    if (S.klinikId !== k.klinik) {   // simpanan perangkat milik klinik lain tidak dipakai
+      S = salin(kosong);
+      S.klinikId = k.klinik;
+      S.klinik.nama = k.nama;
+    }
+    simpan();
+    location.hash = '#/ringkasan';
+    render();
+    return muatServer();
+  }
+  // Data pasien tidak ditinggalkan di perangkat setelah keluar; hanya catatan tampilan lokal.
+  function keluar() {
+    if (modeServer()) {
+      try {
+        localStorage.setItem(KEY_SRV, JSON.stringify({ ekstraPasien: S.ekstraPasien, minimumStok: S.minimumStok, klinikId: S.klinikId }));
+      } catch (e) {}
+    }
+    SESI = null; simpanSesi();
+    if (window.google && google.accounts && google.accounts.id) google.accounts.id.disableAutoSelect();
+    S = baca(KEY); panel = null;
+    render();
+  }
+  function sesiHabis() {
+    keluar();
+    pesanMasuk = 'Sesi berakhir. Silakan masuk lagi.';
+    render();
+  }
+
+  var memuat = false, muatLagi = false, janjiMuat = null;
+  function muatServer(diam) {
+    if (!modeServer()) return Promise.resolve(false);
+    if (memuat) { muatLagi = true; return janjiMuat; }
+    memuat = true;
+    janjiMuat = VaksinKuKlinik.muat({ api: '/api', token: SESI.token, klinik: SESI.klinik, fetch: ambil }).then(function (d) {
+      var p = VaksinKuKlinik.petakan(d, S);
+      ['klinik', 'jadwal', 'pasien', 'booking', 'stok', 'mutasi', 'layanan', 'transaksi'].forEach(function (k) { S[k] = p[k]; });
+      S.terakhirMuat = new Date().toISOString();
+      simpan();
+      if (!diam || !(panel || mengetik())) render();
+      return true;
+    }, function (e) {
+      if (e.status === 401) { sesiHabis(); return false; }
+      if (!diam) toast('Server VaksinKu belum dapat dihubungi. Data yang tampil mungkin belum terbaru.');
+      return false;
+    }).then(function (ok) {
+      memuat = false;
+      if (muatLagi) { muatLagi = false; return muatServer(diam); }
+      return ok;
+    });
+    return janjiMuat;
+  }
+  function mengetik() {
+    var a = document.activeElement;
+    return !!(a && /INPUT|TEXTAREA|SELECT/.test(a.tagName));
+  }
+  setInterval(function () {
+    if (modeServer() && !sibuk && document.visibilityState !== 'hidden') muatServer(true);
+  }, 60000);
+  window.addEventListener('focus', function () { if (modeServer() && !sibuk) muatServer(true); });
+
+  // Jalankan tindakan ke server, lalu muat ulang data. pesan: teks atau fungsi(hasil).
+  // padaGalat(e) → true bila galat sudah ditampilkan di formulir.
+  function kerja(janji, pesan, tutup, padaGalat) {
+    sibuk = true;
+    return janji.then(function (hasil) {
+      if (tutup) { panel = null; formErr = {}; }
+      return muatServer().then(function () { toast(typeof pesan === 'function' ? pesan(hasil) : pesan); });
+    }, function (e) {
+      if (e && e.status === 401) { sesiHabis(); return; }
+      if (padaGalat && e && e.pesan && padaGalat(e)) return;
+      toast(e && e.pesan ? e.pesan : 'Server VaksinKu belum dapat dihubungi. Periksa internet lalu coba lagi.');
+    }).then(function () { sibuk = false; });
+  }
+  function galatForm(medanGalat) {
+    return function (e) { formErr = {}; formErr[medanGalat] = e.pesan; render(); return true; };
+  }
+  // Status disimpan per reservasi di server: satu reservasi keluarga berubah bersama.
+  function ubahStatusServer(b, st) {
+    var tujuan = st === 'mangkir' ? 'tidak_hadir' : st, langkah = [];
+    if (b.statusServer === 'baru' && (tujuan === 'hadir' || tujuan === 'tidak_hadir')) langkah.push('terkonfirmasi');
+    langkah.push(tujuan);
+    return langkah.reduce(function (jalan, x) {
+      return jalan.then(function () { return rpc('ubah_status_booking', { p_booking: b.srv, p_status: x }); });
+    }, Promise.resolve());
+  }
+  function catatanKeluarga(b) {
+    if (!b.srv) return '';
+    var lain = S.booking.filter(function (x) { return x.srv === b.srv && x.id !== b.id; }).length;
+    return lain ? ' (beserta ' + lain + ' anggota keluarga dalam reservasi yang sama)' : '';
+  }
+  function jkAman(v) { return ['Perempuan', 'Laki-laki'].indexOf(v) >= 0 ? v : ''; }
+
+  function simpanPasienServer(pid, get) {
+    var isi = { nama: get('nama'), tgl_lahir: get('tglLahir'), jenis_kelamin: jkAman(get('jk')), hp: get('hp') };
+    var eks = { wali: get('wali'), alamat: get('alamat') };
+    if (pid) {
+      var p = pasienById(pid);
+      S.ekstraPasien[pid] = eks;
+      if (p && p.akun) {
+        simpan(); panel = null; formErr = {};
+        muatServer();
+        toast('Wali & alamat disimpan. Nama, tanggal lahir, dan HP pasien ini dikelola keluarganya di aplikasi VaksinKu.');
+        return;
+      }
+      kerja(api('PATCH', '/pasien?id=eq.' + pid, isi), 'Data pasien diperbarui.', true);
+      return;
+    }
+    isi.klinik_pendaftar = SESI.klinik;
+    kerja(api('POST', '/pasien', isi, 'return=representation').then(function (r) {
+      if (r && r[0]) S.ekstraPasien[r[0].id] = eks;
+      return r;
+    }), isi.nama + ' terdaftar.', true);
+  }
+
+  // Pesan WhatsApp dari aplikasi: pasien tanpa akun didaftarkan, lalu satu reservasi dibuat.
+  function tempelWAServer(x, d) {
+    if (S.booking.some(function (b) { return b.kode === x.kode; })) {
+      formErr = { teks: 'Reservasi ' + x.kode + ' sudah masuk lewat sistem online, tidak perlu ditempel. Cari kodenya di daftar booking.' };
+      render(); return;
+    }
+    var tanpaTgl = x.pasien.filter(function (p) { return !p.tglLahir && !pasienCocok(p); });
+    if (tanpaTgl.length) {
+      formErr = { teks: 'Tanggal lahir ' + tanpaTgl.map(function (p) { return p.nama; }).join(', ') +
+        ' tidak ada di pesan. Daftarkan pasien lewat menu Pendaftaran, lalu buat Booking baru.' };
+      render(); return;
+    }
+    var ids = [];
+    var jalan = x.pasien.reduce(function (j, p) {
+      return j.then(function () {
+        var ada = pasienCocok(p);
+        if (ada) { ids.push(ada.id); return; }
+        return api('POST', '/pasien', { nama: p.nama, tgl_lahir: p.tglLahir, jenis_kelamin: jkAman(p.jk), hp: x.pendaftar.hp || '',
+          klinik_pendaftar: SESI.klinik }, 'return=representation').then(function (r) {
+          ids.push(r[0].id);
+          S.ekstraPasien[r[0].id] = { wali: x.pendaftar.nama || '', alamat: x.layanan === 'Home Care' ? x.lokasi : '' };
+        });
+      });
+    }, Promise.resolve());
+    kerja(jalan.then(function () {
+      var item = [];
+      ids.forEach(function (pid) { x.vaksinIds.forEach(function (v) { item.push({ pasien_id: pid, vaksin_id: v }); }); });
+      return rpc('buat_booking', {
+        p_klinik: SESI.klinik, p_layanan: VaksinKuKlinik.LAYANAN_KODE[x.layanan] || 'klinik', p_lokasi: x.lokasi || '',
+        p_tanggal: d.tanggal, p_jam: d.jam, p_tarif: x.dokterTarif,
+        p_catatan: (x.catatan ? x.catatan + ' · ' : '') + 'Dari WhatsApp ' + x.kode, p_bagikan_riwayat: false, p_item: item
+      });
+    }), function (b) { return 'Booking ' + b.kode + ' dicatat untuk ' + ids.length + ' pasien.'; }, true, galatForm('jam'));
+  }
+
+  // Jam layanan & identitas klinik (admin klinik) — dikirim 0,8 detik setelah berhenti mengetik.
+  var jedaKlinik = 0;
+  function jadwalkanSimpanKlinik() {
+    if (!adminKlinik()) return;
+    clearTimeout(jedaKlinik);
+    jedaKlinik = setTimeout(function () {
+      var j = S.jadwal;
+      if (!/^\d\d:\d\d$/.test(j.buka) || !/^\d\d:\d\d$/.test(j.tutup) || j.tutup <= j.buka ||
+          !(j.durasi >= 5 && j.durasi <= 240) || !(j.kapasitas >= 1 && j.kapasitas <= 50)) {
+        toast('Periksa jam layanan: jam tutup setelah jam buka, durasi 5–240 menit, kapasitas 1–50.');
+        return;
+      }
+      api('PATCH', '/klinik?id=eq.' + encodeURIComponent(SESI.klinik), {
+        alamat: S.klinik.alamat, telepon_wa: S.klinik.telp, jam_buka: j.buka, jam_tutup: j.tutup,
+        durasi_slot: j.durasi, kapasitas_slot: j.kapasitas, hari_libur: (j.libur || []).slice().sort()
+      }).then(function () { toast('Pengaturan klinik tersimpan di server.'); },
+        function (e) { if (e.status === 401) sesiHabis(); else { toast(e.pesan || 'Pengaturan belum tersimpan. Coba lagi.'); muatServer(); } });
+    }, 800);
+  }
+
+  /* petugas klinik (Pengaturan) */
+  var petugas = null, petugasMuat = false;
+  function muatPetugas() {
+    if (petugasMuat) return;
+    petugasMuat = true;
+    rpc('daftar_petugas', { p_klinik: SESI.klinik }).then(function (r) { petugas = r || []; },
+      function () { petugas = petugas || []; }).then(function () { petugasMuat = false; if (route === 'pengaturan' && !panel) render(); });
+  }
+  function petugasHTML() {
+    if (petugas === null) { muatPetugas(); return '<div class="hint">Memuat daftar petugas…</div>'; }
+    var out = '<div class="stack g6">' + petugas.map(function (p) {
+      return '<div class="row mid g8 small" style="border-bottom:1px solid var(--line);padding:7px 0;">' +
+        '<div class="grow"><div style="font-weight:600;">' + h(p.nama || p.email) + '</div><div class="tiny muted">' + h(p.email) + '</div></div>' +
+        '<span class="chip ' + (p.peran === 'admin' ? 'teal' : 'grey') + '">' + h(p.peran) + '</span>' +
+        (adminKlinik() && p.user_id !== SESI.id ? '<button class="linkbtn" data-act="cabut-petugas" data-arg="' + h(p.user_id) + '">Cabut</button>' : '') +
+        '</div>';
+    }).join('') + '</div>';
+    if (adminKlinik()) {
+      out += '<div class="stack g8" style="margin-top:6px;"><label class="lbl">Tambah petugas</label>' +
+        '<div class="row g8 wrap"><input class="input" id="email-petugas" type="email" placeholder="email.google@gmail.com" style="flex:1;min-width:200px;">' +
+        '<select class="input" id="peran-petugas" style="width:auto;"><option value="petugas">Petugas</option><option value="admin">Admin</option></select>' +
+        '<button class="btn primary sm" data-act="tambah-petugas">Tambah</button></div>' +
+        '<div class="hint">Orangnya harus sudah pernah membuka vaksinku.app/klinik.html dan masuk dengan Google sekali. ' +
+        'Admin dapat mengubah jam layanan dan mengelola petugas; petugas mengelola booking, pelayanan, stok, dan pembayaran.</div></div>';
+    }
+    return out;
+  }
+  function tambahPetugas() {
+    var em = (document.getElementById('email-petugas') || {}).value || '', peran = (document.getElementById('peran-petugas') || {}).value || 'petugas';
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em.trim())) { toast('Isi email Google petugas dengan benar.'); return; }
+    sibuk = true;
+    rpc('tambah_petugas', { p_klinik: SESI.klinik, p_email: em.trim(), p_peran: peran }).then(function () {
+      toast(em.trim() + ' ditambahkan sebagai ' + peran + '.'); petugas = null; render();
+    }, function (e) { if (e.status === 401) sesiHabis(); else toast(e.pesan || 'Server belum dapat dihubungi.'); })
+      .then(function () { sibuk = false; });
+  }
+  function cabutPetugas(uid2) {
+    var p = (petugas || []).filter(function (x) { return x.user_id === uid2; })[0];
+    if (!p || !konfirmasi('Cabut akses ' + (p.nama || p.email) + ' dari klinik ini?')) return;
+    sibuk = true;
+    rpc('cabut_petugas', { p_klinik: SESI.klinik, p_user: uid2 }).then(function () {
+      toast('Akses ' + (p.nama || p.email) + ' dicabut.'); petugas = null; render();
+    }, function (e) { if (e.status === 401) sesiHabis(); else toast(e.pesan || 'Server belum dapat dihubungi.'); })
+      .then(function () { sibuk = false; });
+  }
+  document.addEventListener('click', function (ev) {
+    var el = ev.target.closest('[data-act]');
+    if (!el) return;
+    var act = el.getAttribute('data-act');
+    if (act === 'periksa-lagi') { pesanMasuk = ''; muatKeanggotaan(); }
+    if (act === 'keluar-langsung') { pesanMasuk = ''; keluar(); }
+  });
+  window.VaksinKuKlinikUji = { terimaGoogle: terimaGoogle, muatServer: muatServer, sesi: function () { return SESI; } };
+
   /* ============================ init ============================ */
   window.addEventListener('hashchange', function () {
     bacaRoute(); panel = null; formErr = {};
@@ -1830,4 +2505,6 @@
   });
   bacaRoute();
   render();
+  if (modeServer()) muatServer();
+  else if (sesiBerlaku() && wajibMasuk() && !(SESI.daftar || []).length) muatKeanggotaan();
 })();

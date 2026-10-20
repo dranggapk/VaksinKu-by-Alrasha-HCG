@@ -1,6 +1,6 @@
 # VaksinKu — Aplikasi Vaksinasi Keluarga
 
-Aplikasi **VaksinKu by Alrasha Ibumas**: mengatur jadwal vaksinasi keluarga,
+Aplikasi **VaksinKu by Alrasha Health Care Group**: mengatur jadwal vaksinasi keluarga,
 menyimpan rekam medis, dan membuat reservasi — dalam satu berkas HTML yang
 berjalan langsung di browser.
 
@@ -33,20 +33,29 @@ tautan, atau ditambahkan ke layar utama ponsel lewat menu "Add to Home screen".
 |---|---|
 | **Layar pembuka** | Splash, onboarding 3 langkah, dan layar masuk — sesuai rancangan di Claude Design |
 | **Pilihan kebutuhan** | Anak / dewasa / umroh & haji / lansia; pilihan ini menyaring rekomendasi vaksin di beranda dan daftar harga |
-| **Banner promo** | Slider geser di bawah tombol booking: paket berharga coret dari price list, plus pengenalan layanan Home Care dan modul Korporat |
+| **Ikon menu** | Gaya *Flat Filled with Outline* (Alternatif 2 dari lembar desain ikon): isi teal & pink, garis tepi biru tua, di atas lingkaran teal pucat. Dipakai di menu bawah (yang tidak aktif tampil abu-abu), menu Profil, dan pintasan Beranda. Digambar sebagai SVG di `IKON_MENU` pada `app/app.js` |
+| **Ikon kategori vaksin & cara vaksinasi** | Gaya yang sama dalam kotak membulat, dengan tiga keadaan: *Default* (teal), *Aktif/Dipilih* (pink), *Nonaktif* (abu-abu). Suntik untuk tiap kategori di Daftar Harga, pemilih vaksin, dan vaksin pranikah; kategori kombinasi (DPT Combo, Campak + Rubella) memakai varian bertanda +. Home Care, On Site Klinik, dan On Site Corporate di Beranda, form Booking, dan onboarding |
+| **Banner promo** | Slider geser di bawah kartu reservasi/booking, berputar tiap 5 detik dan berhenti begitu disentuh. Berisi 5 banner promo (Bundling HPV, HPV 4, Little Protection, Influenza, Vaksin Dewasa). Diatur di daftar `BANNER` pada `app/app.js`; gambar 1200×540 (20:9) disimpan di `app/banner/` dan ditanam ke berkas aplikasi saat build |
+| **Paket promo haji & umrah** | Kartu harga coret dari price list di Beranda |
 | **Profil pendaftar** | Nama & nomor HP, dipakai sebagai kontak reservasi |
 | **Data pasien** | Tambah/ubah/hapus anggota keluarga; usia dihitung dari tanggal lahir |
-| **Jadwal vaksin personal** | Ceklis otomatis menyesuaikan usia: anak mengikuti **IDAI 2024**, dewasa mengikuti **PAPDI 2025** (rentang usia dipilih otomatis) |
-| **Kelengkapan vaksinasi** | Persentase dihitung dari vaksin yang sudah jatuh tempo vs yang sudah dicatat |
+| **Mitra klinik per kota** | Pengguna memilih kota lalu klinik mitra: **Kota Bandung** (Klinik Utama Jasmine MQ Medika) dan **Kota Tanjungpinang** (Klinik Alrasha Health Care Center, Klinik Utama Alrasha Ibumas). Harga, ketersediaan, dokter, banner promo, dan paket haji/umrah mengikuti klinik terpilih |
+| **Panduan Vaksinasi di Indonesia** | Profil 21 jenis vaksin: merek yang beredar (foto/ilustrasi, produsen, tersedia di klinik terpilih), manfaat, jadwal, kontraindikasi, reaksi, tanya-jawab. Tujuh jadwal: anak IDAI 2024 & Buku KIA, dewasa PAPDI 2025, ibu hamil POGI 2026, pranikah, lansia, internasional. Nama vaksin di Daftar Harga, Jadwal, Rekam Medis, Booking, dan lainnya membuka profilnya |
+| **Jadwal anak: IDAI atau Buku KIA** | Tiap anak bisa mengikuti **IDAI 2024** (rekomendasi lengkap) atau **Buku KIA 2024** (program pemerintah + BIAS sekolah) dan berganti kapan saja — dosis yang sudah dicatat langsung terbaca di jadwal baru. Dewasa mengikuti **PAPDI 2025** |
+| **Tabel ceklis + No. Batch** | Tabel meniru Buku KIA (baris dosis × kolom usia, warna tepat/boleh/kejar/tidak boleh) dan tabel IDAI per jenis vaksin. Tiap dosis dicatat dengan tanggal, tempat, fasilitas, merek, **No. Batch**, dan foto label (opsional) |
+| **Gratis di Puskesmas** | Dosis program pemerintah ditandai; orang tua bisa merencanakan dosis tertentu (atau semuanya) di Puskesmas, vaksin lain dibooking di klinik |
+| **Batas usia & imunisasi kejar** | Dosis yang lewat batas usia (mis. rotavirus) tampil "terlewat" dan tidak dihitung kurang; flu tahunan & tifoid 3-tahunan dihitung dari dosis terakhir; lewat batas program KIA dialihkan ke batas kejar IDAI |
+| **Kondisi khusus & BIAS** | Peringatan dari catatan IDAI (berat lahir <2.000 g, ibu HBsAg+, ibu TB aktif, gangguan imun, alergi berat); kartu jadwal BIAS di dashboard sekolah; layar perbandingan IDAI vs KIA |
+| **Kelengkapan vaksinasi** | Persentase dihitung dari dosis yang sudah waktunya dan masih boleh diberikan vs yang sudah dicatat |
 | **Reservasi** | Form tervalidasi: layanan, lokasi, pasien, dokter, vaksin, tanggal & jam |
 | **Biaya nyata** | Total dihitung dari price list resmi; ganti dokter umum ↔ spesialis mengubah total seketika |
-| **Kirim ke WhatsApp** | Ringkasan reservasi dikirim ke CS **0811-7744-74** dengan satu ketukan |
+| **Kirim ke WhatsApp** | Ringkasan reservasi dikirim ke CS **0811-7744-74** dengan satu ketukan, disertai kode data yang dibaca dashboard klinik |
 | **Konsultasi dokter** | Pertanyaan disusun bersama konteks medis pasien, dikirim ke WhatsApp dokter; jawaban dicatat kembali sebagai arsip percakapan |
 | **Pengingat otomatis** | Vaksin terlambat, vaksin yang akan jatuh tempo, reservasi mendekat, dan konsultasi tanpa jawaban — dihitung dari tanggal lahir tiap pasien, dengan lencana di beranda |
 | **Ekspor ke kalender** | Unduh `.ics` berisi jadwal vaksin & reservasi lengkap dengan alarm H-7 dan H-1, agar pengingat tetap berbunyi walau aplikasi tertutup |
 | **Rekam medis** | Riwayat vaksinasi per pasien, otomatis terisi saat reservasi ditandai selesai |
 | **Tumbuh kembang** | Catat berat, tinggi, lingkar kepala; grafik berat badan terhadap usia |
-| **Daftar harga** | 17 kategori vaksin, dengan pencarian dan pilihan tarif dokter |
+| **Daftar harga** | 17 kategori vaksin sesuai klinik terpilih, dengan pencarian, pilihan tarif dokter, dan tanda *Gratis di Puskesmas (anak)* |
 | **Vaksin internasional** | Vaksin wajib haji/umrah, rekomendasi WHO, harga & paket promo, e-ICV |
 | **Korporat / Sekolah** | Dashboard vaksinasi massal: daftar peserta per kelas/divisi, cakupan terhitung, booking massal ke WhatsApp, estimasi biaya, dan rekap `.csv` |
 | **Poin Sehat** | +10 poin setiap vaksinasi selesai |
@@ -64,6 +73,7 @@ sama dengan aplikasi pasien.
 | **Ringkasan** | KPI harian, grafik pendapatan 7/14/30 hari (plus tampilan tabel), antrean hari ini, peringatan persediaan |
 | **Pendaftaran** | Data induk pasien, nomor rekam medis otomatis berurutan, pencarian, riwayat vaksinasi per pasien |
 | **Booking** | Daftar tersaring per status, pembuatan booking yang dicek terhadap kapasitas slot, konfirmasi, batal, tidak hadir |
+| **Tempel dari WhatsApp** | Pesan reservasi dari aplikasi pasien ditempel apa adanya: pasien baru didaftarkan, pasien lama dikenali, satu booking dibuat per pasien di slot yang masih muat |
 | **Penjadwalan** | Jam buka–tutup, durasi slot, kapasitas, hari libur; tampilan slot per hari dan grafik beban 14 hari ke depan |
 | **Pelayanan** | Antrean hari ini, check-in, pemilihan batch otomatis **FEFO**, pencatatan KIPI; penyelesaian memotong stok dan menerbitkan tagihan |
 | **Persediaan** | Stok per batch dengan kedaluwarsa dan stok minimum, penerimaan, penyesuaian/pembuangan, buku mutasi, peringatan habis & mendekati tempo |
@@ -74,13 +84,33 @@ stok batch yang dipakai, menulis mutasi keluar, mencatat rekam medis, dan
 menerbitkan tagihan dengan harga dari price list resmi. Tidak ada angka yang
 ditanam — semua dihitung dari data yang dimasukkan petugas.
 
-### Batasan dashboard
+### Dua cara pakai
+
+- **Tersambung ke server — https://vaksinku.app/klinik.html (cara utama).** Petugas
+  masuk dengan akun Google yang didaftarkan admin klinik (*Pengaturan → Petugas klinik*;
+  admin pertama didaftarkan dengan `deploy/jadikan-admin.sh`). Reservasi online dari
+  aplikasi pasien langsung muncul; booking, pasien, stok, pelayanan, dan tagihan
+  tersimpan di server (`admin/server.js` → fungsi database yang memeriksa hak petugas,
+  kuota slot, stok, dan harga). Vaksinasi yang dicatat langsung masuk ke riwayat
+  pasien di aplikasi, lengkap dengan No. Batch dan tanda terverifikasi klinik.
+  Beberapa komputer/kasir memakai data yang sama; data diperbarui tiap menit.
+- **Berkas di perangkat (cadangan/demo).** `VaksinKu-Dashboard.html` yang dibuka
+  langsung dari folder tetap bekerja tanpa server dengan batasan di bawah.
+
+### Batasan dashboard (mode berkas di perangkat)
 
 - **Booking dari aplikasi pasien tidak masuk otomatis.** Tanpa server tidak ada
-  jalur sinkronisasi; reservasi tiba lewat WhatsApp lalu dicatat petugas. Satu
-  jembatan yang memang bekerja: berkas cadangan `.json` dari aplikasi pasien bisa
+  jalur sinkronisasi; reservasi tiba lewat WhatsApp. Pesan dari aplikasi membawa
+  baris **kode data** (`VKD1.…`) di bagian akhir — petugas menyalin pesannya lalu
+  memilih **Booking → Tempel dari WhatsApp**, dan pasien serta booking terbentuk
+  tanpa mengetik ulang. Jadwal yang diminta pasien menjadi nilai awal; petugas
+  boleh menggesernya bila slot penuh. Pesan yang sama tidak tercatat dua kali.
+  Pesan yang diketik pasien sendiri (bukan dari aplikasi) tetap dicatat lewat
+  *Booking baru*. Jalur lainnya: berkas cadangan `.json` dari aplikasi pasien bisa
   **diimpor** di menu Pengaturan — pasien dan reservasinya ditambahkan tanpa
   menimpa data yang ada.
+- Pasien lama dikenali dari **nama dan tanggal lahir yang sama persis**; beda
+  ejaan nama akan terdaftar sebagai pasien baru dan perlu digabung manual.
 - **Satu perangkat, satu pengguna.** Data ada di browser komputer itu saja; belum
   ada akun petugas, hak akses, atau jejak audit per pengguna. Beberapa kasir atau
   beberapa cabang belum bisa berbagi satu data.
@@ -92,11 +122,11 @@ ditanam — semua dihitung dari data yang dimasukkan petugas.
 
 ## Batasan yang perlu diketahui
 
-- **Data tersimpan di perangkat**, bukan di server. Membersihkan data browser
-  akan menghapusnya — gunakan menu *Cadangkan data* sebelum berganti perangkat.
-- **Reservasi belum otomatis masuk sistem klinik.** Aplikasi menyusun ringkasan
-  dan mengirimkannya ke WhatsApp CS untuk dikonfirmasi petugas. Untuk booking
-  yang benar-benar otomatis dibutuhkan server dan integrasi jadwal klinik.
+- **Server VaksinKu (VPS) sudah berjalan** di vaksinku.app: masuk dengan Google,
+  sinkron data keluarga, reservasi online, dan dashboard klinik memakai database
+  yang sama. Tanpa masuk (atau saat server tak terjangkau), aplikasi pasien tetap
+  menyimpan data di perangkat dan reservasi dikirim lewat WhatsApp.
+- Foto label vaksin tetap di perangkat pasien (belum diunggah ke server).
 - **Konsultasi bukan chat real-time.** Tidak ada balasan otomatis dan tidak ada
   jawaban yang dibuat aplikasi. Pertanyaan dikirim lewat WhatsApp ke dokter/CS,
   lalu jawaban yang Anda terima dicatat sendiri ke dalam aplikasi supaya
@@ -108,11 +138,15 @@ ditanam — semua dihitung dari data yang dimasukkan petugas.
   terbuka**, dan izinnya kerap ditolak browser pada berkas lokal. Karena itu
   pengingat yang berbunyi saat aplikasi tertutup disediakan lewat **ekspor
   kalender** — cara ini bekerja di Google Calendar maupun kalender bawaan ponsel.
-- **Masuk hanya bersifat lokal.** Tidak ada server, jadi tidak ada OTP dan tidak
-  ada akun yang bisa dipakai lintas perangkat. Nama dan nomor yang diisi di layar
-  masuk tersimpan di perangkat itu saja. Tombol *Lanjutkan dengan Google* sengaja
-  ditampilkan nonaktif beserta alasannya — bukan tombol pura-pura — karena OAuth
-  membutuhkan server dan alamat situs yang terdaftar.
+- **Daftar & masuk hanya dengan akun Google**, dan hanya bila aplikasi dibuka dari
+  https://vaksinku.app. Berkas yang dibuka langsung di perangkat menampilkan tombol
+  Google nonaktif beserta tautan ke situs resmi; pengguna tetap bisa melihat-lihat
+  tanpa masuk. Client ID dibuat di Google Cloud Console (origin `https://vaksinku.app`)
+  lalu diisi di `GOOGLE` pada `src/data_katalog.py` atau variabel lingkungan
+  `VAKSINKU_GOOGLE_CLIENT_ID` saat build. Nomor HP/WhatsApp diisi di Profil setelah
+  masuk. Selama backend di VPS belum aktif, token Google hanya diperiksa di perangkat
+  (aplikasi tujuan & masa berlaku) dan data tetap tersimpan lokal; verifikasi tanda
+  tangan token dilakukan server saat backend aktif.
 - **Modul korporat/sekolah menghitung dari data yang Anda masukkan sendiri.**
   Cakupan, estimasi biaya, dan rekap semuanya diturunkan dari daftar peserta di
   perangkat ini; belum ada sinkronisasi dengan sistem sekolah, HRD, maupun
@@ -120,16 +154,33 @@ ditanam — semua dihitung dari data yang dimasukkan petugas.
   disesuaikan bila Dinas Kesehatan meminta templat tertentu. Yang ditampilkan
   adalah *estimasi* biaya dari price list; invoice resmi tetap terbit dari klinik.
 - **Slot waktu belum terhubung ketersediaan riil**; jadwal final dikonfirmasi CS.
+- **Price list Klinik Utama Jasmine MQ Medika belum diterima**, begitu pula alamatnya.
+  Saat klinik ini dipilih, harga dan ketersediaan tampil "dikonfirmasi klinik". Isi
+  `harga` dan `alamat` klinik tersebut di `MITRA` pada `src/data_katalog.py` bila
+  datanya sudah ada. Kedua klinik Alrasha memakai price list katalog yang sama.
+- **Klinik Ibumas (Jl. D.I. Panjaitan) tidak lagi ditampilkan** — mitra Tanjungpinang
+  sesuai daftar: Alrasha Health Care Center dan Klinik Utama Alrasha Ibumas.
+- **Gambar merek berupa ilustrasi kemasan, bukan foto.** Bentuk dan warna kemasan
+  tiap merek digambar ulang dengan Buku Vaksin Indonesia sebagai acuan (`GAYA_MEREK`
+  di `src/panduan_vaksin.py`); foto di buku itu milik penerbitnya dan bertanda air,
+  sehingga tidak disalin. Foto kemasan asli dari stok klinik atau distributor dapat
+  diletakkan di `app/merek/` (nama berkas di `app/merek/README.md`) dan otomatis
+  menggantikan ilustrasinya saat build.
+- **Jadwal kejar bukan resep.** Aplikasi menandai dosis yang perlu dikejar dan batas
+  usianya, tetapi jumlah dosis kejar (mis. PCV yang dimulai terlambat) ditentukan dokter.
+- Foto label vaksin disimpan di perangkat; penyimpanan browser terbatas (±5 MB),
+  sehingga foto dikecilkan otomatis dan ditolak bila penyimpanan penuh.
 - Grafik pertumbuhan menampilkan data pasien sendiri, belum dibandingkan dengan
   kurva WHO (butuh tabel standar WHO yang resmi).
 
 ## Sumber data
 
 Harga, jadwal vaksin, layanan, dokter, dan lokasi klinik diambil dari katalog
-resmi VaksinKu by Alrasha Ibumas (16 halaman) dan disimpan terpusat di
+resmi VaksinKu by Alrasha Health Care Group (16 halaman) dan disimpan terpusat di
 `src/data_katalog.py` — perbarui di satu berkas itu lalu build ulang.
 
-Rujukan yang dipakai: jadwal anak **IDAI 2024**, jadwal dewasa **PAPDI 2025**,
+Rujukan yang dipakai: jadwal anak **IDAI 2024** dan **Buku KIA 2024** (Kemenkes, termasuk BIAS) —
+per dosis di `src/jadwal_anak.py` —, jadwal dewasa **PAPDI 2025**,
 vaksin haji & umrah sesuai regulasi Arab Saudi dengan tambahan rekomendasi WHO.
 
 ## Struktur repositori
@@ -142,23 +193,35 @@ design/                    Artboard hasil ekspor kanvas Claude Design
 app/                       Sumber aplikasi pasien
   index.html               Kerangka halaman
   styles.css               Design system: token warna, komponen, tata letak
+  banner/                  Gambar banner promo Beranda (1200×540, WebP)
+  merek/                   Foto kemasan vaksin per merek untuk Panduan (lihat README di dalamnya)
   app.js                   Logika: penyimpanan, rute, layar, perhitungan biaya
-admin/                     Sumber dashboard manajemen
+  sinkron.js               Sinkronisasi profil, keluarga & riwayat dosis dengan server (PostgREST)
+admin/                     Sumber dashboard manajemen (server.js = penghubung ke server VaksinKu)
   index.html               Kerangka halaman
   styles.css               Design system dashboard (sidebar, tabel, grafik)
   app.js                   Modul booking s.d. transaksi, grafik, dan panel
 src/
-  data_katalog.py          Isi katalog (harga, jadwal, layanan, dokter, klinik)
+  data_katalog.py          Isi katalog (harga, jadwal dewasa, layanan, dokter, mitra klinik)
+  jadwal_anak.py           Jadwal anak per dosis: IDAI 2024 & Buku KIA 2024
+  panduan_vaksin.py        Isi Panduan Vaksinasi: profil 21 vaksin & jadwal ibu hamil
   build_bundle.py          Merakit aplikasi pasien + font & logo jadi satu berkas
   build_admin.py           Merakit dashboard manajemen jadi satu berkas
-  uji_app.py               Uji fungsional aplikasi pasien (99 uji)
-  uji_admin.py             Uji fungsional dashboard (64 uji)
+  uji_app.py               Uji fungsional aplikasi pasien (172 uji)
+  uji_admin.py             Uji fungsional dashboard (78 uji)
+  buat_seed_supabase.py    Membuat supabase/seed.sql dari katalog
+  uji_supabase.py          Uji hak akses backend Supabase di PostgreSQL lokal (63 uji)
+  uji_backend.mjs          Uji ujung-ke-ujung backend VPS: PostgreSQL + PostgREST + masuk Google (63 uji, termasuk sinkron dua perangkat, reservasi online dari aplikasi, dan dashboard klinik di browser)
+  buat_paket_vps.py        Merakit dist/vaksinku-vps.tar.gz untuk /opt/vaksinku
   tangkap_layar.py         Tangkap layar aplikasi pasien
   tangkap_dashboard.py     Tangkap layar dashboard
   ambil_desain.py          Ekspor isi kanvas Claude Design ke folder design/
   build_index.py           Merakit index.html dari design/
   gen.py                   Design system generator mockup statis (versi lama)
   build_app.py             Generator prototipe klik (versi lama)
+situs/               Halaman situs vaksinku.app (privasi.html = Kebijakan Privasi)
+deploy/              Pemasangan di VPS bersama (lihat deploy/README.md)
+supabase/            Backend tahap fondasi: migrasi tabel + RLS + fungsi, seed (lihat supabase/README.md)
 mockup/              Artboard statis (.dc.html) untuk kanvas desain
 katalog/             Halaman katalog hasil koreksi (lihat katalog/README.md)
 ```
@@ -170,8 +233,9 @@ cd src
 python3 build_bundle.py       # → VaksinKu-App.html (font tertanam, siap offline)
 python3 build_admin.py        # → VaksinKu-Dashboard.html
 python3 build_bundle.py --tanpa-font   # lebih cepat, font dari Google Fonts
-python3 uji_app.py            # 99 uji fungsional aplikasi pasien
-python3 uji_admin.py          # 64 uji fungsional dashboard
+python3 uji_app.py            # 172 uji fungsional aplikasi pasien
+python3 uji_admin.py          # 78 uji fungsional dashboard
+python3 uji_supabase.py       # 63 uji hak akses backend (butuh PostgreSQL lokal)
 python3 tangkap_layar.py      # tangkap layar aplikasi pasien
 python3 tangkap_dashboard.py  # tangkap layar dashboard
 python3 build_index.py        # → index.html dari folder design/

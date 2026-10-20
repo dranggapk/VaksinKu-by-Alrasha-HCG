@@ -24,8 +24,11 @@ def main():
         html = f.read()
     with open(os.path.join(ADMIN, "styles.css"), encoding="utf-8") as f:
         css = f.read()
+    # penghubung server (admin/server.js) dimuat sebelum app.js
+    with open(os.path.join(ADMIN, "server.js"), encoding="utf-8") as f:
+        js = f.read() + "\n"
     with open(os.path.join(ADMIN, "app.js"), encoding="utf-8") as f:
-        js = f.read()
+        js += f.read()
 
     if tanpa_font:
         fonts = ('<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>'

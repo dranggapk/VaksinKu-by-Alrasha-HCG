@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Isi katalog resmi VaksinKu by Alrasha Ibumas — sumber tunggal untuk
+"""Isi katalog resmi VaksinKu by Alrasha Health Care Group — sumber tunggal untuk
 harga, jadwal vaksin, layanan, dokter, dan lokasi klinik di dalam prototipe."""
 
 # ---------------------------------------------------------------- identitas
@@ -11,6 +11,15 @@ BRAND = {
     "instagram": "@alrashaibumasgroup",
     "website": "www.alrashaibumas.com",
     "group": "Alrasha Ibumas Group",
+}
+
+# Masuk dengan Google. Client ID dibuat di Google Cloud Console (Credentials →
+# OAuth client ID → Web application) dengan Authorized JavaScript origin
+# https://vaksinku.app. Client ID bukan rahasia; boleh juga diisi lewat
+# variabel lingkungan VAKSINKU_GOOGLE_CLIENT_ID saat build.
+GOOGLE = {
+    "client_id": "969970859602-3le4bln2e58lcd3d84n6q08uo55jli6h.apps.googleusercontent.com",
+    "situs": "https://vaksinku.app",
 }
 
 # Tiga pilar positioning (slide "Kenapa harus di VaksinKu")
@@ -203,11 +212,26 @@ DOKTER = [
 ]
 
 # ---------------------------------------------------------------- klinik
-KLINIK = [
-    ("Klinik Alrasha Health Care Center", "Jl. Hang Lekir, Batu 10, No. 21–22, Tanjungpinang"),
-    ("Klinik Utama Alrasha Ibumas", "Jl. Hang Lekir, Batu 10, No. 18–20, Tanjungpinang"),
-    ("Klinik Ibumas", "Jl. D.I. Panjaitan No. 4, Tanjungpinang"),
+# Mitra VaksinKu per kota. Harga dan ketersediaan vaksin bergantung pada klinik
+# yang dipilih pengguna. "harga" menunjuk price list yang dipakai klinik itu:
+# "alrasha" = price list katalog di atas (HARGA, HARGA_INTERNASIONAL, PAKET_TRIPLE);
+# None = price list belum diterima, harga dikonfirmasi klinik saat reservasi.
+# "alamat" kosong = belum diterima; aplikasi menulis "alamat menyusul".
+MITRA = [
+    {"id": "bandung", "kota": "Kota Bandung", "klinik": [
+        {"id": "jasmine-mq", "nama": "Klinik Utama Jasmine MQ Medika", "alamat": "", "harga": None, "dokter": []},
+    ]},
+    {"id": "tanjungpinang", "kota": "Kota Tanjungpinang", "klinik": [
+        {"id": "alrasha-hcc", "nama": "Klinik Alrasha Health Care Center",
+         "alamat": "Jl. Hang Lekir, Batu 10, No. 21–22, Tanjungpinang", "harga": "alrasha", "dokter": [0, 1, 2, 3]},
+        {"id": "alrasha-ibumas", "nama": "Klinik Utama Alrasha Ibumas",
+         "alamat": "Jl. Hang Lekir, Batu 10, No. 18–20, Tanjungpinang", "harga": "alrasha", "dokter": [0, 1, 2, 3]},
+    ]},
 ]
+
+# Daftar datar (nama, alamat) untuk dashboard klinik: satu dashboard per klinik mitra.
+KLINIK = [(k["nama"], k["alamat"] or "Alamat menyusul")
+          for kota in sorted(MITRA, key=lambda m: m["id"] != "tanjungpinang") for k in kota["klinik"]]
 
 # ---------------------------------------------------------------- alur reservasi
 ALUR_RESERVASI = [
