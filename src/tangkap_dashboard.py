@@ -12,7 +12,7 @@ import tempfile
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 BUNDLE = os.path.join(ROOT, "VaksinKu-Dashboard.html")
-CHROME = "/opt/pw-browsers/chromium-1194/chrome-linux/chrome"
+CHROME = "/opt/pw-browsers/chromium"
 KELUAR = os.path.join(tempfile.gettempdir(), "vaksinku-dashboard")
 
 LAYAR = ["ringkasan", "booking", "pendaftaran", "penjadwalan",

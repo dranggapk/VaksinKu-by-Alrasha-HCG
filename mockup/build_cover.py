@@ -289,7 +289,7 @@ def main():
         f.write(html)
     print("wrote", out)
     png = os.path.join(HERE, "cover-alternatif.png")
-    subprocess.run(["/opt/pw-browsers/chromium-1194/chrome-linux/chrome", "--headless=new", "--no-sandbox", "--disable-gpu",
+    subprocess.run(["/opt/pw-browsers/chromium", "--headless=new", "--no-sandbox", "--disable-gpu",
                     "--hide-scrollbars", "--window-size=1400,1230", "--screenshot=" + png, "file://" + out],
                    capture_output=True, timeout=120)
     print("wrote", png)

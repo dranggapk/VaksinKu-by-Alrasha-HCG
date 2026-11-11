@@ -161,8 +161,9 @@ def katalog_js():
 
 
 # --------------------------------------------------------------- font
-def font_css():
-    out = subprocess.run(["curl", "-sS", "-m", "40", "-A", UA, FONT_CSS_URL],
+def font_css(url=None, rentang=None):
+    url, rentang = url or FONT_CSS_URL, rentang or WEIGHT_RANGE
+    out = subprocess.run(["curl", "-sS", "-m", "40", "-A", UA, url],
                          capture_output=True, check=True).stdout.decode("utf-8")
     blocks = re.findall(r"/\*\s*([\w-]+)\s*\*/\s*(@font-face\s*\{[^}]*\})", out)
     faces, rules = {}, []
@@ -180,7 +181,7 @@ def font_css():
         rules.append(
             "@font-face{font-family:'%s';font-style:normal;font-weight:%s;font-display:swap;"
             "src:url(data:font/woff2;base64,%s) format('woff2');unicode-range:%s;}"
-            % (family, WEIGHT_RANGE[family], base64.b64encode(raw).decode("ascii"), urange)
+            % (family, rentang[family], base64.b64encode(raw).decode("ascii"), urange)
         )
     return "\n".join(rules)
 
@@ -205,6 +206,10 @@ def tanam_banner(js):
 # --------------------------------------------------------------- rakit
 def main():
     tanpa_font = "--tanpa-font" in sys.argv
+    # --merek jasvacc → varian merek lain dari kode yang sama (lihat src/merek.py)
+    nama_merek = sys.argv[sys.argv.index("--merek") + 1] if "--merek" in sys.argv else "vaksinku"
+    import merek as M
+    cfg = M.MEREK[nama_merek]
     with open(os.path.join(APP, "index.html"), encoding="utf-8") as f:
         html = f.read()
     with open(os.path.join(APP, "styles.css"), encoding="utf-8") as f:
@@ -215,19 +220,22 @@ def main():
     with open(os.path.join(APP, "sinkron.js"), encoding="utf-8") as f:
         js = f.read() + "\n" + js
 
+    url_font = cfg.get("font_url", FONT_CSS_URL)
     if tanpa_font:
         fonts = ('<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>'
-                 '<link href="' + FONT_CSS_URL + '" rel="stylesheet">')
+                 '<link href="' + url_font + '" rel="stylesheet">')
     else:
         print("mengambil font...")
-        fonts = "<style>\n" + font_css() + "\n</style>"
+        fonts = "<style>\n" + font_css(url_font, cfg.get("font_rentang")) + "\n</style>"
 
     html = html.replace("<!--FONTS-->", fonts)
     html = html.replace("/*STYLES*/", css)
-    html = html.replace("/*KATALOG*/", katalog_js())
+    html = html.replace("/*KATALOG*/", M.terapkan_katalog(cfg, katalog_js()))
     html = html.replace("/*APP*/", tanam_banner(js))
+    html = M.terapkan_html(cfg, html)
 
-    out = os.path.join(ROOT, "VaksinKu-App.html")
+    out = os.path.join(ROOT, cfg["keluaran"])
+    M.tulis_privasi(cfg)
     with open(out, "w", encoding="utf-8") as f:
         f.write(html)
     print("wrote %s — %.0f KB" % (out, os.path.getsize(out) / 1024))

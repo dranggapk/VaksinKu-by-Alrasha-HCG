@@ -138,7 +138,7 @@ def main():
     with open(out, "w", encoding="utf-8") as f:
         f.write(html)
     png = os.path.join(HERE, "ikon-alternatif.png")
-    subprocess.run(["/opt/pw-browsers/chromium-1194/chrome-linux/chrome", "--headless=new", "--no-sandbox", "--disable-gpu",
+    subprocess.run(["/opt/pw-browsers/chromium", "--headless=new", "--no-sandbox", "--disable-gpu",
                     "--hide-scrollbars", "--window-size=1300,1300", "--virtual-time-budget=3000", "--screenshot=" + png,
                     "file://" + out], capture_output=True, timeout=120)
     print("wrote", out, "dan", png)

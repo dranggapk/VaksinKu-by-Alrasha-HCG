@@ -15,9 +15,12 @@ import tempfile
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
-BUNDLE = os.path.join(ROOT, "VaksinKu-App.html")
-CHROME = "/opt/pw-browsers/chromium-1194/chrome-linux/chrome"
-KELUAR = os.path.join(tempfile.gettempdir(), "vaksinku-layar")
+# MEREK=jasvacc python3 tangkap_layar.py → memotret varian JasVacc (lihat src/merek.py)
+MEREK = os.environ.get("MEREK", "vaksinku")
+BUNDLE = os.path.join(ROOT, "JasVacc-App.html" if MEREK == "jasvacc" else "VaksinKu-App.html")
+KUNCI = "jasvacc.v1" if MEREK == "jasvacc" else "vaksinku.v1"
+CHROME = "/opt/pw-browsers/chromium"
+KELUAR = os.path.join(tempfile.gettempdir(), MEREK + "-layar")
 
 LAYAR = {
     "beranda": "#/beranda", "booking": "#/booking", "jadwal": "#/jadwal",
@@ -138,7 +141,9 @@ def seed_js(nama, tujuan):
             data["korporat"] = contoh_korporat("peserta")
         elif nama == "korporat-laporan":
             data["korporat"] = contoh_korporat("laporan")
-    return ("<script>try{localStorage.setItem('vaksinku.v1'," +
+    if MEREK == "jasvacc" and isinstance(data.get("lokasi"), dict) and data["lokasi"].get("klinik"):
+        data["lokasi"] = {"kota": "bandung", "klinik": "jasmine-mq"}   # klinik merek JasVacc
+    return ("<script>try{localStorage.setItem('" + KUNCI + "'," +
             json.dumps(json.dumps(data, ensure_ascii=False)) +
             ");}catch(e){}location.hash=" + json.dumps(tujuan) + ";</script>\n")
 
