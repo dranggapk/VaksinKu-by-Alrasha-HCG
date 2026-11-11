@@ -1,29 +1,29 @@
 {
-  "name": "JasVacc by Jasmine MQ Medika",
-  "short_name": "JasVacc",
+  "name": "Vaksimine by Jasmine MQ Medika",
+  "short_name": "Vaksimine",
   "description": "Jadwal vaksinasi keluarga, rekam medis, dan reservasi vaksin di Jasmine MQ Medika.",
   "lang": "id",
-  "start_url": "/jasvacc/",
-  "scope": "/jasvacc/",
+  "start_url": "/vaksimine/",
+  "scope": "/vaksimine/",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#FFFFFF",
-  "theme_color": "#0F2533",
+  "theme_color": "#032543",
   "icons": [
     {
-      "src": "/jasvacc/ikon/ikon-192.png",
+      "src": "/vaksimine/ikon/ikon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/jasvacc/ikon/ikon-512.png",
+      "src": "/vaksimine/ikon/ikon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/jasvacc/ikon/ikon-512.png",
+      "src": "/vaksimine/ikon/ikon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"

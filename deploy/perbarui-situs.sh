@@ -6,7 +6,7 @@
 #   VaksinKu-Dashboard.html → situs/klinik.html   (dashboard klinik, wajib masuk petugas)
 #   situs/privasi.html      → situs/privasi.html
 #   situs/manifest.json, situs/ikon/*.png → ikon aplikasi di layar utama HP
-#   JasVacc-App.html + jasvacc/*          → situs/jasvacc/ (varian JasVacc)
+#   Vaksimine-App.html + vaksimine/*          → situs/vaksimine/ (varian Vaksimine)
 # Tidak menjalankan kode apa pun dari repositori, dan tidak menyentuh backend,
 # database, maupun sekolahibuhamil.id. Perubahan backend lewat perbarui-backend.sh.
 #
@@ -44,14 +44,14 @@ pasang() {
 pasang "$SUMBER/VaksinKu-App.html" "$SITUS/index.html" 200000 "VaksinKu"
 pasang "$SUMBER/situs/privasi.html" "$SITUS/privasi.html" 5000 "Kebijakan Privasi"
 pasang "$SUMBER/VaksinKu-Dashboard.html" "$SITUS/klinik.html" 200000 "VaksinKuKlinik" || true
-# JasVacc (varian merek Jasmine MQ Medika) di vaksinku.app/jasvacc/
-mkdir -p "$SITUS/jasvacc/ikon"
-pasang "$SUMBER/JasVacc-App.html" "$SITUS/jasvacc/index.html" 200000 "JasVacc" || true
-pasang "$SUMBER/jasvacc/privasi.html" "$SITUS/jasvacc/privasi.html" 5000 "Kebijakan Privasi" || true
-pasang "$SUMBER/jasvacc/manifest.json" "$SITUS/jasvacc/manifest.json" 300 '"short_name"' || true
-for f in "$SUMBER"/jasvacc/ikon/*.png; do
+# Vaksimine (varian merek Jasmine MQ Medika) di vaksinku.app/vaksimine/
+mkdir -p "$SITUS/vaksimine/ikon"
+pasang "$SUMBER/Vaksimine-App.html" "$SITUS/vaksimine/index.html" 200000 "Vaksimine" || true
+pasang "$SUMBER/vaksimine/privasi.html" "$SITUS/vaksimine/privasi.html" 5000 "Kebijakan Privasi" || true
+pasang "$SUMBER/vaksimine/manifest.json" "$SITUS/vaksimine/manifest.json" 300 '"short_name"' || true
+for f in "$SUMBER"/vaksimine/ikon/*.png; do
   [ -f "$f" ] || continue
-  head -c 4 "$f" | grep -q PNG && pasang "$f" "$SITUS/jasvacc/ikon/$(basename "$f")" 300 "" || true
+  head -c 4 "$f" | grep -q PNG && pasang "$f" "$SITUS/vaksimine/ikon/$(basename "$f")" 300 "" || true
 done
 # ikon layar utama HP & manifest aplikasi (berkas PNG diperiksa tanda tangan berkasnya)
 mkdir -p "$SITUS/ikon"

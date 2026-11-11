@@ -2,12 +2,12 @@
 """Varian merek aplikasi pasien dari satu kode yang sama.
 
     python3 build_bundle.py                 → VaksinKu-App.html  (merek bawaan)
-    python3 build_bundle.py --merek jasvacc → JasVacc-App.html   (Jasmine MQ Medika)
+    python3 build_bundle.py --merek vaksimine → Vaksimine-App.html (Jasmine MQ Medika)
 
 Varian hanya mengganti tampilan: nama, logo, font, warna, banner, dan kontak merek.
 Fitur, jadwal, price list, dan server (/api, /auth) tetap sama, sehingga setiap
-perbaikan VaksinKu otomatis ikut ke varian lain. Aset JasVacc ada di jasvacc/
-(dibuat src/buat_aset_jasvacc.py).
+perbaikan VaksinKu otomatis ikut ke varian lain. Aset Vaksimine ada di vaksimine/
+(dibuat src/buat_aset_vaksimine.py).
 """
 import base64
 import colorsys
@@ -27,19 +27,20 @@ def _data_uri(path):
 
 MEREK = {
     "vaksinku": {"keluaran": "VaksinKu-App.html"},
-    "jasvacc": {
-        "keluaran": "JasVacc-App.html",
-        "nama": "JasVacc",
+    "vaksimine": {
+        "keluaran": "Vaksimine-App.html",
+        "folder": "vaksimine",
+        "nama": "Vaksimine",
         "oleh": "by Jasmine MQ Medika",
-        "kunci_data": "jasvacc.v1",           # data perangkat terpisah dari VaksinKu
-        "jalur": "/jasvacc",                  # disajikan di vaksinku.app/jasvacc/
+        "kunci_data": "vaksimine.v1",         # data perangkat terpisah dari VaksinKu
+        "jalur": "/vaksimine",                # disajikan di vaksinku.app/vaksimine/
         "klinik": "jasmine-mq", "kota": "bandung",
-        "situs": "https://vaksinku.app/jasvacc",
+        "situs": "https://vaksinku.app/vaksimine",
         "brand": {"group": "Jasmine MQ Medika", "instagram": "@jasmine_mqmedika", "website": "jasminemqmedika"},
-        "logo_full": "jasvacc/logo-jasvacc.png",
-        "logo_mark": "jasvacc/logo-jasvacc-kecil.png",
+        "logo_full": "vaksimine/logo-vaksimine.png",
+        "logo_mark": "vaksimine/logo-vaksimine-kecil.png",
         "banner": [{
-            "gambar": "jasvacc/banner-influenza.webp",
+            "gambar": "vaksimine/banner-influenza.webp",
             "alt": "Promo vaksin influenza Vaxigrip Tiv 3 strain: 1 orang Rp300.000, 2 orang Rp500.000, "
                    "3 orang Rp725.000, 4 orang Rp925.000, 5 orang Rp1.100.000.",
             "act": "go", "arg": "booking", "klinik": ["jasmine-mq"],
@@ -49,12 +50,14 @@ MEREK = {
                      "&family=Poppins:wght@400;500;600;700&display=swap"),
         "font_rentang": {"Fredoka": "500 800", "Poppins": "400 800"},
         "font_ganti": {"'Baloo 2'": "'Fredoka'", "Baloo 2": "Fredoka", "Plus Jakarta Sans": "Poppins"},
-        "theme_color": "#0F2533",
-        # palet poster Jasmine: navy, hijau sage, merah Jasmine, putih
+        "theme_color": "#032543",
+        # logo Vaksimine memuat perisai + tulisan: kepala beranda butuh sedikit lebih tinggi
+        "css_tambahan": ".hero img[alt]{height:30px !important;}",
+        # palet logo Vaksimine (navy & merah) + hijau sage dari materi promo Jasmine
         "token": {
-            "--teal": "#6E8F69", "--teal-dark": "#0F2533", "--teal-deep": "#0A1A24",
+            "--teal": "#6E8F69", "--teal-dark": "#032543", "--teal-deep": "#021A30",
             "--teal-tint": "#EEF2EB", "--teal-tint2": "#DCE5D6",
-            "--magenta": "#EC1D25", "--magenta-dark": "#BE141B", "--magenta-tint": "#FDECEC", "--magenta-tint2": "#FAD4D5",
+            "--magenta": "#DF0111", "--magenta-dark": "#B0000D", "--magenta-tint": "#FDECEC", "--magenta-tint2": "#FAD4D5",
             "--bg": "#F4F6F2", "--stage-1": "#E9EEE6", "--stage-2": "#DCE5D6",
         },
     },
@@ -110,7 +113,7 @@ def tulis_privasi(cfg):
     with open(os.path.join(ROOT, "situs", "privasi.html"), encoding="utf-8") as f:
         s = f.read()
     s = re.sub(r"VaksinKu(?![A-Za-z])", cfg["nama"], s).replace("by Alrasha Health Care Group", cfg["oleh"])
-    with open(os.path.join(ROOT, "jasvacc", "privasi.html"), "w", encoding="utf-8") as f:
+    with open(os.path.join(ROOT, cfg["folder"], "privasi.html"), "w", encoding="utf-8") as f:
         f.write(s)
 
 
@@ -124,7 +127,7 @@ def terapkan_html(cfg, html):
     for lama, baru in cfg["font_ganti"].items():
         html = html.replace(lama, baru)
     html = re.sub(r"(?<![&\w])#[0-9A-Fa-f]{6}(?![0-9A-Fa-f\w])", _ubah_warna, html)
-    token = ":root{" + "".join("%s:%s;" % kv for kv in cfg["token"].items()) + "}"
+    token = ":root{" + "".join("%s:%s;" % kv for kv in cfg["token"].items()) + "}" + cfg.get("css_tambahan", "")
     html = html.replace("</head>", "<style>%s</style>\n</head>" % token, 1)
     html = re.sub(r'<meta name="theme-color" content="[^"]*">', '<meta name="theme-color" content="%s">' % cfg["theme_color"], html)
     j = cfg["jalur"]

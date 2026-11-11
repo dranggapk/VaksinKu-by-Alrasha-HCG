@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Membuat aset merek JasVacc di jasvacc/ (dipakai build_bundle.py --merek jasvacc).
+"""Membuat aset merek Vaksimine di vaksimine/ (dipakai build_bundle.py --merek vaksimine).
 
-Sumber: jasvacc/logo-jasmine.png (logo Klinik Utama Jasmine MQ Medika) dan
-jasvacc/sumber-poster.jpg (materi promo influenza Jasmine). Gambar digambar ulang
-lewat Chromium headless dengan font Fredoka & Poppins.
+Sumber: vaksimine/sumber-logo.png (logo Vaksimine by Jasmine MQ Medika),
+vaksimine/logo-jasmine.png (logo klinik) dan vaksimine/sumber-poster.jpg (materi promo
+influenza Jasmine). Banner digambar lewat Chromium headless dengan font Fredoka & Poppins.
 
-    python3 src/buat_aset_jasvacc.py
+    python3 src/buat_aset_vaksimine.py
 """
 import base64
 import json
@@ -15,6 +15,7 @@ import subprocess
 import sys
 import tempfile
 
+import numpy as np
 from PIL import Image
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -23,10 +24,10 @@ sys.path.insert(0, HERE)
 import build_bundle as B  # noqa: E402
 import merek as M  # noqa: E402
 
-J = os.path.join(ROOT, "jasvacc")
+J = os.path.join(ROOT, "vaksimine")
 CHROME = "/opt/pw-browsers/chromium"
-NAVY, MERAH, SAGE = "#0F2533", "#EC1D25", "#C9D4C4"
-CFG = M.MEREK["jasvacc"]
+NAVY, MERAH, SAGE = "#032543", "#DF0111", "#C9D4C4"
+CFG = M.MEREK["vaksimine"]
 FONTS = B.font_css(CFG["font_url"], CFG["font_rentang"])
 
 
@@ -59,46 +60,56 @@ def pangkas(im, pad=8):
     return c
 
 
+def tanpa_latar(path):
+    """Latar putih logo dijadikan transparan; tepi huruf tetap halus."""
+    im = np.asarray(Image.open(path).convert("RGB")).astype(float)
+    d = 255 - im.min(axis=2)
+    a = np.clip((d - 14) / 40, 0, 1)
+    rgb = np.clip(np.where(a[..., None] > 0, (im - 255 * (1 - a[..., None])) / np.maximum(a[..., None], 1e-3), 255), 0, 255)
+    return Image.fromarray(np.dstack([rgb, a * 255]).astype(np.uint8), "RGBA")
+
+
 def main():
-    logo = uri(os.path.join(J, "logo-jasmine.png"))
-    kata = ('<span style="font-family:Fredoka;font-weight:700;color:%s;">Jas</span>'
-            '<span style="font-family:Fredoka;font-weight:700;color:%s;">Vacc</span>' % (NAVY, MERAH))
+    logo = uri(os.path.join(J, "logo-jasmine.png"))   # logo klinik, untuk banner promo
+    mentah = tanpa_latar(os.path.join(J, "sumber-logo.png"))
 
-    # logo lengkap: oval Jasmine + JasVacc + by Jasmine MQ Medika
-    im = potret('<div style="display:flex;align-items:center;gap:34px;padding:20px;">'
-                '<img src="%s" style="height:250px;">'
-                '<div><div style="font-size:178px;line-height:.9;letter-spacing:-2px;">%s</div>'
-                '<div style="font-family:Poppins;font-weight:500;font-size:46px;color:#5E6B70;margin-top:16px;">by Jasmine MQ Medika</div></div></div>'
-                % (logo, kata), 1400, 320, None)
-    im = pangkas(im)
-    im.thumbnail((720, 720), Image.LANCZOS)
-    im.save(os.path.join(J, "logo-jasvacc.png"), optimize=True)
+    # logo lengkap: perisai + Vaksimine + by Jasmine MQ Medika
+    im = pangkas(mentah)
+    im.thumbnail((760, 760), Image.LANCZOS)
+    im.save(os.path.join(J, "logo-vaksimine.png"), optimize=True)
 
-    # logo kecil (kepala beranda): oval + JasVacc satu baris
-    im = potret('<div style="display:flex;align-items:center;gap:22px;padding:10px;">'
-                '<img src="%s" style="height:150px;"><div style="font-size:130px;line-height:1;">%s</div></div>'
-                % (logo, kata), 1000, 190, None)
-    im = pangkas(im, 4)
+    # logo kecil (kepala beranda): tanpa baris "by Jasmine MQ Medika"
+    a = np.array(mentah)
+    a[450:, 760:, 3] = 0
+    im = pangkas(Image.fromarray(a), 4)
     im.thumbnail((520, 520), Image.LANCZOS)
-    im.save(os.path.join(J, "logo-jasvacc-kecil.png"), optimize=True)
+    im.save(os.path.join(J, "logo-vaksimine-kecil.png"), optimize=True)
+
+    # perisai saja, untuk ikon layar utama
+    a = np.array(mentah)
+    a[:, 760:, 3] = 0
+    perisai = pangkas(Image.fromarray(a), 0)
+    p_path = os.path.join(tempfile.mkdtemp(), "perisai.png")
+    perisai.save(p_path)
+    logo_perisai = uri(p_path)
 
     # ikon layar utama: oval Jasmine di atas putih, sage lembut di bawah
     ikon = potret('<div style="width:1024px;height:1024px;position:relative;background:#fff;overflow:hidden;">'
                   '<div style="position:absolute;left:-10%%;right:-10%%;bottom:-38%%;height:62%%;border-radius:50%%;background:%s;opacity:.55;"></div>'
-                  '<img src="%s" style="position:absolute;left:112px;top:262px;width:800px;"></div>' % (SAGE, logo),
+                  '<img src="%s" style="position:absolute;left:50%%;top:50%%;height:700px;transform:translate(-50%%,-50%%);"></div>' % ("#DCE4EC", logo_perisai),
                   1024, 1024, None, transparan=False).convert("RGB")
     os.makedirs(os.path.join(J, "ikon"), exist_ok=True)
     for nama, uk in (("ikon-512", 512), ("ikon-192", 192), ("apple-touch-icon", 180), ("favicon-32", 32)):
         ikon.resize((uk, uk), Image.LANCZOS).save(os.path.join(J, "ikon", nama + ".png"), optimize=True)
     with open(os.path.join(J, "manifest.json"), "w", encoding="utf-8") as f:
         json.dump({
-            "name": "JasVacc by Jasmine MQ Medika", "short_name": "JasVacc",
+            "name": "Vaksimine by Jasmine MQ Medika", "short_name": "Vaksimine",
             "description": "Jadwal vaksinasi keluarga, rekam medis, dan reservasi vaksin di Jasmine MQ Medika.",
-            "lang": "id", "start_url": "/jasvacc/", "scope": "/jasvacc/", "display": "standalone",
+            "lang": "id", "start_url": "/vaksimine/", "scope": "/vaksimine/", "display": "standalone",
             "orientation": "portrait", "background_color": "#FFFFFF", "theme_color": NAVY,
-            "icons": [{"src": "/jasvacc/ikon/ikon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
-                      {"src": "/jasvacc/ikon/ikon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"},
-                      {"src": "/jasvacc/ikon/ikon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}],
+            "icons": [{"src": "/vaksimine/ikon/ikon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
+                      {"src": "/vaksimine/ikon/ikon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"},
+                      {"src": "/vaksimine/ikon/ikon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}],
         }, f, ensure_ascii=False, indent=2)
 
     # banner promo influenza (1200×540) dari poster Jasmine
@@ -129,7 +140,7 @@ def main():
         'Reservasi sekarang</div></div></div></div></div>'
         % (NAVY, uri(kel_path), logo, NAVY, sel, MERAH), 1200, 540, None, transparan=False)
     banner.convert("RGB").save(os.path.join(J, "banner-influenza.webp"), quality=86)
-    print("aset JasVacc dibuat di", J)
+    print("aset Vaksimine dibuat di", J)
 
 
 if __name__ == "__main__":

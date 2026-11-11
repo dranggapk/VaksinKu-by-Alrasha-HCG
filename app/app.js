@@ -304,7 +304,7 @@
   // setiap perubahan disimpan di perangkat, lalu dikirim ke server bila sesi aktif
   function simpan() { simpanLokal(); jadwalkanSinkron(); }
   S = baca();
-  // Varian merek satu klinik (mis. JasVacc → Jasmine MQ Medika): klinik itu jadi pilihan bawaan.
+  // Varian merek satu klinik (mis. Vaksimine → Jasmine MQ Medika): klinik itu jadi pilihan bawaan.
   if (K.merek && K.merek.klinik && !(S.lokasi && S.lokasi.klinik)) S.lokasi = { kota: K.merek.kota, klinik: K.merek.klinik };
   migrasiRiwayat();
   migrasiLokasi();
@@ -3710,7 +3710,7 @@
     }
   ];
 
-  // Varian merek lain (mis. JasVacc) membawa daftar banner sendiri lewat katalog (src/merek.py).
+  // Varian merek lain (mis. Vaksimine) membawa daftar banner sendiri lewat katalog (src/merek.py).
   if (K.merek && K.merek.banner) BANNER_SEMUA = K.merek.banner;
 
   function bannerHTML() {

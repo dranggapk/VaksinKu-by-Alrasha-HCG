@@ -206,7 +206,7 @@ def tanam_banner(js):
 # --------------------------------------------------------------- rakit
 def main():
     tanpa_font = "--tanpa-font" in sys.argv
-    # --merek jasvacc → varian merek lain dari kode yang sama (lihat src/merek.py)
+    # --merek vaksimine → varian merek lain dari kode yang sama (lihat src/merek.py)
     nama_merek = sys.argv[sys.argv.index("--merek") + 1] if "--merek" in sys.argv else "vaksinku"
     import merek as M
     cfg = M.MEREK[nama_merek]

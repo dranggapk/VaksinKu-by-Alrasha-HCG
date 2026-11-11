@@ -62,19 +62,19 @@ tautan, atau ditambahkan ke layar utama ponsel lewat menu "Add to Home screen".
 | **Cadangkan & pulihkan** | Ekspor/impor seluruh data sebagai berkas `.json` |
 | **Data contoh** | Sekali klik untuk mencoba aplikasi atau presentasi |
 
-## JasVacc (`JasVacc-App.html`) — varian merek Jasmine MQ Medika
+## Vaksimine (`Vaksimine-App.html`) — varian merek Jasmine MQ Medika
 
-Aplikasi yang sama persis dengan VaksinKu, dengan logo Jasmine MQ Medika, font Fredoka
-& Poppins, dan warna materi promo Jasmine (navy, hijau sage, merah Jasmine). Dirakit dari
+Aplikasi yang sama persis dengan VaksinKu, dengan logo Vaksimine by Jasmine MQ Medika,
+font Fredoka & Poppins, dan warna logo (navy & merah) ditambah hijau sage materi promo Jasmine. Dirakit dari
 kode yang sama, jadi setiap perbaikan VaksinKu otomatis ikut:
 
-    python3 src/buat_aset_jasvacc.py         # logo, ikon, banner → jasvacc/ (bila sumber berubah)
-    python3 src/build_bundle.py --merek jasvacc   # → JasVacc-App.html
-    python3 src/uji_jasvacc.py               # uji khas varian
+    python3 src/buat_aset_vaksimine.py         # logo, ikon, banner → vaksimine/ (bila sumber berubah)
+    python3 src/build_bundle.py --merek vaksimine   # → Vaksimine-App.html
+    python3 src/uji_vaksimine.py               # uji khas varian
 
 Pengaturan varian ada di `src/merek.py` (nama, logo, font, palet, banner, klinik bawaan
-Jasmine MQ Medika, data perangkat terpisah `jasvacc.v1`). Disajikan di
-https://vaksinku.app/jasvacc/ memakai server dan database yang sama.
+Jasmine MQ Medika, data perangkat terpisah `vaksimine.v1`). Disajikan di
+https://vaksinku.app/vaksimine/ memakai server dan database yang sama.
 
 ## Dashboard manajemen (`VaksinKu-Dashboard.html`)
 
