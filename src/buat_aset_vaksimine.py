@@ -71,24 +71,33 @@ def tanpa_latar(path):
 
 def main():
     logo = uri(os.path.join(J, "logo-jasmine.png"))   # logo klinik, untuk banner promo
-    mentah = tanpa_latar(os.path.join(J, "sumber-logo.png"))
+    # logo tegak: perisai (atas) · Vaksimine · by Jasmine MQ Medika (bawah)
+    mentah = tanpa_latar(os.path.join(J, "sumber-logo.webp"))
+    a = np.array(mentah)
+    baris = (a[..., 3] > 60).sum(axis=1)
+    kosong = [y for y in range(1, len(baris)) if baris[y] == 0 and baris[y - 1] > 0]   # akhir tiap bagian
+    batas_perisai, batas_kata = kosong[0], kosong[1]
 
-    # logo lengkap: perisai + Vaksimine + by Jasmine MQ Medika
     im = pangkas(mentah)
-    im.thumbnail((760, 760), Image.LANCZOS)
+    im.thumbnail((640, 640), Image.LANCZOS)
     im.save(os.path.join(J, "logo-vaksimine.png"), optimize=True)
 
-    # logo kecil (kepala beranda): tanpa baris "by Jasmine MQ Medika"
-    a = np.array(mentah)
-    a[450:, 760:, 3] = 0
-    im = pangkas(Image.fromarray(a), 4)
-    im.thumbnail((520, 520), Image.LANCZOS)
-    im.save(os.path.join(J, "logo-vaksimine-kecil.png"), optimize=True)
+    perisai = pangkas(Image.fromarray(np.where(np.arange(a.shape[0])[:, None, None] < batas_perisai, a, 0).astype(np.uint8)), 0)
+    kata = pangkas(Image.fromarray(np.where((np.arange(a.shape[0])[:, None, None] > batas_perisai) &
+                                            (np.arange(a.shape[0])[:, None, None] < batas_kata), a, 0).astype(np.uint8)), 0)
 
-    # perisai saja, untuk ikon layar utama
-    a = np.array(mentah)
-    a[:, 760:, 3] = 0
-    perisai = pangkas(Image.fromarray(a), 0)
+    # logo mendatar (kepala beranda, halaman masuk, dashboard): perisai + Vaksimine
+    tinggi = 300
+    p2 = perisai.resize((round(perisai.width * tinggi / perisai.height), tinggi), Image.LANCZOS)
+    tk = round(tinggi * 0.42)
+    k2 = kata.resize((round(kata.width * tk / kata.height), tk), Image.LANCZOS)
+    datar = Image.new("RGBA", (p2.width + 30 + k2.width, tinggi), (0, 0, 0, 0))
+    datar.paste(p2, (0, 0), p2)
+    datar.paste(k2, (p2.width + 30, (tinggi - tk) // 2 + 8), k2)
+    datar = pangkas(datar, 4)
+    datar.thumbnail((560, 560), Image.LANCZOS)
+    datar.save(os.path.join(J, "logo-vaksimine-kecil.png"), optimize=True)
+
     p_path = os.path.join(tempfile.mkdtemp(), "perisai.png")
     perisai.save(p_path)
     logo_perisai = uri(p_path)

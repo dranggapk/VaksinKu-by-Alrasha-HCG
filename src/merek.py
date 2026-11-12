@@ -29,6 +29,7 @@ MEREK = {
     "vaksinku": {"keluaran": "VaksinKu-App.html"},
     "vaksimine": {
         "keluaran": "Vaksimine-App.html",
+        "keluaran_dashboard": "Vaksimine-Dashboard.html",   # disajikan di vaksinku.app/vaksimine/klinik.html
         "folder": "vaksimine",
         "nama": "Vaksimine",
         "oleh": "by Jasmine MQ Medika",
@@ -52,7 +53,8 @@ MEREK = {
         "font_ganti": {"'Baloo 2'": "'Fredoka'", "Baloo 2": "Fredoka", "Plus Jakarta Sans": "Poppins"},
         "theme_color": "#032543",
         # logo Vaksimine memuat perisai + tulisan: kepala beranda butuh sedikit lebih tinggi
-        "css_tambahan": ".hero img[alt]{height:30px !important;}",
+        "css_tambahan": ".hero img[alt]{height:30px !important;}.splash-logo{width:min(210px,56vw) !important;}",
+        "css_dashboard": ".sidebar .merk img{height:34px;}",
         # palet logo Vaksimine (navy & merah) + hijau sage dari materi promo Jasmine
         "token": {
             "--teal": "#6E8F69", "--teal-dark": "#032543", "--teal-deep": "#021A30",
@@ -117,17 +119,19 @@ def tulis_privasi(cfg):
         f.write(s)
 
 
-def terapkan_html(cfg, html):
+def terapkan_html(cfg, html, dashboard=False):
     if "nama" not in cfg:
         return html
     html = html.replace("'vaksinku.v1'", "'%s'" % cfg["kunci_data"])
+    # kunci data dashboard: vaksinku.admin.* → <merek>.admin.*
+    html = html.replace("'vaksinku.admin.", "'%s.admin." % cfg["kunci_data"].split(".")[0])
     # nama merek di teks (bukan nama variabel seperti VaksinKuSinkron)
     html = re.sub(r"VaksinKu(?![A-Za-z])", cfg["nama"], html)
     html = html.replace("by Alrasha Health Care Group", cfg["oleh"])
     for lama, baru in cfg["font_ganti"].items():
         html = html.replace(lama, baru)
     html = re.sub(r"(?<![&\w])#[0-9A-Fa-f]{6}(?![0-9A-Fa-f\w])", _ubah_warna, html)
-    token = ":root{" + "".join("%s:%s;" % kv for kv in cfg["token"].items()) + "}" + cfg.get("css_tambahan", "")
+    token = ":root{" + "".join("%s:%s;" % kv for kv in cfg["token"].items()) + "}" + cfg.get("css_dashboard" if dashboard else "css_tambahan", "")
     html = html.replace("</head>", "<style>%s</style>\n</head>" % token, 1)
     html = re.sub(r'<meta name="theme-color" content="[^"]*">', '<meta name="theme-color" content="%s">' % cfg["theme_color"], html)
     j = cfg["jalur"]

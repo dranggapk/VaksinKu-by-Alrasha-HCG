@@ -98,10 +98,16 @@
   }
 
   /* ============================ state ============================ */
+  // klinik bawaan mode perangkat: klinik merek bila varian satu klinik (mis. Vaksimine → Jasmine MQ Medika)
+  var KLINIK_AWAL = (function () {
+    var id = K.merek && K.merek.klinik, cocok = [];
+    (K.mitra || []).forEach(function (m) { m.klinik.forEach(function (k) { if (k.id === id) cocok.push([k.nama, k.alamat || 'Alamat menyusul']); }); });
+    return cocok[0] || K.klinik[0];
+  })();
   var KEY = 'vaksinku.admin.v1';
   var kosong = {
     versi: 1,
-    klinik: { nama: K.klinik[0][0], alamat: K.klinik[0][1], telp: K.brand.callCenter },
+    klinik: { nama: KLINIK_AWAL[0], alamat: KLINIK_AWAL[1], telp: K.brand.callCenter },
     jadwal: { buka: '08:00', tutup: '16:00', durasi: 30, kapasitas: 3, libur: [0] },
     pasien: [], booking: [], layanan: [], stok: [], mutasi: [], transaksi: [],
     urut: { rm: 0, booking: 0, invoice: 0 },

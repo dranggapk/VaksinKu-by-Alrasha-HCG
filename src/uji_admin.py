@@ -16,7 +16,9 @@ import tempfile
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
-BUNDLE = os.path.join(ROOT, "VaksinKu-Dashboard.html")
+# MEREK=vaksimine → dashboard varian merek (src/merek.py); uji & fiturnya sama
+MEREK = os.environ.get("MEREK", "vaksinku")
+BUNDLE = os.path.join(ROOT, "Vaksimine-Dashboard.html" if MEREK == "vaksimine" else "VaksinKu-Dashboard.html")
 CHROME = "/opt/pw-browsers/chromium"
 
 TEST_JS = r"""
@@ -370,7 +372,8 @@ TEST_JS = r"""
 def main():
     with open(BUNDLE, encoding="utf-8") as f:
         html = f.read()
-    html = html.replace("</body>", TEST_JS + "\n</body>")
+    tes = TEST_JS if MEREK == "vaksinku" else TEST_JS.replace("'vaksinku.admin.", "'%s.admin." % MEREK)
+    html = html.replace("</body>", tes + "\n</body>")
     tmp = os.path.join(tempfile.gettempdir(), "_uji_admin.html")
     with open(tmp, "w", encoding="utf-8") as f:
         f.write(html)

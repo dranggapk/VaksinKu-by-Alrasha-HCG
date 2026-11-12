@@ -35,7 +35,7 @@
 		root * /srv
 		file_server
 		# halaman selalu diperiksa ulang agar versi baru langsung terpakai
-		@halaman path / /index.html /privasi.html /klinik.html /vaksimine /vaksimine/ /vaksimine/index.html /vaksimine/privasi.html
+		@halaman path / /index.html /privasi.html /klinik.html /vaksimine /vaksimine/ /vaksimine/index.html /vaksimine/privasi.html /vaksimine/klinik.html
 		header @halaman Cache-Control "no-cache"
 	}
 }

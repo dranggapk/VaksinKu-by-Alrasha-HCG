@@ -70,11 +70,13 @@ kode yang sama, jadi setiap perbaikan VaksinKu otomatis ikut:
 
     python3 src/buat_aset_vaksimine.py         # logo, ikon, banner → vaksimine/ (bila sumber berubah)
     python3 src/build_bundle.py --merek vaksimine   # → Vaksimine-App.html
+    python3 src/build_admin.py --merek vaksimine    # → Vaksimine-Dashboard.html (dashboard klinik)
     python3 src/uji_vaksimine.py               # uji khas varian
 
 Pengaturan varian ada di `src/merek.py` (nama, logo, font, palet, banner, klinik bawaan
 Jasmine MQ Medika, data perangkat terpisah `vaksimine.v1`). Disajikan di
-https://vaksinku.app/vaksimine/ memakai server dan database yang sama.
+https://vaksinku.app/vaksimine/ (dashboard klinik: /vaksimine/klinik.html) memakai server
+dan database yang sama. Uji dashboard varian: `MEREK=vaksimine python3 src/uji_admin.py`.
 
 ## Dashboard manajemen (`VaksinKu-Dashboard.html`)
 

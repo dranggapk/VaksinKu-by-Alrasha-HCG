@@ -11,9 +11,11 @@ import tempfile
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
-BUNDLE = os.path.join(ROOT, "VaksinKu-Dashboard.html")
+# MEREK=vaksimine → dashboard varian merek (src/merek.py); uji & fiturnya sama
+MEREK = os.environ.get("MEREK", "vaksinku")
+BUNDLE = os.path.join(ROOT, "Vaksimine-Dashboard.html" if MEREK == "vaksimine" else "VaksinKu-Dashboard.html")
 CHROME = "/opt/pw-browsers/chromium"
-KELUAR = os.path.join(tempfile.gettempdir(), "vaksinku-dashboard")
+KELUAR = os.path.join(tempfile.gettempdir(), MEREK + "-dashboard")
 
 LAYAR = ["ringkasan", "booking", "pendaftaran", "penjadwalan",
          "pelayanan", "persediaan", "transaksi", "pengaturan", "tempel-wa"]

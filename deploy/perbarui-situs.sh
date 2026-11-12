@@ -6,7 +6,7 @@
 #   VaksinKu-Dashboard.html → situs/klinik.html   (dashboard klinik, wajib masuk petugas)
 #   situs/privasi.html      → situs/privasi.html
 #   situs/manifest.json, situs/ikon/*.png → ikon aplikasi di layar utama HP
-#   Vaksimine-App.html + vaksimine/*          → situs/vaksimine/ (varian Vaksimine)
+#   Vaksimine-App.html, Vaksimine-Dashboard.html + vaksimine/* → situs/vaksimine/ (varian Vaksimine)
 # Tidak menjalankan kode apa pun dari repositori, dan tidak menyentuh backend,
 # database, maupun sekolahibuhamil.id. Perubahan backend lewat perbarui-backend.sh.
 #
@@ -47,6 +47,7 @@ pasang "$SUMBER/VaksinKu-Dashboard.html" "$SITUS/klinik.html" 200000 "VaksinKuKl
 # Vaksimine (varian merek Jasmine MQ Medika) di vaksinku.app/vaksimine/
 mkdir -p "$SITUS/vaksimine/ikon"
 pasang "$SUMBER/Vaksimine-App.html" "$SITUS/vaksimine/index.html" 200000 "Vaksimine" || true
+pasang "$SUMBER/Vaksimine-Dashboard.html" "$SITUS/vaksimine/klinik.html" 200000 "VaksinKuKlinik" || true
 pasang "$SUMBER/vaksimine/privasi.html" "$SITUS/vaksimine/privasi.html" 5000 "Kebijakan Privasi" || true
 pasang "$SUMBER/vaksimine/manifest.json" "$SITUS/vaksimine/manifest.json" 300 '"short_name"' || true
 for f in "$SUMBER"/vaksimine/ikon/*.png; do
