@@ -1,0 +1,10 @@
+
+# ==== VaksinKu — ditambahkan untuk vaksinku.app (jangan ubah blok sekolahibuhamil.id di atas) ====
+www.vaksinku.app {
+	redir https://vaksinku.app{uri} permanent
+}
+
+vaksinku.app {
+	encode zstd gzip
+	reverse_proxy vaksinku-web:80
+}

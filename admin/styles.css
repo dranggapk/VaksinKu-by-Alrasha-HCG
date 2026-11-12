@@ -212,3 +212,10 @@ table.tbl td.num,table.tbl th.num{text-align:right;font-variant-numeric:tabular-
   .tabel-gulir{overflow-x:auto;}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none !important;}}
+
+/* layar masuk petugas (mode server) */
+.layar-masuk{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px 16px;background:var(--bg,#F6F5F2);}
+.kotak-masuk{width:100%;max-width:400px;padding:28px 24px;}
+.tombol-google{min-height:44px;display:flex;justify-content:center;align-items:center;}
+.sidebar .kaki-srv{opacity:.85;}
+.sidebar .kaki-srv .linkbtn{font-size:11px;}

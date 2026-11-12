@@ -15,9 +15,12 @@ import tempfile
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
-BUNDLE = os.path.join(ROOT, "VaksinKu-App.html")
-CHROME = "/opt/pw-browsers/chromium-1194/chrome-linux/chrome"
-KELUAR = os.path.join(tempfile.gettempdir(), "vaksinku-layar")
+# MEREK=vaksimine python3 tangkap_layar.py → memotret varian Vaksimine (lihat src/merek.py)
+MEREK = os.environ.get("MEREK", "vaksinku")
+BUNDLE = os.path.join(ROOT, "Vaksimine-App.html" if MEREK == "vaksimine" else "VaksinKu-App.html")
+KUNCI = "vaksimine.v1" if MEREK == "vaksimine" else "vaksinku.v1"
+CHROME = "/opt/pw-browsers/chromium"
+KELUAR = os.path.join(tempfile.gettempdir(), MEREK + "-layar")
 
 LAYAR = {
     "beranda": "#/beranda", "booking": "#/booking", "jadwal": "#/jadwal",
@@ -26,13 +29,15 @@ LAYAR = {
     "chat": "#/chat", "chat-baru": "#/chat-baru", "chat-detail": "#/chat-detail/k1",
     "booking-detail": "#/booking-detail/b1",
     "notifikasi": "#/notifikasi",
-    "splash": "#/splash", "onboarding": "#/onboarding", "masuk": "#/masuk",
+    "panduan": "#/panduan", "panduan-hepb": "#/panduan/hepb", "panduan-hamil": "#/panduan-jadwal/hamil",
+    "panduan-polio": "#/panduan/polio", "panduan-flu": "#/panduan/flu",
+    "splash": "#/splash", "onboarding-awal": "#/onboarding", "onboarding": "#/onboarding", "masuk": "#/masuk",
     "korporat": "#/korporat", "korporat-peserta": "#/korporat",
     "korporat-laporan": "#/korporat",
 }
 
 # layar pembuka hanya muncul sebelum pengguna mengisi apa pun
-BARU = {"splash", "onboarding", "masuk"}
+BARU = {"splash", "onboarding-awal", "onboarding", "masuk"}
 
 TANDA_APP = "<script>/*APP-MULAI*/"
 
@@ -122,19 +127,23 @@ def contoh_korporat(tab="ringkasan"):
 
 def state_baru():
     """Perangkat yang belum pernah dipakai — untuk layar splash/onboarding/masuk."""
-    return {"versi": 1, "onboarding": {"selesai": False, "langkah": 1, "fokus": ["anak"], "layanan": ""}}
+    return {"versi": 1, "onboarding": {"selesai": False, "langkah": 1, "fokus": ["anak", "hamil"], "layanan": ""}}
 
 
 def seed_js(nama, tujuan):
     if nama in BARU:
         data = state_baru()
+        if nama == "onboarding-awal":
+            data["onboarding"]["langkah"] = 0
     else:
         data = contoh_state()
         if nama == "korporat-peserta":
             data["korporat"] = contoh_korporat("peserta")
         elif nama == "korporat-laporan":
             data["korporat"] = contoh_korporat("laporan")
-    return ("<script>try{localStorage.setItem('vaksinku.v1'," +
+    if MEREK == "vaksimine" and isinstance(data.get("lokasi"), dict) and data["lokasi"].get("klinik"):
+        data["lokasi"] = {"kota": "bandung", "klinik": "jasmine-mq"}   # klinik merek Vaksimine
+    return ("<script>try{localStorage.setItem('" + KUNCI + "'," +
             json.dumps(json.dumps(data, ensure_ascii=False)) +
             ");}catch(e){}location.hash=" + json.dumps(tujuan) + ";</script>\n")
 
@@ -158,8 +167,8 @@ def main():
         png = os.path.join(KELUAR, nama + ".png")
         if os.path.exists(png):
             os.remove(png)
-        # splash berpindah sendiri setelah 1,8 detik — potret sebelum itu
-        budget = "1200" if nama == "splash" else "4000"
+        # splash berpindah sendiri setelah 3,6–4,5 detik — potret sebelum itu
+        budget = "1200" if nama == "splash" else "6000"
         subprocess.run(
             [CHROME, "--headless=new", "--disable-gpu", "--no-sandbox", "--allow-file-access-from-files",
              # Chrome headless menata halaman pada lebar minimum 500px; memakai angka

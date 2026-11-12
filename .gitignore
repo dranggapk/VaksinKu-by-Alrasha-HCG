@@ -9,3 +9,6 @@ app/*.bundle.html
 
 # artboard hasil ekspor Claude Design ikut disimpan
 !design/*.dc.html
+
+# paket pemasangan VPS (dibuat src/buat_paket_vps.py)
+dist/

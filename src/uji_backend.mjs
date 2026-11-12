@@ -1,0 +1,547 @@
+// Uji ujung-ke-ujung backend VaksinKu di VPS: PostgreSQL + PostgREST + layanan masuk.
+//
+// Membuat database baru, memasang deploy/backend/db/00_auth.sql, migrasi
+// supabase/migrations, 50_masuk_google.sql, dan seed; lalu menjalankan PostgREST dan
+// layanan masuk (deploy/backend/auth/server.mjs) dengan server kunci Google tiruan,
+// sehingga token Google sah, palsu, kedaluwarsa, dan untuk aplikasi lain bisa diuji.
+//
+//   node src/uji_backend.mjs
+//   PGURL=postgresql://postgres@127.0.0.1:54329 POSTGREST=/jalur/postgrest node src/uji_backend.mjs
+import { spawn, spawnSync, execFileSync } from 'node:child_process';
+import crypto from 'node:crypto';
+import http from 'node:http';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { createRequire } from 'node:module';
+
+const ROOT = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
+const PGURL = process.env.PGURL || 'postgresql://postgres@127.0.0.1:54329';
+const POSTGREST = process.env.POSTGREST || 'postgrest';
+const DB = 'vaksinku_e2e';
+const PORT_API = 3101, PORT_AUTH = 8181, PORT_JWKS = 8282, PORT_WEB = 8099;
+const CADDY = process.env.CADDY || '';   // bila diisi: uji juga lewat deploy/web/Caddyfile
+const CLIENT_ID = 'uji-vaksinku.apps.googleusercontent.com';
+// Client ID di berkas dashboard yang dirakit; diganti CLIENT_ID uji saat dashboard diuji di browser
+const DATA_GOOGLE_ID = '969970859602-3le4bln2e58lcd3d84n6q08uo55jli6h.apps.googleusercontent.com';
+const SECRET = crypto.randomBytes(48).toString('base64');
+const PW_AUTH = crypto.randomBytes(18).toString('hex');
+
+const hasil = [];
+const ok = (nama, syarat, detail = '') => hasil.push(`${syarat ? 'LULUS' : 'GAGAL'} | ${nama}${detail ? ' | ' + detail : ''}`);
+
+function psql(db, ...args) {
+  return execFileSync('psql', [`${PGURL}/${db}`, '-v', 'ON_ERROR_STOP=1', '-X', '-q', '-At', ...args], { encoding: 'utf8' });
+}
+
+// ---------------------------------------------------------------- database
+psql('postgres', '-c', `drop database if exists ${DB} with (force)`);
+psql('postgres', '-c', `create database ${DB}`);
+const berkas = [
+  'deploy/backend/db/00_auth.sql',
+  ...fs.readdirSync(path.join(ROOT, 'supabase/migrations')).filter((f) => f.endsWith('.sql')).sort().map((f) => `supabase/migrations/${f}`),
+  'deploy/backend/db/50_masuk_google.sql',
+  'supabase/seed.sql',
+];
+for (const f of berkas) psql(DB, '-f', path.join(ROOT, f));
+psql(DB, '-c', `alter role authenticator with login password '${PW_AUTH}'`);
+
+// ---------------------------------------------------------------- Google tiruan
+const { privateKey, publicKey } = crypto.generateKeyPairSync('rsa', { modulusLength: 2048 });
+const palsu = crypto.generateKeyPairSync('rsa', { modulusLength: 2048 });
+const jwk = { ...publicKey.export({ format: 'jwk' }), kid: 'kunci-uji', alg: 'RS256', use: 'sig' };
+const jwks = http.createServer((req, res) => {
+  res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'public, max-age=60' });
+  res.end(JSON.stringify({ keys: [jwk] }));
+}).listen(PORT_JWKS);
+
+const b64 = (o) => Buffer.from(JSON.stringify(o)).toString('base64url');
+function tokenGoogle(ubah = {}, kunci = privateKey, kepala = {}) {
+  const kini = Math.floor(Date.now() / 1000);
+  const isi = { iss: 'https://accounts.google.com', aud: CLIENT_ID, sub: '1001', email: 'sari@gmail.com',
+    email_verified: true, name: 'Ibu Sari', picture: 'https://contoh/foto.jpg', iat: kini, exp: kini + 600, ...ubah };
+  const h = b64({ alg: 'RS256', kid: 'kunci-uji', typ: 'JWT', ...kepala });
+  const p = b64(isi);
+  const sig = crypto.sign('RSA-SHA256', Buffer.from(`${h}.${p}`), kunci).toString('base64url');
+  return `${h}.${p}.${sig}`;
+}
+
+// ---------------------------------------------------------------- layanan
+const proses = [];
+function jalankan(cmd, args, env) {
+  const p = spawn(cmd, args, { env: { ...process.env, ...env }, stdio: ['ignore', 'pipe', 'pipe'] });
+  let log = '';
+  p.stdout.on('data', (d) => { log += d; });
+  p.stderr.on('data', (d) => { log += d; });
+  p.log = () => log;
+  proses.push(p);
+  return p;
+}
+const u = new URL(PGURL);
+const api = jalankan(POSTGREST, [], {
+  PGRST_DB_URI: `postgres://authenticator:${PW_AUTH}@${u.hostname}:${u.port}/${DB}`,
+  PGRST_DB_SCHEMAS: 'public', PGRST_DB_ANON_ROLE: 'anon', PGRST_JWT_SECRET: SECRET,
+  PGRST_SERVER_PORT: String(PORT_API), PGRST_OPENAPI_MODE: 'disabled', PGRST_DB_CHANNEL_ENABLED: 'false',
+});
+const auth = jalankan('node', [path.join(ROOT, 'deploy/backend/auth/server.mjs')], {
+  PORT: String(PORT_AUTH), GOOGLE_CLIENT_ID: CLIENT_ID, GOOGLE_JWKS_URL: `http://127.0.0.1:${PORT_JWKS}/certs`,
+  API_URL: `http://127.0.0.1:${PORT_API}`, PGRST_JWT_SECRET: SECRET, BATAS_PER_MENIT: '100',
+});
+
+let web = null, webRoot = '';
+if (CADDY) {
+  const tmp = fs.mkdtempSync('/tmp/vaksinku-web-');
+  webRoot = tmp;
+  fs.writeFileSync(path.join(tmp, 'index.html'), '<title>VaksinKu</title>');
+  const cf = fs.readFileSync(path.join(ROOT, 'deploy/web/Caddyfile'), 'utf8')
+    .replace(':80 {', `:${PORT_WEB} {`).replace('root * /srv', `root * ${tmp}`)
+    .replace('auth:8080', `127.0.0.1:${PORT_AUTH}`).replace('api:3000', `127.0.0.1:${PORT_API}`);
+  fs.writeFileSync(path.join(tmp, 'Caddyfile'), cf);
+  web = jalankan(CADDY, ['run', '--config', path.join(tmp, 'Caddyfile'), '--adapter', 'caddyfile'], {});
+}
+
+async function tunggu(url) {
+  for (let i = 0; i < 100; i++) {
+    try { const r = await fetch(url); if (r.status < 500) return; } catch { /* belum menyala */ }
+    await new Promise((r) => setTimeout(r, 100));
+  }
+  throw new Error(`tidak menyala: ${url}\n${api.log()}\n${auth.log()}`);
+}
+
+const API = `http://127.0.0.1:${PORT_API}`;
+const AUTH = `http://127.0.0.1:${PORT_AUTH}`;
+async function masuk(credential) {
+  const r = await fetch(`${AUTH}/auth/google`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ credential }) });
+  return { status: r.status, data: await r.json().catch(() => ({})) };
+}
+async function panggil(jalur, token, opsi = {}) {
+  const headers = { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}), ...(opsi.headers || {}) };
+  const r = await fetch(`${API}${jalur}`, { ...opsi, headers });
+  const teks = await r.text();
+  let data; try { data = JSON.parse(teks); } catch { data = teks; }
+  return { status: r.status, data };
+}
+function hariKerja() {
+  const t = new Date(Date.now() + 7 * 864e5);
+  while (t.getUTCDay() === 0) t.setUTCDate(t.getUTCDate() + 1);
+  return t.toISOString().slice(0, 10);
+}
+
+try {
+  await tunggu(`${API}/klinik`);
+  await tunggu(`${AUTH}/auth/sehat`);
+
+  if (web) {
+    const WEB = `http://127.0.0.1:${PORT_WEB}`;
+    await tunggu(`${WEB}/`);
+    const halaman = await fetch(`${WEB}/`);
+    ok('web: halaman aplikasi tersaji, tanpa header Server', halaman.status === 200 && !halaman.headers.get('server') &&
+      halaman.headers.get('cache-control') === 'no-cache', String(halaman.status));
+    const lw = await fetch(`${WEB}/auth/google`, { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ credential: tokenGoogle({ sub: '3003', email: 'lewat-web@gmail.com' }) }) });
+    const dw = await lw.json();
+    ok('web: /auth/google diteruskan ke layanan masuk', lw.status === 200 && !!dw.token, String(lw.status));
+    const pw = await fetch(`${WEB}/api/profil?select=nama`, { headers: { Authorization: `Bearer ${dw.token}` } });
+    ok('web: /api/ diteruskan ke PostgREST (awalan dibuang)', pw.status === 200 && (await pw.json()).length === 1, String(pw.status));
+    const besar = await fetch(`${WEB}/auth/google`, { method: 'POST', body: 'x'.repeat(40000) });
+    ok('web: permintaan masuk terlalu besar ditolak', besar.status === 413 || besar.status === 400, String(besar.status));
+  }
+
+  // ---- katalog terbuka
+  const kl = await panggil('/klinik?select=id&order=id');
+  ok('anon: daftar klinik terbuka lewat API', kl.status === 200 && kl.data.length === 3, JSON.stringify(kl.data));
+  const ps0 = await panggil('/pasien');
+  ok('anon: data pasien tertutup', ps0.status === 401 || ps0.status === 403, String(ps0.status));
+
+  // ---- penolakan token Google
+  const tolak = [
+    ['token untuk aplikasi lain', tokenGoogle({ aud: 'aplikasi-lain.apps.googleusercontent.com' })],
+    ['token kedaluwarsa', tokenGoogle({ exp: Math.floor(Date.now() / 1000) - 3600 })],
+    ['tanda tangan palsu', tokenGoogle({}, palsu.privateKey)],
+    ['penerbit bukan Google', tokenGoogle({ iss: 'https://penipu.example' })],
+    ['email belum terverifikasi', tokenGoogle({ email_verified: false })],
+    ['algoritma none', `${b64({ alg: 'none', kid: 'kunci-uji' })}.${b64({ iss: 'accounts.google.com', aud: CLIENT_ID, sub: '1', email: 'x@y', exp: 9e9 })}.`],
+    ['bukan token', 'abc'],
+  ];
+  for (const [nama, t] of tolak) {
+    const r = await masuk(t);
+    ok(`masuk: ${nama} ditolak`, r.status === 401 && !r.data.token, String(r.status));
+  }
+
+  // ---- masuk sah
+  const a = await masuk(tokenGoogle());
+  ok('masuk: token Google sah → sesi VaksinKu', a.status === 200 && !!a.data.token && /^[0-9a-f-]{36}$/.test(a.data.akun?.id || ''),
+    `${a.status} ${a.data.akun?.email}`);
+  const a2 = await masuk(tokenGoogle({ name: 'Ibu Sari W.' }));
+  ok('masuk ulang: akun sama, tidak dobel', a2.data.akun?.id === a.data.akun?.id);
+  const jumlahAkun = psql(DB, '-c', 'select count(*) from auth.users where google_sub = \'1001\'').trim();
+  ok('masuk ulang: satu baris auth.users', jumlahAkun === '1', jumlahAkun);
+  const S = a2.data.token;
+
+  // ---- sesi dipakai ke API
+  const prof = await panggil('/profil?select=id,nama', S);
+  ok('sesi: profil dibuat otomatis dari akun Google', prof.status === 200 && prof.data.length === 1 && prof.data[0].nama === 'Ibu Sari',
+    JSON.stringify(prof.data));
+  const ubah = await panggil(`/profil?id=eq.${a.data.akun.id}`, S, { method: 'PATCH', body: JSON.stringify({ hp: '081234567890' }), headers: { Prefer: 'return=representation' } });
+  ok('sesi: pemilik mengisi nomor HP di profil', ubah.status === 200 && ubah.data[0]?.hp === '081234567890', String(ubah.status));
+  const anak = await panggil('/pasien', S, { method: 'POST', headers: { Prefer: 'return=representation' },
+    body: JSON.stringify({ profil_id: a.data.akun.id, nama: 'Nadia', tgl_lahir: '2021-05-12', jenis_kelamin: 'Perempuan', hubungan: 'Anak' }) });
+  ok('sesi: menambah anggota keluarga', anak.status === 201, `${anak.status} ${JSON.stringify(anak.data).slice(0, 80)}`);
+  const pasienId = anak.data[0]?.id;
+
+  const bk = await panggil('/rpc/buat_booking', S, { method: 'POST', body: JSON.stringify({
+    p_klinik: 'alrasha-hcc', p_layanan: 'klinik', p_lokasi: '', p_tanggal: hariKerja(), p_jam: '09:00', p_tarif: 'umum',
+    p_catatan: '', p_bagikan_riwayat: false, p_item: [{ pasien_id: pasienId, vaksin_id: 'v7-11' }] }) });
+  ok('sesi: booking lewat API dengan harga dari server', bk.status === 200 && /^VK-/.test(bk.data.kode || ''), `${bk.status} ${bk.data.kode || JSON.stringify(bk.data).slice(0, 80)}`);
+
+  // ---- pemisahan antar akun
+  const b = await masuk(tokenGoogle({ sub: '2002', email: 'budi@gmail.com', name: 'Pak Budi' }));
+  const psB = await panggil('/pasien?select=id', b.data.token);
+  ok('akun lain: tidak melihat pasien Ibu Sari', psB.status === 200 && psB.data.length === 0, JSON.stringify(psB.data));
+  const bkB = await panggil('/booking?select=id', b.data.token);
+  ok('akun lain: tidak melihat booking Ibu Sari', bkB.status === 200 && bkB.data.length === 0);
+  const curi = await panggil('/pasien', b.data.token, { method: 'POST',
+    body: JSON.stringify({ profil_id: a.data.akun.id, nama: 'Titipan', tgl_lahir: '2020-01-01' }) });
+  ok('akun lain: tidak bisa menambah pasien atas nama Ibu Sari', curi.status === 403 || curi.status === 401, String(curi.status));
+
+  // ---- sinkronisasi dua perangkat (app/sinkron.js terhadap PostgREST sungguhan)
+  {
+    const { sinkron } = createRequire(import.meta.url)(path.join(ROOT, 'app/sinkron.js'));
+    const m = await masuk(tokenGoogle({ sub: '4004', email: 'dewi@gmail.com', name: 'Dewi' }));
+    const opsi = { api: API, token: m.data.token, akunId: m.data.akun.id, fetch };
+    const kosong = () => ({ profil: { nama: '', hp: '' }, pasien: [], riwayat: [] });
+    const A = kosong(), B = kosong();
+    A.profil = { nama: 'Dewi', hp: '081111' };
+    A.pasien.push({ id: 'a1', nama: 'Rafa', tglLahir: '2023-02-01', jenisKelamin: 'Laki-laki', hubungan: 'Anak', kondisi: { alergi: true } });
+    A.pasien.push({ id: 'a2', nama: 'Tanpa Tanggal' });   // belum lengkap: tidak dikirim
+    A.riwayat.push({ id: 'r1', pasienId: 'a1', label: 'Hepatitis B 0', kunci: ['hepb:0'], tanggal: '2023-02-01', sumber: 'jadwal', batch: 'HB-01', foto: 'data:image/jpeg;base64,xxx' });
+    A.riwayat.push({ id: 'r2', pasienId: 'a1', label: 'BCG', kunci: ['bcg:1'], tanggal: '2023-03-01', sumber: 'jadwal' });
+
+    const h1 = await sinkron(A, opsi);
+    ok('sinkron A: pasien & riwayat terkirim', h1.dikirim >= 3, JSON.stringify(h1));
+    const nP = psql(DB, '-c', `select count(*) from pasien where profil_id = '${m.data.akun.id}'`).trim();
+    const nR = psql(DB, '-c', `select count(*) from riwayat_dosis r join pasien p on p.id = r.pasien_id where p.profil_id = '${m.data.akun.id}'`).trim();
+    ok('sinkron A: pasien tanpa tanggal lahir tidak dikirim', nP === '1' && nR === '2', `pasien ${nP}, riwayat ${nR}`);
+    const fotoSrv = psql(DB, '-c', `select count(*) from riwayat_dosis where foto_path <> '' or label = 'xxx'`).trim();
+    ok('sinkron A: foto label tetap di perangkat', fotoSrv === '0');
+    const h1b = await sinkron(A, opsi);
+    ok('sinkron A ulang tanpa perubahan: tidak ada kiriman', h1b.dikirim === 0 && h1b.diterima === 0 && h1b.dihapus === 0, JSON.stringify(h1b));
+
+    B.profil = { nama: 'Dewi', hp: '' };
+    const h2 = await sinkron(B, opsi);
+    const rafa = B.pasien.find((p) => p.nama === 'Rafa');
+    ok('perangkat B: menerima keluarga & riwayat', !!rafa && B.riwayat.length === 2 && rafa.kondisi.alergi === true &&
+      B.riwayat.some((r) => r.batch === 'HB-01' && r.pasienId === rafa.id), JSON.stringify(h2));
+    ok('perangkat B: HP kosong tidak menimpa HP di server', B.profil.hp === '081111', B.profil.hp);
+
+    rafa.nama = 'Rafa Pratama';
+    B.riwayat = B.riwayat.filter((r) => r.label !== 'BCG');
+    B.riwayat.push({ id: 'b1', pasienId: rafa.id, label: 'Polio 1', kunci: ['polio:1'], tanggal: '2023-04-01', sumber: 'jadwal' });
+    await sinkron(B, opsi);
+    const h3 = await sinkron(A, opsi);
+    ok('perangkat A: menerima perubahan nama, hapus, dan catatan baru dari B',
+      A.pasien[0].nama === 'Rafa Pratama' && !A.riwayat.some((r) => r.label === 'BCG') && A.riwayat.some((r) => r.label === 'Polio 1') &&
+      A.riwayat.find((r) => r.label === 'Hepatitis B 0').foto === 'data:image/jpeg;base64,xxx', JSON.stringify(h3));
+
+    // catatan klinik (terverifikasi) dibuat petugas di server
+    const sidRafa = A.pasien[0].sid;
+    psql(DB, '-c', `insert into riwayat_dosis (pasien_id, kunci, label, tanggal, tempat, faskes, merek, no_batch, sumber, klinik_id, diverifikasi)
+      values ('${sidRafa}', '{dtp:1,hib:1,hepb:1}', 'DPT Combo — Pentabio', '2023-04-02', 'Klinik', 'Klinik Alrasha Health Care Center', 'Pentabio', 'PB-777', 'klinik', 'alrasha-hcc', true)`);
+    await sinkron(A, opsi);
+    const kl = A.riwayat.find((r) => r.sumber === 'klinik');
+    ok('perangkat A: menerima catatan klinik terverifikasi + No. Batch', !!kl && kl.diverifikasi && kl.batch === 'PB-777' && kl.pasienId === A.pasien[0].id);
+    kl.batch = 'DIUBAH';
+    await sinkron(A, opsi);
+    const batchSrv = psql(DB, '-c', `select no_batch from riwayat_dosis where sumber = 'klinik' and pasien_id = '${sidRafa}'`).trim();
+    ok('catatan klinik yang diubah di perangkat tidak dikirim ke server', batchSrv === 'PB-777', batchSrv);
+
+    A.pasien = A.pasien.filter((p) => p.sid !== sidRafa);
+    A.riwayat = A.riwayat.filter((r) => r.pasienId !== 'a1');
+    await sinkron(A, opsi);
+    const sisaP = psql(DB, '-c', `select count(*) from pasien where id = '${sidRafa}'`).trim();
+    await sinkron(B, opsi);
+    ok('hapus anggota keluarga di A: terhapus di server dan di B', sisaP === '0' && !B.pasien.some((p) => p.sid === sidRafa) &&
+      !B.riwayat.some((r) => r.pasienId === rafa.id), `server ${sisaP}`);
+
+    const lain = await masuk(tokenGoogle({ sub: '5005', email: 'eko@gmail.com', name: 'Eko' }));
+    const C = kosong();
+    await sinkron(C, { api: API, token: lain.data.token, akunId: lain.data.akun.id, fetch });
+    ok('akun lain tidak menerima data keluarga Dewi', C.pasien.length === 0 && C.riwayat.length === 0);
+    let ditolak = false;
+    try { await sinkron({ profil: {}, pasien: [], riwayat: [] }, { ...opsi, token: lain.data.token }); } catch (e) { ditolak = true; }
+    const profilDewi = psql(DB, '-c', `select hp from profil where id = '${m.data.akun.id}'`).trim();
+    ok('sinkron dengan akunId orang lain tidak mengubah profilnya', profilDewi === '081111', `${ditolak} ${profilDewi}`);
+  }
+
+  // ---- aplikasi sungguhan di browser: data keluarga terkirim saat aplikasi dibuka
+  if (web && process.env.CHROME) {
+    const m = await masuk(tokenGoogle({ sub: '6006', email: 'fitri@gmail.com', name: 'Fitri' }));
+    const state = {
+      versi: 1, onboarding: { selesai: true, langkah: 2, fokus: ['anak'], layanan: 'klinik' },
+      akun: { masuk: true, metode: 'google', email: 'fitri@gmail.com', sesi: { token: m.data.token, exp: m.data.exp, id: m.data.akun.id } },
+      profil: { nama: 'Fitri', hp: '082222' },
+      pasien: [{ id: 'p1', nama: 'Bima', tglLahir: '2024-01-10', jenisKelamin: 'Laki-laki', hubungan: 'Anak' }],
+      riwayat: [{ id: 'q1', pasienId: 'p1', label: 'Hepatitis B 0', kunci: ['hepb:0'], tanggal: '2024-01-10', sumber: 'jadwal', batch: 'X1' }],
+    };
+    const html = fs.readFileSync(path.join(ROOT, 'VaksinKu-App.html'), 'utf8').replace('<script>/*APP-MULAI*/',
+      `<script>localStorage.setItem('vaksinku.v1', ${JSON.stringify(JSON.stringify(state))});location.hash='#/beranda';</script><script>/*APP-MULAI*/`);
+    fs.writeFileSync(path.join(webRoot, 'index.html'), html);
+    execFileSync(process.env.CHROME, ['--headless=new', '--no-sandbox', '--disable-gpu', '--virtual-time-budget=8000',
+      '--dump-dom', `http://127.0.0.1:${PORT_WEB}/`], { encoding: 'utf8', timeout: 60000, maxBuffer: 64 * 1024 * 1024 });
+    const nama = psql(DB, '-c', `select p.nama || '|' || count(r.id) || '|' || pr.hp from pasien p join profil pr on pr.id = p.profil_id
+      left join riwayat_dosis r on r.pasien_id = p.id where p.profil_id = '${m.data.akun.id}' group by p.nama, pr.hp`).trim();
+    ok('aplikasi di browser: keluarga, riwayat, dan HP terkirim ke server saat dibuka', nama === 'Bima|1|082222', nama || '(kosong)');
+
+    // ---- reservasi online dari aplikasi: slot penuh ditolak, slot kosong diterima dengan harga server
+    const tgl = hariKerja();
+    const isiSlot = await masuk(tokenGoogle({ sub: '7007', email: 'rina@gmail.com', name: 'Rina' }));
+    const anakRina = [];
+    for (const n of ['Ana', 'Ani', 'Ari']) {
+      const r = await panggil('/pasien', isiSlot.data.token, { method: 'POST', headers: { Prefer: 'return=representation' },
+        body: JSON.stringify({ profil_id: isiSlot.data.akun.id, nama: n, tgl_lahir: '2022-01-01' }) });
+      anakRina.push(r.data[0].id);
+    }
+    const penuh = await panggil('/rpc/buat_booking', isiSlot.data.token, { method: 'POST', body: JSON.stringify({
+      p_klinik: 'alrasha-hcc', p_layanan: 'klinik', p_lokasi: '', p_tanggal: tgl, p_jam: '13:00', p_tarif: 'umum', p_catatan: '',
+      p_bagikan_riwayat: false, p_item: anakRina.map((id) => ({ pasien_id: id, vaksin_id: 'v7-11' })) }) });
+    ok('slot 13:00 diisi 3 pasien (kapasitas klinik)', penuh.status === 200, String(penuh.status));
+
+    async function bukaAppBooking(sub, email, jam, ubah = {}) {
+      const akun = await masuk(tokenGoogle({ sub, email, name: 'Lina' }));
+      const st = {
+        versi: 1, onboarding: { selesai: true, langkah: 2, fokus: ['anak'], layanan: 'klinik' },
+        akun: { masuk: true, metode: 'google', email, sesi: { token: akun.data.token, exp: akun.data.exp, id: akun.data.akun.id } },
+        profil: { nama: 'Lina', hp: '083333' }, lokasi: { kota: 'tanjungpinang', klinik: 'alrasha-hcc' },
+        pasien: [{ id: 'p1', nama: 'Kiki', tglLahir: '2024-03-03', jenisKelamin: 'Perempuan', hubungan: 'Anak' }],
+        draft: { layanan: 'klinik', klinikIdx: 0, alamatId: '', institusi: '', institusiAlamat: '', pasienIds: ['p1'],
+          vaksinIds: ['v7-11'], dokter: 'umum', tanggal: tgl, jam, catatan: 'uji', bagikan: true },
+        ...ubah, draft: undefined,
+      };
+      st.draft = { layanan: 'klinik', klinikIdx: 0, alamatId: '', institusi: '', institusiAlamat: '', pasienIds: ['p1'],
+        vaksinIds: ['v7-11'], dokter: 'umum', tanggal: tgl, jam, catatan: 'uji', bagikan: true, ...(ubah.draft || {}) };
+      const html = fs.readFileSync(path.join(ROOT, 'VaksinKu-App.html'), 'utf8').replace('<script>/*APP-MULAI*/',
+        `<script>localStorage.setItem('vaksinku.v1', ${JSON.stringify(JSON.stringify(st))});location.hash='#/booking';</script><script>/*APP-MULAI*/`)
+        .replace('</body>', `<script>window.__galat = []; window.addEventListener('error', function (e) { window.__galat.push(e.message); });
+          window.addEventListener('unhandledrejection', function (e) { window.__galat.push('janji: ' + (e.reason && e.reason.message)); });
+          setTimeout(function () { document.querySelector('[data-act="kirim-booking"]').click(); }, 1500);setTimeout(function () { var p = document.createElement('pre'); p.id = 'st-uji'; p.textContent = localStorage.getItem('vaksinku.v1'); p.setAttribute('data-galat', window.__galat.join(' ; ')); document.body.appendChild(p); }, 4000);</script></body>`);
+      fs.writeFileSync(path.join(webRoot, 'index.html'), html);
+      const jalan = spawnSync(process.env.CHROME, ['--headless=new', '--no-sandbox', '--disable-gpu', '--virtual-time-budget=8000',
+        '--dump-dom', `http://127.0.0.1:${PORT_WEB}/`], { encoding: 'utf8', timeout: 60000, maxBuffer: 64 * 1024 * 1024 });
+      const dom = jalan.stdout;
+      return { akun, dom };
+    }
+    const g = await bukaAppBooking('8008', 'lina@gmail.com', '13:00');
+    const nG = psql(DB, '-c', `select count(*) from booking where profil_id = '${g.akun.data.akun.id}'`).trim();
+    ok('aplikasi: reservasi di slot penuh ditolak server, pesan tampil', nG === '0' && g.dom.includes('Slot 13:00 penuh'), `${nG} booking`);
+    const y = await bukaAppBooking('9009', 'yuni@gmail.com', '10:00');
+    const bkY = psql(DB, '-c', `select b.kode || '|' || b.status || '|' || b.jam || '|' || b.bagikan_riwayat || '|' || p.nama || '|' || bi.vaksin_id || '|' || bi.harga
+      from booking b join booking_item bi on bi.booking_id = b.id join pasien p on p.id = bi.pasien_id
+      where b.profil_id = '${y.akun.data.akun.id}'`).trim();
+    const kodeY = bkY.split('|')[0];
+    ok('aplikasi: reservasi online tercatat di server dengan harga klinik', /^VK-\d{6}-\d{4}\|baru\|10:00:00\|true\|Kiki\|v7-11\|400000$/.test(bkY), bkY || '(kosong)');
+    ok('aplikasi: detail reservasi menampilkan kode dari server', !!kodeY && y.dom.includes(kodeY) && y.dom.includes('Reservasi online diterima sistem klinik'));
+
+    // pasien remaja dengan riwayat beragam, dua vaksin, jam buka pertama (kasus dari lapangan)
+    const z = await bukaAppBooking('9010', 'ayu@gmail.com', '08:00', {
+      profil: { nama: 'Ayu', hp: '081200001111', jenisKelamin: 'Perempuan', email: 'ayu@gmail.com' },
+      pasien: [{ id: 'p1', nama: 'Ayesha', tglLahir: '2010-04-12', jenisKelamin: 'Perempuan', hubungan: 'Anak', jadwalAnak: 'idai',
+        kondisi: { alergi: true, hamil: false }, rv: '' }],
+      riwayat: [
+        { id: 'r1', pasienId: 'p1', label: 'Hepatitis B 0', kunci: ['hepb:0'], tanggal: '2010-04-12', sumber: 'jadwal', batch: '' },
+        { id: 'r2', pasienId: 'p1', label: 'BCG', tanggal: '2010-05-12', sumber: 'jadwal' },
+        { id: 'r3', pasienId: 'p1', label: 'Influenza — Vaxigrip Tetra', merek: 'Vaxigrip Tetra', kunci: ['flu:1'], tanggal: '2025-01-10',
+          sumber: 'booking', bookingId: 'lama', tempat: 'Klinik', faskes: 'Klinik Alrasha Health Care Center' },
+        { id: 'r4', pasienId: 'p1', label: 'Campak', kunci: ['mr:1'], tanggal: '', sumber: 'jadwal' },
+      ],
+      draft: { vaksinIds: ['v12-20', 'v13-22'], bagikan: false },
+    });
+    const bkZ = psql(DB, '-c', `select b.jam || '|' || count(bi.id) from booking b join booking_item bi on bi.booking_id = b.id
+      where b.profil_id = '${z.akun.data.akun.id}' group by b.jam`).trim();
+    ok('aplikasi: remaja + riwayat beragam + 2 vaksin jam 08:00 terkirim ke server', bkZ === '08:00:00|2',
+      bkZ || (() => { try { const gl = (z.dom.match(/data-galat="([^"]*)"/) || [])[1];
+        const j = JSON.parse(z.dom.match(/<pre id="st-uji"[^>]*>([\s\S]*?)<\/pre>/)[1].replace(/&quot;/g, '"').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>'));
+        return JSON.stringify({ js: gl, galat: (j.booking[0] || {}).galatServer, kode: (j.booking[0] || {}).kode, sinkron: j.sinkron, draft: !!j.draft }).slice(0, 900); } catch (e) { return '(tidak terkirim) ' + e.message + ' ' + z.dom.length; } })());
+
+    // ---- dashboard klinik sungguhan di browser: masuk petugas → stok → hadir → catat vaksinasi → bayar
+    const admin = await masuk(tokenGoogle({ sub: '5005', email: 'admin.hcc@gmail.com', name: 'Admin HCC' }));
+    const sqlAdmin = fs.readFileSync(path.join(ROOT, 'deploy/jadikan-admin.sh'), 'utf8').split("<<'SQL'\n")[1].split('\nSQL')[0];
+    const fAdmin = path.join(fs.mkdtempSync('/tmp/vaksinku-sql-'), 'admin.sql');
+    fs.writeFileSync(fAdmin, sqlAdmin);
+    const jadi = psql(DB, '-v', 'email=admin.hcc@gmail.com', '-v', 'klinik=alrasha-hcc', '-f', fAdmin).trim();
+    ok('jadikan-admin.sh: admin klinik pertama terdaftar', jadi.startsWith('BERHASIL'), jadi);
+    const tokAdmin = tokenGoogle({ sub: '5005', email: 'admin.hcc@gmail.com', name: 'Admin HCC' });
+    const tokBaru = tokenGoogle({ sub: '5006', email: 'baru@gmail.com', name: 'Perawat Baru' });
+    const tglWalk = hariKerja();
+    const ujiKlinik = `<script>
+(function () {
+  var hasil = [], U = window.VaksinKuKlinikUji;
+  function ok(n, c, d) { hasil.push((c ? 'LULUS' : 'GAGAL') + ' | dashboard: ' + n + (d ? ' | ' + d : '')); }
+  function teks() { return document.body.textContent; }
+  function tunggu(syarat, ms) {
+    return new Promise(function (selesai) {
+      var mulai = Date.now();
+      (function cek() { var v = false; try { v = syarat(); } catch (e) {} if (v || Date.now() - mulai > (ms || 8000)) selesai(!!v); else setTimeout(cek, 100); })();
+    });
+  }
+  function klik(sel) { var e = document.querySelector(sel); if (!e) { hasil.push('GAGAL | dashboard: elemen tidak ada ' + sel); return; } e.click(); }
+  function isi(sel, v, ev) { var e = document.querySelector(sel); if (!e) { hasil.push('GAGAL | dashboard: input tidak ada ' + sel); return; } e.value = v; e.dispatchEvent(new Event(ev || 'input', { bubbles: true })); }
+  // pindah layar lewat hashchange asli (panel ditutup saat layar berganti)
+  function ke(h) {
+    return new Promise(function (r) {
+      window.addEventListener('hashchange', function f() { window.removeEventListener('hashchange', f); setTimeout(r, 0); });
+      location.hash = h;
+    });
+  }
+  var st = function () { return JSON.parse(localStorage.getItem('vaksinku.admin.server.v1') || '{}'); };
+  window.confirm = function () { return true; };
+  var toasts = [];
+  new MutationObserver(function () {
+    [].forEach.call(document.querySelectorAll('.toast'), function (t) { if (toasts.indexOf(t.textContent) < 0) toasts.push(t.textContent); });
+  }).observe(document.body, { childList: true });
+  function jejak() { return toasts.slice(-2).join(' / ') + ' ' + [].map.call(document.querySelectorAll('.errmsg'), function (e) { return e.textContent; }).join(' / '); }
+  Promise.resolve().then(function () {
+    ok('situs: wajib masuk, tombol Google tampil', !!document.getElementById('tombol-google') && teks().indexOf('Dashboard Klinik') >= 0);
+    return U.terimaGoogle({ credential: ${JSON.stringify(tokBaru)} });
+  }).then(function () {
+    ok('akun belum terdaftar: tidak bisa membuka data', teks().indexOf('belum terdaftar sebagai petugas') >= 0 && !document.querySelector('.sidebar'));
+    klik('[data-act="keluar-langsung"]');
+    return U.terimaGoogle({ credential: ${JSON.stringify(tokAdmin)} });
+  }).then(function () {
+    return tunggu(function () { return teks().indexOf('Tersambung ke server VaksinKu') >= 0 && (st().booking || []).length; });
+  }).then(function () {
+    var b = (st().booking || []).filter(function (x) { return x.kode === ${JSON.stringify(kodeY)}; })[0];
+    ok('admin masuk: reservasi online dari aplikasi tampil', !!b && b.status === 'baru' && b.sumber === 'aplikasi pasien', b ? b.kode + ' ' + b.status : '-');
+    ok('pasien dari aplikasi tampil dengan nama', (st().pasien || []).some(function (p) { return p.nama === 'Kiki' && p.akun; }));
+    ok('jam layanan dibaca dari server', st().jadwal.buka === '08:00' && st().jadwal.kapasitas === 3);
+    return ke('#/persediaan');
+  }).then(function () {
+    klik('[data-act="form-stok"]');
+    isi('#form-stok [name=vaksinId]', 'v7-11', 'change'); isi('#form-stok [name=batch]', 'FL-01');
+    isi('#form-stok [name=kedaluwarsa]', '2030-01-01'); isi('#form-stok [name=jumlah]', '10'); isi('#form-stok [name=minimum]', '3');
+    klik('[data-act="kirim-form"][data-arg="form-stok"]');
+    return tunggu(function () { return (st().stok || []).length === 1; });
+  }).then(function () {
+    var s0 = st().stok[0] || {};
+    ok('stok masuk tersimpan di server', s0.batch === 'FL-01' && s0.sisa === 10 && s0.minimum === 3, JSON.stringify(s0).slice(0, 90));
+    return ke('#/booking');
+  }).then(function () {
+    var b = st().booking.filter(function (x) { return x.kode === ${JSON.stringify(kodeY)}; })[0];
+    klik('[data-act="buka-booking"][data-arg="' + b.id + '"]');
+    klik('[data-act="aksi-booking"][data-arg="ubah-status/hadir"]');
+    return tunggu(function () { return document.querySelector('[data-act="aksi-booking"][data-arg^="layani/"]'); }).then(function () { return b; });
+  }).then(function (b) {
+    ok('tandai hadir (baru → terkonfirmasi → hadir)', st().booking.filter(function (x) { return x.id === b.id; })[0].statusServer === 'hadir');
+    klik('[data-act="aksi-booking"][data-arg^="layani/"]');
+    isi('[data-pd="kipi"]', '');
+    klik('[data-act="simpan-layanan"]');
+    return tunggu(function () { return (st().transaksi || []).length === 1; }).then(function () { return b; });
+  }).then(function (b) {
+    var s = st(), t = s.transaksi[0] || {}, l = s.layanan[0] || {};
+    ok('catat vaksinasi: stok berkurang, tagihan terbit', s.stok[0].sisa === 9 && t.total === 400000 && t.status === 'terbuka' &&
+       s.booking.filter(function (x) { return x.id === b.id; })[0].status === 'selesai', t.nomor + ' ' + t.total);
+    ok('riwayat pelayanan mencatat batch & vaksinator', l.item && l.item[0].batch === 'FL-01' && !!l.petugas, JSON.stringify(l).slice(0, 100));
+    return ke('#/transaksi');
+  }).then(function () {
+    klik('[data-act="form-bayar"]');
+    klik('[data-act="kirim-form"][data-arg="form-bayar"]');
+    return tunggu(function () { return (st().transaksi[0] || {}).status === 'lunas'; });
+  }).then(function () {
+    ok('pembayaran: tagihan lunas', st().transaksi[0].status === 'lunas' && st().transaksi[0].metode === 'Tunai');
+    return ke('#/pengaturan');
+  }).then(function () {
+    return tunggu(function () { return teks().indexOf('admin.hcc@gmail.com') >= 0 && document.getElementById('email-petugas'); });
+  }).then(function () {
+    isi('#email-petugas', 'baru@gmail.com'); klik('[data-act="tambah-petugas"]');
+    return tunggu(function () { return teks().indexOf('baru@gmail.com') >= 0; });
+  }).then(function () {
+    ok('admin menambah petugas lewat email', teks().indexOf('baru@gmail.com') >= 0);
+    return tunggu(function () { return false; }, 600);   // beri waktu simpanan sebelumnya selesai
+  }).then(function () {
+    return ke('#/pendaftaran');
+  }).then(function () {
+    klik('[data-act="form-pasien"]');
+    isi('#form-pasien [name=nama]', 'Dodi Walkin'); isi('#form-pasien [name=tglLahir]', '2020-02-02');
+    isi('#form-pasien [name=hp]', '081299990000'); isi('#form-pasien [name=alamat]', 'Jl. Uji 1');
+    klik('[data-act="kirim-form"][data-arg="form-pasien"]');
+    return tunggu(function () { return (st().pasien || []).some(function (p) { return p.nama === 'Dodi Walkin'; }); });
+  }).then(function () {
+    var p = st().pasien.filter(function (x) { return x.nama === 'Dodi Walkin'; })[0] || {};
+    ok('pendaftaran pasien datang langsung', p.klinikPendaftar === 'alrasha-hcc' && !p.akun && p.alamat === 'Jl. Uji 1', JSON.stringify(p).slice(0, 80) + jejak());
+    return ke('#/booking').then(function () { return p; });
+  }).then(function (p) {
+    klik('[data-act="form-booking"]');
+    isi('[data-pd="pasienId"]', p.id, 'input'); isi('[data-pd="tanggal"]', ${JSON.stringify(tglWalk)});
+    klik('[data-act="pd-jam"][data-arg="14:00"]'); isi('[data-act="pd-tambah-vaksin"]', 'v7-11');
+    klik('[data-act="simpan-booking"]');
+    return tunggu(function () { return st().booking.some(function (b) { return b.pasienId === p.id; }); }).then(function () { return p; });
+  }).then(function (p) {
+    var b = st().booking.filter(function (x) { return x.pasienId === p.id; })[0] || {};
+    ok('booking oleh petugas langsung terkonfirmasi', b.status === 'terkonfirmasi' && b.jam === '14:00' && /^VK-/.test(b.kode), b.kode + ' ' + b.status);
+  }).catch(function (e) { hasil.push('GAGAL | dashboard: pengecualian ' + e.message); }).then(function () {
+    var o = document.createElement('pre'); o.id = 'hasil-klinik'; o.textContent = hasil.join('\\n'); document.body.appendChild(o);
+  });
+})();
+</script>`;
+    const htmlK = fs.readFileSync(path.join(ROOT, 'VaksinKu-Dashboard.html'), 'utf8')
+      .split(JSON.stringify(DATA_GOOGLE_ID)).join(JSON.stringify(CLIENT_ID))
+      .replace('<script>/*APP-MULAI*/', '<script>window.google = { accounts: { id: { initialize() {}, renderButton() {}, disableAutoSelect() {} } } };</script><script>/*APP-MULAI*/')
+      .replace('</body>', ujiKlinik + '</body>');
+    fs.writeFileSync(path.join(webRoot, 'klinik.html'), htmlK);
+    const domK = execFileSync(process.env.CHROME, ['--headless=new', '--no-sandbox', '--disable-gpu', '--virtual-time-budget=30000',
+      '--dump-dom', `http://127.0.0.1:${PORT_WEB}/klinik.html`], { encoding: 'utf8', timeout: 120000, maxBuffer: 64 * 1024 * 1024 });
+    const mK = domK.match(/<pre id="hasil-klinik">([\s\S]*?)<\/pre>/);
+    if (!mK) ok('dashboard: uji di browser selesai', false, domK.slice(0, 300));
+    else for (const baris of mK[1].split('\n').filter(Boolean)) hasil.push(baris.replace(/&amp;/g, '&').replace(/&gt;/g, '>').replace(/&lt;/g, '<'));
+
+    // ---- hasil di database & di aplikasi pasien
+    const bkAkhir = psql(DB, '-c', `select status from booking where kode = '${kodeY}'`).trim();
+    const rd = psql(DB, '-c', `select r.no_batch || '|' || r.diverifikasi || '|' || r.faskes from riwayat_dosis r join pasien p on p.id = r.pasien_id
+      where p.nama = 'Kiki' and r.sumber = 'klinik'`).trim();
+    ok('server: booking selesai & riwayat klinik terverifikasi', bkAkhir === 'selesai' && rd === 'FL-01|true|Klinik Alrasha Health Care Center', `${bkAkhir} ${rd}`);
+    const ptg = psql(DB, '-c', `select a.peran from anggota_klinik a join auth.users u on u.id = a.user_id where u.email = 'baru@gmail.com'`).trim();
+    ok('server: petugas baru terdaftar', ptg === 'petugas', ptg);
+    {
+      const { sinkron } = createRequire(import.meta.url)(path.join(ROOT, 'app/sinkron.js'));
+      const Y = { profil: {}, pasien: [], riwayat: [] };
+      await sinkron(Y, { api: API, token: y.akun.data.token, akunId: y.akun.data.akun.id, fetch });
+      const rk = Y.riwayat.filter((r) => r.sumber === 'klinik')[0];
+      ok('aplikasi pasien: menerima catatan vaksinasi dari dashboard klinik', !!rk && rk.batch === 'FL-01' && rk.diverifikasi && rk.merek === 'Vaxigrip Tetra',
+        rk ? `${rk.label} ${rk.batch}` : JSON.stringify(Y.riwayat));
+      if (rk) {
+        rk.kunci = ['flu:1']; rk.kunciDipetakan = true;   // dipetakan aplikasi (petakanDosisKlinik)
+        await sinkron(Y, { api: API, token: y.akun.data.token, akunId: y.akun.data.akun.id, fetch });
+        const rk2 = Y.riwayat.filter((r) => r.sumber === 'klinik')[0];
+        ok('aplikasi pasien: kunci dosis hasil pemetaan bertahan saat sinkron ulang', rk2 === rk && rk2.kunci.join() === 'flu:1', rk2 && rk2.kunci.join());
+      }
+    }
+    // petugas tidak melihat pasien yang tidak pernah berurusan dengan kliniknya
+    const pt = await panggil('/pasien?select=nama', admin.data.token);
+    ok('petugas hanya melihat pasien kliniknya', pt.status === 200 && pt.data.every((p) => ['Kiki', 'Ayesha', 'Dodi Walkin', 'Nadia', 'Ana', 'Ani', 'Ari'].includes(p.nama)) &&
+      !pt.data.some((p) => p.nama === 'Bima'), pt.data.map((p) => p.nama).join(','));
+  }
+
+  // ---- pemalsuan sesi & peran
+  const rpc = await panggil('/rpc/masuk_google', S, { method: 'POST', body: JSON.stringify({ p_sub: '9', p_email: 'x@y', p_nama: '', p_foto: '' }) });
+  ok('pengguna tidak bisa memanggil pendaftaran akun langsung', rpc.status === 401 || rpc.status === 403 || rpc.status === 404, String(rpc.status));
+  const isiS = JSON.parse(Buffer.from(S.split('.')[1], 'base64url'));
+  const palsuS = [S.split('.')[0], b64({ ...isiS, sub: b.data.akun.id }), S.split('.')[2]].join('.');
+  const r1 = await panggil('/pasien', palsuS);
+  ok('sesi yang diubah isinya ditolak', r1.status === 401, String(r1.status));
+  const kepalaHS = b64({ alg: 'HS256', typ: 'JWT' });
+  const isiLayanan = b64({ role: 'layanan_masuk', exp: 9e9 });
+  const kunciLain = crypto.createHmac('sha256', 'kunci-tebakan-yang-salah-xxxxxxxxxxxx').update(`${kepalaHS}.${isiLayanan}`).digest('base64url');
+  const r2 = await panggil('/rpc/masuk_google', `${kepalaHS}.${isiLayanan}.${kunciLain}`, { method: 'POST', body: '{}' });
+  ok('peran layanan dengan kunci tebakan ditolak', r2.status === 401, String(r2.status));
+  const sr = await panggil('/pasien', [kepalaHS, b64({ role: 'service_role', exp: 9e9 }), 'x'].join('.'));
+  ok('peran service_role tidak bisa dipakai lewat API', sr.status === 401, String(sr.status));
+} catch (e) {
+  ok('uji berjalan tanpa galat', false, e.message);
+} finally {
+  for (const p of proses) p.kill();
+  jwks.close();
+}
+
+for (const h of hasil) console.log(h);
+const gagal = hasil.filter((h) => h.startsWith('GAGAL')).length;
+console.log(`\n${hasil.length - gagal}/${hasil.length} lulus`);
+if (gagal) { console.log('\n--- log auth ---\n' + auth.log()); process.exit(1); }
