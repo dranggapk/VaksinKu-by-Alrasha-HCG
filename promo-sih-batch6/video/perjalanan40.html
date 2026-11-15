@@ -22,12 +22,14 @@ h1{font-weight:800;letter-spacing:-.02em;line-height:1.04}
 .card strong{display:block;font-size:34px;font-weight:700;line-height:1.25}
 .node{position:absolute;width:150px;height:150px;margin:-75px 0 0 -75px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 14px 30px -12px rgba(63,52,134,.45)}
 .node .emo{font-size:76px}
+.node{overflow:hidden}
 .lbl{position:absolute;width:420px;background:#fff;border-radius:24px;padding:16px 22px;box-shadow:0 14px 34px -16px rgba(63,52,134,.4)}
 .lbl b{display:inline-block;color:#fff;border-radius:10px;padding:2px 12px;font-size:22px;font-weight:700}
 .lbl strong{display:block;font-size:30px;font-weight:700;line-height:1.2;margin-top:6px}
 .lbl small{display:block;font-size:22px;color:var(--mute);font-weight:600;margin-top:2px}
 .marker{position:absolute;width:120px;height:120px;margin:-60px 0 0 -60px;border-radius:50%;background:#fff;border:7px solid var(--pink);display:flex;align-items:center;justify-content:center;box-shadow:0 12px 26px -10px rgba(63,52,134,.5)}
 .marker .emo{font-size:66px}
+.marker{overflow:hidden}.marker img{width:104%;margin-top:8%}
 #counter{position:absolute;left:60px;top:268px;width:250px;height:160px;border-radius:30px;background:var(--ungt);color:#fff;display:none;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 18px 40px -18px rgba(63,52,134,.6);z-index:50}
 #counter small{font-size:24px;font-weight:700;letter-spacing:.08em;opacity:.8}
 #counter b{font-size:92px;font-weight:800;line-height:1}
@@ -81,6 +83,7 @@ function sProblem(s,e){const sc=scene(s,e);const svg=S('svg',{width:1080,height:
   const n=H(`<div class="abs pill" style="left:${w[1]-110}px;top:${w[2]}px;background:rgba(255,255,255,.14);color:#fff;font-size:30px;border:2px solid rgba(255,255,255,.35)">${w[0]}</div>`,sc);n.dataset.base=`rotate(${w[3]}deg)`;A(n,s+0.6+i*0.35,e,'pop');
   R.push(t=>{n.style.marginTop=(Math.sin(t*1.6+i)*12)+'px';});});
  [[330,760],[690,700],[520,960]].forEach((q,i)=>{const n=H(`<div class="abs" style="left:${q[0]}px;top:${q[1]}px;font-size:110px;font-weight:800;color:#FFD3E1">?</div>`,sc);A(n,s+1.4+i*0.3,e,'pop');});
+ const mq=H(`<div class="abs" style="left:390px;top:690px;width:260px;height:260px;border-radius:50%;background:#fff;overflow:hidden;box-shadow:0 0 0 10px rgba(255,143,179,.6)"><img src="../ilus/ibu-bertanya.png" style="width:240px;margin:20px 0 0 14px"></div>`,sc);A(mq,s+1.0,e,'pop');
  const h=H(`<h1 class="abs" style="left:60px;width:900px;top:1250px;text-align:center;color:#fff;font-size:76px">Tapi… harus mulai dari mana?</h1>`,sc);A(h,s+2.4,e);}
 
 function sSolution(s,e,short){const sc=scene(s,e);const dk=document.getElementById('dark');
@@ -128,12 +131,12 @@ function road(s,e,o){ // o: {title,color,dates,w0,w1,ayah,haltes:[[emo,date,titl
  // nodes
  const fr=[0.17,0.5,0.84];
  o.haltes.forEach((h,i)=>{const pt=base.getPointAtLength(fr[i]*L);
-  const n=H(`<div class="node" style="left:${pt.x}px;top:${pt.y}px;border:8px solid ${o.color}"><span class="emo">${h[0]}</span></div>`,sc);
+  const n=H(`<div class="node" style="left:${pt.x}px;top:${pt.y}px;border:8px solid ${o.color}">${h[0].startsWith('<')?h[0]:`<span class="emo">${h[0]}</span>`}</div>`,sc);
   const left=pt.x>510;const lx=left?pt.x-95-420:pt.x+95;const lb=H(`<div class="lbl" style="left:${Math.max(60,Math.min(540,lx))}px;top:${pt.y-70}px"><b style="background:${o.color}">${h[1]}</b><strong>${h[2]}</strong><small>${h[3]}</small></div>`,sc);
   const tt=m0+(fr[i]-0.04)*(m1-m0);A(n,tt,e,'pop');A(lb,tt+0.2,e,left?'left':'right');});
  // markers
- const mb=H(`<div class="marker"><span class="emo">🤰</span></div>`,sc);
- const ma=o.ayah?H(`<div class="marker" style="border-color:var(--blue)"><span class="emo">👨</span></div>`,sc):null;
+ const mb=H(`<div class="marker"><img src="../ilus/ibu.png"></div>`,sc);
+ const ma=o.ayah?H(`<div class="marker" style="border-color:var(--blue)"><img src="../ilus/ayah.png"></div>`,sc):null;
  R.push(t=>{const k=prog(t);const pt=base.getPointAtLength(k*L);mb.style.left=pt.x+'px';mb.style.top=pt.y+'px';mb.style.opacity=cl((t-(s+0.5))/0.3)*cl((e-t)/0.3);
   const bob=Math.abs(Math.sin(t*7))*-10;mb.style.transform=`translateY(${bob}px)`;
   if(ma){const pa=base.getPointAtLength(Math.max(0,k*L-120));ma.style.left=(pa.x+(k===0?-30:0))+'px';ma.style.top=pa.y+'px';ma.style.opacity=cl((t-(s+0.8))/0.3)*cl((e-t)/0.3);ma.style.transform=`translateY(${Math.abs(Math.sin(t*7+1))*-10}px)`;}
@@ -144,8 +147,8 @@ function sAyah(s,e){const sc=scene(s,e);
  const p=H(`<div class="abs" style="left:60px;width:900px;top:280px;text-align:center"><span class="pill" style="background:var(--ungt);color:#fff">+ KELAS SPESIAL AYAH</span></div>`,sc);A(p,s+0.2,e,'pop');
  const h=H(`<h1 class="abs" style="left:60px;width:900px;top:380px;text-align:center;font-size:66px;color:var(--ung)">Peran Suami &amp; Keluarga dalam Kehamilan &amp; Persalinan</h1>`,sc);A(h,s+0.5,e);
  const d=H(`<p class="abs" style="left:60px;width:900px;top:610px;text-align:center;font-size:34px;font-weight:700">Kamis, 7 Januari 2027 · 18.30 WIB</p>`,sc);A(d,s+0.8,e);
- const m1=H(`<div class="marker" style="left:370px;top:850px;width:230px;height:230px;margin:-115px 0 0 -115px;border-width:10px"><span class="emo" style="font-size:130px">🤰</span></div>`,sc);A(m1,s+1.0,e,'left');
- const m2=H(`<div class="marker" style="left:650px;top:850px;width:230px;height:230px;margin:-115px 0 0 -115px;border-width:10px;border-color:var(--blue)"><span class="emo" style="font-size:130px">👨</span></div>`,sc);A(m2,s+1.2,e,'right');
+ const m1=H(`<div class="marker" style="left:370px;top:850px;width:230px;height:230px;margin:-115px 0 0 -115px;border-width:10px"><img src="../ilus/ibu.png"></div>`,sc);A(m1,s+1.0,e,'left');
+ const m2=H(`<div class="marker" style="left:650px;top:850px;width:230px;height:230px;margin:-115px 0 0 -115px;border-width:10px;border-color:var(--blue)"><img src="../ilus/ayah.png"></div>`,sc);A(m2,s+1.2,e,'right');
  const hr=H(`<div class="abs" style="left:465px;top:800px"><span class="emo" style="font-size:90px">💜</span></div>`,sc);A(hr,s+1.8,e,'pop');R.push(t=>{if(t>s+2.4)hr.style.transform=`scale(${1+0.08*Math.max(0,Math.sin(t*6))})`;});
  const bk=H(`<div class="abs card" style="left:110px;top:1080px;width:800px;display:flex;gap:22px;align-items:center;background:#FDE8F1"><span class="emo" style="font-size:80px">📘</span><div><small>Bonus e-book untuk Ayah</small><strong>Panduan Suami sebagai Birth Companion</strong></div></div>`,sc);A(bk,s+3.0,e,'right');}
 
@@ -172,13 +175,13 @@ function sCta(s,e){const sc=scene(s,e);
  R.push(t=>{if(t>s+2.4)btn.firstChild.style.transform=`scale(${1+0.04*Math.max(0,Math.sin((t-s)*5))})`;});}
 
 /* ===== TIMELINES ===== */
-const T1={title:'Trimester 1',color:'#6A5ACD',dates:'Usia kehamilan &lt;12 minggu',w0:1,w1:12,haltes:[['🛡️','Rabu, 2 Des','Hamil Sehat dan Aman','Tanda kehamilan · cek pertama'],['🌱','Rabu, 16 Des','Menyemai Benih Kehidupan','Perubahan tubuh · janin'],['☁️','Rabu, 6 Jan','Memupuk Jiwa yang Tenang','Psikologis · Pregnancy Plan']]};
-const T2={title:'Trimester 2',color:'#E0547F',dates:'Usia kehamilan 13–27 minggu',w0:13,w1:27,ayah:true,haltes:[['🏃','Kamis, 3 Des','Persiapan Fisik','Olahraga · nutrisi &amp; kalori'],['📈','Kamis, 17 Des','Bertumbuh dan Berkembang Indah','Janin · risiko tinggi'],['👨‍👩‍👧','Kamis, 7 Jan','Peran Suami &amp; Keluarga','Spesial semua trimester']]};
-const T3={title:'Trimester 3',color:'#3E9CC4',dates:'Usia kehamilan 28–40 minggu',w0:28,w1:40,ayah:true,haltes:[['🧳','Jumat, 4 Des','Aman, Nyaman dan Tenang','Tempat bersalin · hospital bag'],['⏱️','Jumat, 18 Des','Bila Waktunya Tiba','Tanda &amp; proses persalinan'],['🫁','Jumat, 8 Jan','Menghitung Hari','Nyeri · sesar · relaksasi']]};
-T2.haltes[2][0]='💞';
+const T1={title:'Trimester 1',color:'#6A5ACD',dates:'Usia kehamilan &lt;12 minggu',w0:1,w1:12,haltes:[['🛡️','Rabu, 2 Des','Hamil Sehat dan Aman','Tanda kehamilan · cek pertama'],['🌱','Rabu, 16 Des','Menyemai Benih Kehidupan','Perubahan tubuh · janin'],['<img src="../ilus/ibu-tenang.png" style="width:118px;margin-top:14px">','Rabu, 6 Jan','Memupuk Jiwa yang Tenang','Psikologis · Pregnancy Plan']]};
+const T2={title:'Trimester 2',color:'#E0547F',dates:'Usia kehamilan 13–27 minggu',w0:13,w1:27,ayah:true,haltes:[['<img src="../ilus/ibu-yoga.png" style="width:118px">','Kamis, 3 Des','Persiapan Fisik','Olahraga · nutrisi &amp; kalori'],['📈','Kamis, 17 Des','Bertumbuh dan Berkembang Indah','Janin · risiko tinggi'],['👨‍👩‍👧','Kamis, 7 Jan','Peran Suami &amp; Keluarga','Spesial semua trimester']]};
+const T3={title:'Trimester 3',color:'#3E9CC4',dates:'Usia kehamilan 28–40 minggu',w0:28,w1:40,ayah:true,haltes:[['<img src="../ilus/tas.png" style="width:100px">','Jumat, 4 Des','Aman, Nyaman dan Tenang','Tempat bersalin · hospital bag'],['⏱️','Jumat, 18 Des','Bila Waktunya Tiba','Tanda &amp; proses persalinan'],['🫁','Jumat, 8 Jan','Menghitung Hari','Nyeri · sesar · relaksasi']]};
+T2.haltes[2][0]='<img src="../ilus/ayah.png" style="width:104px;margin-top:10px">';
 if(V==='30'){
  sHook(0,3);sSolution(3,8);sOrientasi(8,16);
- road(16,24,{title:'9 kelas reguler',color:'#6A5ACD',dates:'2 Des 2026 – 8 Jan 2027',w0:0,w1:40,ayah:true,haltes:[['🌱','Trimester 1','Hamil sehat &amp; tenang','2 Des · 16 Des · 6 Jan'],['🏃','Trimester 2','Fisik, gizi &amp; peran Ayah','3 Des · 17 Des · 7 Jan'],['🧳','Trimester 3','Siap menyambut persalinan','4 Des · 18 Des · 8 Jan']]});
+ road(16,24,{title:'9 kelas reguler',color:'#6A5ACD',dates:'2 Des 2026 – 8 Jan 2027',w0:0,w1:40,ayah:true,haltes:[['🌱','Trimester 1','Hamil sehat &amp; tenang','2 Des · 16 Des · 6 Jan'],['<img src="../ilus/ibu-yoga.png" style="width:118px">','Trimester 2','Fisik, gizi &amp; peran Ayah','3 Des · 17 Des · 7 Jan'],['<img src="../ilus/tas.png" style="width:100px">','Trimester 3','Siap menyambut persalinan','4 Des · 18 Des · 8 Jan']]});
  sHarga(24,27);sCta(27,30.1);
  W(7.55,'#ED9EB6');W(15.55,'#A0D8EE');W(23.55,'#6A5ACD');
  window.DURATION=30;
@@ -195,7 +198,7 @@ R.push(t=>{const w=WIPES.find(x=>t>=x[0]&&t<x[0]+0.95);if(!w){wEl.style.backgrou
  if(p<=1){wEl.style.webkitMaskImage='none';wEl.style.clipPath=`circle(${io(p)*1200}px at 540px 960px)`;}
  else{const r=io(p-1)*1200;wEl.style.clipPath='none';wEl.style.webkitMaskImage=`radial-gradient(circle at 540px 960px, transparent ${r}px, #000 ${r+1}px)`;}});
 // dark bg only in first scenes
-const dk=document.getElementById('dark');R.push(t=>{if(t<(V==='30'?3:10))dk.style.opacity=1;});
+const dk=document.getElementById('dark');R.push(t=>{const s0=V==='30'?3:10;dk.style.opacity=t<s0?1:1-cl((t-(s0+0.3))/0.8);});
 const ctr=document.getElementById('counter');R.push(t=>{const inRoad=V==='30'?(t>=16&&t<24):(t>=30&&t<72);if(!inRoad)ctr.style.display='none';});
 window.seek=function(t){for(const f of R)f(t);
  document.getElementById('b1').style.transform=`translate(${Math.sin(t*0.4)*40}px,${Math.cos(t*0.3)*50}px)`;
