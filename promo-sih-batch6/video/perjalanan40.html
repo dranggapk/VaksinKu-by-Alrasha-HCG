@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="id"><head><meta charset="utf-8">
+<style>
+@font-face{font-family:P;src:url(../mockup/fonts/poppins-latin-500-normal.woff2);font-weight:500}
+@font-face{font-family:P;src:url(../mockup/fonts/poppins-latin-600-normal.woff2);font-weight:600}
+@font-face{font-family:P;src:url(../mockup/fonts/poppins-latin-700-normal.woff2);font-weight:700}
+@font-face{font-family:P;src:url(../mockup/fonts/poppins-latin-800-normal.woff2);font-weight:800}
+:root{--ung:#6A5ACD;--ungt:#3F3486;--pink:#ED9EB6;--pinkd:#E0547F;--blue:#A0D8EE;--blued:#3E9CC4;--mute:#7c74b0;--cream:#FFFBF7}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:1080px;height:1920px;overflow:hidden}
+body{font-family:P,'Noto Color Emoji',sans-serif;color:var(--ungt);background:var(--cream);position:relative}
+.emo{font-family:'Noto Color Emoji';line-height:1}
+.full{position:absolute;inset:0}
+.scene{position:absolute;inset:0;display:none}
+.abs{position:absolute}
+.cx{transform-origin:center}
+.blob{position:absolute;border-radius:50%;filter:blur(8px)}
+h1{font-weight:800;letter-spacing:-.02em;line-height:1.04}
+.pill{display:inline-block;padding:12px 28px;border-radius:999px;font-weight:700;font-size:32px;letter-spacing:.04em;white-space:nowrap}
+.card{background:#fff;border-radius:30px;padding:22px 28px;box-shadow:0 18px 40px -18px rgba(63,52,134,.35)}
+.card small{display:block;font-size:24px;color:var(--mute);font-weight:600}
+.card strong{display:block;font-size:34px;font-weight:700;line-height:1.25}
+.node{position:absolute;width:150px;height:150px;margin:-75px 0 0 -75px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 14px 30px -12px rgba(63,52,134,.45)}
+.node .emo{font-size:76px}
+.lbl{position:absolute;width:420px;background:#fff;border-radius:24px;padding:16px 22px;box-shadow:0 14px 34px -16px rgba(63,52,134,.4)}
+.lbl b{display:inline-block;color:#fff;border-radius:10px;padding:2px 12px;font-size:22px;font-weight:700}
+.lbl strong{display:block;font-size:30px;font-weight:700;line-height:1.2;margin-top:6px}
+.lbl small{display:block;font-size:22px;color:var(--mute);font-weight:600;margin-top:2px}
+.marker{position:absolute;width:120px;height:120px;margin:-60px 0 0 -60px;border-radius:50%;background:#fff;border:7px solid var(--pink);display:flex;align-items:center;justify-content:center;box-shadow:0 12px 26px -10px rgba(63,52,134,.5)}
+.marker .emo{font-size:66px}
+#counter{position:absolute;left:60px;top:268px;width:250px;height:160px;border-radius:30px;background:var(--ungt);color:#fff;display:none;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 18px 40px -18px rgba(63,52,134,.6);z-index:50}
+#counter small{font-size:24px;font-weight:700;letter-spacing:.08em;opacity:.8}
+#counter b{font-size:92px;font-weight:800;line-height:1}
+#wipe{position:absolute;inset:0;z-index:100;pointer-events:none}
+</style></head><body>
+<div class="blob" id="b1" style="width:560px;height:560px;background:#FBD3E0;opacity:.6;left:-200px;top:1250px"></div>
+<div class="blob" id="b2" style="width:480px;height:480px;background:#CFEAF6;opacity:.7;right:-170px;top:30px"></div>
+<div class="full" id="dark" style="background:radial-gradient(900px 900px at 50% 48%,#3B2F6E 0,#221A45 70%)"></div>
+<div id="stage" class="full"></div>
+<div id="counter"><small>MINGGU KE-</small><b id="cnum">0</b></div>
+<div id="wipe"></div>
+<script>
+const V=new URLSearchParams(location.search).get('v')||'90';
+const NS='http://www.w3.org/2000/svg';
+const stage=document.getElementById('stage');
+const R=[];                     // per-frame updaters
+const cl=x=>Math.min(Math.max(x,0),1), ease=x=>1-Math.pow(1-cl(x),3), io=x=>{x=cl(x);return x<.5?4*x*x*x:1-Math.pow(-2*x+2,3)/2};
+const back=x=>{x=cl(x);const c=1.7;return 1+(c+1)*Math.pow(x-1,3)+c*Math.pow(x-1,2)};
+function H(html,parent){const d=document.createElement('div');d.innerHTML=html.trim();const n=d.firstChild;(parent||stage).appendChild(n);return n;}
+function S(tag,attrs,parent){const n=document.createElementNS(NS,tag);for(const k in attrs)n.setAttribute(k,attrs[k]);parent.appendChild(n);return n;}
+function scene(s,e){const d=H('<div class="scene"></div>');R.push(t=>{d.style.display=(t>=s&&t<e)?'block':'none'});return d;}
+// appear: node, in-time, out-time, effect
+function A(n,t0,t1,fx){fx=fx||'up';n.style.opacity=0;R.push(t=>{const p=(t-t0)/0.5,q=t1?(t1-t)/0.35:1;const k=ease(p);
+ let tr='';if(fx==='up')tr=`translateY(${(1-k)*50}px)`;else if(fx==='left')tr=`translateX(${(1-k)*-90}px)`;else if(fx==='right')tr=`translateX(${(1-k)*90}px)`;
+ else if(fx==='scale')tr=`scale(${0.8+0.2*k})`;else if(fx==='pop')tr=`scale(${p<=0?0.4:back(p)})`;
+ n.style.opacity=Math.min(cl(p*1.6),cl(q));n.style.transform=(n.dataset.base||'')+' '+tr;});}
+function drawPath(p,t0,t1,rev){const L=p.getTotalLength();p.style.strokeDasharray=L;R.push(t=>{const k=io((t-t0)/(t1-t0));p.style.strokeDashoffset=rev?L*k:L*(1-k);});return L;}
+function wipe(t0,color){const w=document.getElementById('wipe');R.push(t=>{if(t<t0||t>t0+0.95)return;const p=(t-t0)/0.45;
+ if(p<=1){w.style.background=color;w.style.clipPath=`circle(${io(p)*1200}px at 540px 960px)`;w.style.webkitMaskImage='none';}
+ else{const r=io(p-1)*1200;w.style.clipPath='none';w.style.webkitMaskImage=`radial-gradient(circle at 540px 960px, transparent ${r}px, #000 ${r+1}px)`;}});
+ R.push(t=>{if(t<t0||t>t0+0.95){if(!(R.wipeActive&&R.wipeActive(t)))w.style.background='transparent';}});}
+const WIPES=[];function W(t0,c){WIPES.push([t0,c]);}
+
+/* ===== SCENE BUILDERS ===== */
+function ekg(parent,y,t0,t1,color){const svg=S('svg',{width:1080,height:1920,viewBox:'0 0 1080 1920',class:'abs'},parent);svg.style.left=0;svg.style.top=0;
+ let d=`M 60 ${y}`;const seg=[[0,0],[90,0],[115,-28],[140,0],[175,0],[195,40],[225,-190],[255,90],[280,0],[330,0],[360,-40],[400,0],[450,0]];
+ for(let rep=0;rep<2;rep++)for(const s of seg)d+=` L ${60+rep*450+s[0]} ${y+s[1]}`;
+ const p=S('path',{d,fill:'none',stroke:color||'#FF8FB3','stroke-width':12,'stroke-linecap':'round','stroke-linejoin':'round'},svg);
+ p.style.filter='drop-shadow(0 0 12px rgba(255,143,179,.8))';drawPath(p,t0,t1);
+ const dot=S('circle',{r:16,fill:'#fff'},svg);const L=p.getTotalLength();dot.style.filter='drop-shadow(0 0 14px #fff)';
+ R.push(t=>{if(t<t1){dot.style.opacity=0;return;}const k=((t-t1)%1.3)/1.3;const pt=p.getPointAtLength(k*L);dot.setAttribute('cx',pt.x);dot.setAttribute('cy',pt.y);dot.style.opacity=1;});
+ return svg;}
+
+function sHook(s,e){const sc=scene(s,e);ekg(sc,900,s+0.2,s+1.6);
+ const h=H(`<h1 class="abs" style="left:60px;width:900px;top:1060px;text-align:center;color:#fff;font-size:80px">Ada detak kecil yang mengubah segalanya.</h1>`,sc);A(h,s+1.2,e);}
+
+function sProblem(s,e){const sc=scene(s,e);const svg=S('svg',{width:1080,height:1920,class:'abs'},sc);svg.style.left=0;svg.style.top=0;
+ let d='';for(let i=0;i<=900;i++){const u=i/900*Math.PI*2;const x=510+290*Math.sin(3*u)+90*Math.sin(11*u+.5),y=820+230*Math.sin(2*u+1)+70*Math.cos(13*u);d+=(i?' L ':'M ')+x.toFixed(1)+' '+y.toFixed(1);}
+ const p=S('path',{d,fill:'none',stroke:'#FF8FB3','stroke-width':7,'stroke-linecap':'round','stroke-linejoin':'round',opacity:.9},svg);drawPath(p,s,s+2.4);
+ [['mitos',180,520,-8],['googling',760,560,6],['kata orang…',230,1120,5],['takut',800,1090,-6],['grup WA',520,450,3]].forEach((w,i)=>{
+  const n=H(`<div class="abs pill" style="left:${w[1]-110}px;top:${w[2]}px;background:rgba(255,255,255,.14);color:#fff;font-size:30px;border:2px solid rgba(255,255,255,.35)">${w[0]}</div>`,sc);n.dataset.base=`rotate(${w[3]}deg)`;A(n,s+0.6+i*0.35,e,'pop');
+  R.push(t=>{n.style.marginTop=(Math.sin(t*1.6+i)*12)+'px';});});
+ [[330,760],[690,700],[520,960]].forEach((q,i)=>{const n=H(`<div class="abs" style="left:${q[0]}px;top:${q[1]}px;font-size:110px;font-weight:800;color:#FFD3E1">?</div>`,sc);A(n,s+1.4+i*0.3,e,'pop');});
+ const h=H(`<h1 class="abs" style="left:60px;width:900px;top:1250px;text-align:center;color:#fff;font-size:76px">Tapi… harus mulai dari mana?</h1>`,sc);A(h,s+2.4,e);}
+
+function sSolution(s,e,short){const sc=scene(s,e);const dk=document.getElementById('dark');
+ R.push(t=>{if(t>=s&&t<e+1)dk.style.opacity=1-cl((t-(s+0.3))/0.8);});
+ const svg=S('svg',{width:1080,height:1920,class:'abs'},sc);svg.style.left=0;svg.style.top=0;
+ const ln=S('path',{d:'M 110 760 L 910 760',fill:'none',stroke:'#6A5ACD','stroke-width':12,'stroke-linecap':'round'},svg);drawPath(ln,s+0.2,s+1.0);
+ R.push(t=>{ln.style.opacity=1-cl((t-(s+1.2))/0.3);});
+ const logo=H(`<img class="abs" src="../mockup/logo-sih.png" style="left:290px;top:440px;width:440px">`,sc);A(logo,s+1.2,e,'scale');
+ const b=H(`<div class="abs" style="left:60px;width:900px;top:900px;text-align:center"><span class="pill" style="background:var(--ung);color:#fff;font-size:38px">BATCH 6</span></div>`,sc);A(b,s+1.8,e,'pop');
+ const t1=H(`<h1 class="abs" style="left:60px;width:900px;top:1010px;text-align:center;color:var(--ung);font-size:58px">Kelas online bersama dokter spesialis kebidanan &amp; kandungan</h1>`,sc);A(t1,s+2.3,e);
+ const t2=H(`<p class="abs" style="left:60px;width:900px;top:1220px;text-align:center;font-size:34px;font-weight:600;color:var(--mute)">29 Nov 2026 – 8 Jan 2027 · untuk Bunda &amp; Ayah</p>`,sc);A(t2,s+2.9,e);}
+
+function sOrientasi(s,e){const sc=scene(s,e);const k=(e-s)/12;
+ const p=H(`<div class="abs" style="left:60px;top:280px"><span class="pill" style="background:#DDF3E5;color:#2E7D4F">🎁 WEBINAR GRATIS</span></div>`,sc);A(p,s+0.2,e,'pop');
+ const h=H(`<div class="abs" style="left:60px;top:370px;width:900px"><div style="font-size:30px;font-weight:600;color:var(--mute)">Masa Orientasi Sekolah Ibu Hamil Batch 6</div><h1 style="font-size:90px;color:var(--ung);margin-top:4px">Together in<br>Pregnancy Journey</h1></div>`,sc);A(h,s+0.4,e);
+ // gate
+ const svg=S('svg',{width:1080,height:1920,class:'abs'},sc);svg.style.left=0;svg.style.top=0;
+ const g=S('g',{},svg);
+ const glow=S('ellipse',{cx:510,cy:960,rx:150,ry:170,fill:'#FFF1C9'},g);
+ const dl=S('rect',{x:360,y:800,width:150,height:300,fill:'#ED9EB6',rx:6},g),dr=S('rect',{x:510,y:800,width:150,height:300,fill:'#F4B6CA',rx:6},g);
+ const arch=S('path',{d:'M 330 1110 L 330 820 Q 510 640 690 820 L 690 1110',fill:'none',stroke:'#6A5ACD','stroke-width':26,'stroke-linecap':'round','stroke-linejoin':'round'},g);
+ const sign=S('g',{},g);S('rect',{x:420,y:690,width:180,height:70,rx:16,fill:'#2E7D4F'},sign);const st=S('text',{x:510,y:738,'text-anchor':'middle','font-size':38,'font-weight':800,fill:'#fff','font-family':'P'},sign);st.textContent='GRATIS';
+ drawPath(arch,s+0.6,s+0.6+1.2*k);
+ R.push(t=>{const a=cl((t-(s+0.9))/0.4);[dl,dr,glow].forEach(n=>n.style.opacity=a);sign.style.opacity=cl((t-(s+1.6*k))/0.3);
+  const o=io((t-(s+2.4*k))/0.8);dl.setAttribute('width',150*(1-o));dr.setAttribute('x',510+150*o);dr.setAttribute('width',150*(1-o));
+  glow.setAttribute('rx',150+30*o+Math.sin(t*4)*4);});
+ [['💬',220,880,'Grup WA'],['🩺',800,880,'Dokter &amp; bidan'],['🎁',510,1010,'Doorprize']].forEach((q,i)=>{
+  const n=H(`<div class="abs" style="left:${q[1]-90}px;top:${q[2]-70}px;width:180px;text-align:center"><span class="emo" style="font-size:90px">${q[0]}</span><div style="font-size:24px;font-weight:700;background:#fff;border-radius:12px;padding:4px 8px;margin-top:6px;box-shadow:0 8px 20px -10px rgba(63,52,134,.5)">${q[3]}</div></div>`,sc);
+  const t0=s+(3.2+i*0.5)*k;n.style.opacity=0;R.push(t=>{const p=ease((t-t0)/0.6);n.style.opacity=cl((t-t0)/0.2)*cl((e-t)/0.35);n.style.transform=`translate(${(510-q[1])*(1-p)}px,${(960-q[2])*(1-p)}px) scale(${0.3+0.7*p})`;});});
+ const c1=H(`<div class="abs card" style="left:60px;top:1170px;width:440px;background:#FDE8F1"><small>Minggu, 29 November 2026</small><strong>15.30–16.30 WIB · Online</strong></div>`,sc);A(c1,s+5*k,e);
+ const c2=H(`<div class="abs card" style="left:520px;top:1170px;width:440px;background:#EEEAFB"><small>Narasumber</small><strong style="font-size:28px">dr. Aviasti Pratiwi Andayani, Sp.OG</strong></div>`,sc);A(c2,s+5.6*k,e);}
+
+function road(s,e,o){ // o: {title,color,dates,w0,w1,ayah,haltes:[[emo,date,title,sub]]}
+ const sc=scene(s,e);
+ const hd=H(`<div class="abs" style="left:340px;top:272px;width:620px"><h1 style="font-size:74px;color:${o.color}">${o.title}</h1><p style="font-size:30px;font-weight:700;margin-top:6px">${o.dates}</p></div>`,sc);A(hd,s+0.2,e,'right');
+ const svg=S('svg',{width:1080,height:1920,class:'abs'},sc);svg.style.left=0;svg.style.top=0;
+ const d='M 200 520 C 950 560, 950 820, 520 900 C 90 980, 120 1260, 860 1350';
+ const base=S('path',{d,fill:'none',stroke:o.color,'stroke-opacity':.18,'stroke-width':70,'stroke-linecap':'round'},svg);
+ const mid=S('path',{d,fill:'none',stroke:'#fff','stroke-width':6,'stroke-dasharray':'22 22','stroke-linecap':'round'},svg);
+ const L=base.getTotalLength();base.style.strokeDasharray=L;
+ const m0=s+0.9,m1=e-0.9;const prog=t=>cl((t-m0)/(m1-m0));
+ const mask=S('path',{d,fill:'none',stroke:'#000','stroke-width':0},svg);
+ R.push(t=>{const k=Math.min(1,prog(t)*1+0.18*cl((t-(s+0.2))/0.6));base.style.strokeDashoffset=L*(1-k);mid.style.opacity=k>0?1:0;mid.style.clipPath='none';
+  mid.style.strokeDashoffset=-t*30;mid.setAttribute('stroke-dasharray',`22 22`);mid.style.opacity=cl((t-(s+0.4))/0.4)*0.9;mid.style.webkitMask='none';});
+ // nodes
+ const fr=[0.17,0.5,0.84];
+ o.haltes.forEach((h,i)=>{const pt=base.getPointAtLength(fr[i]*L);
+  const n=H(`<div class="node" style="left:${pt.x}px;top:${pt.y}px;border:8px solid ${o.color}"><span class="emo">${h[0]}</span></div>`,sc);
+  const left=pt.x>510;const lx=left?pt.x-95-420:pt.x+95;const lb=H(`<div class="lbl" style="left:${Math.max(60,Math.min(540,lx))}px;top:${pt.y-70}px"><b style="background:${o.color}">${h[1]}</b><strong>${h[2]}</strong><small>${h[3]}</small></div>`,sc);
+  const tt=m0+(fr[i]-0.04)*(m1-m0);A(n,tt,e,'pop');A(lb,tt+0.2,e,left?'left':'right');});
+ // markers
+ const mb=H(`<div class="marker"><span class="emo">🤰</span></div>`,sc);
+ const ma=o.ayah?H(`<div class="marker" style="border-color:var(--blue)"><span class="emo">👨</span></div>`,sc):null;
+ R.push(t=>{const k=prog(t);const pt=base.getPointAtLength(k*L);mb.style.left=pt.x+'px';mb.style.top=pt.y+'px';mb.style.opacity=cl((t-(s+0.5))/0.3)*cl((e-t)/0.3);
+  const bob=Math.abs(Math.sin(t*7))*-10;mb.style.transform=`translateY(${bob}px)`;
+  if(ma){const pa=base.getPointAtLength(Math.max(0,k*L-120));ma.style.left=(pa.x+(k===0?-30:0))+'px';ma.style.top=pa.y+'px';ma.style.opacity=cl((t-(s+0.8))/0.3)*cl((e-t)/0.3);ma.style.transform=`translateY(${Math.abs(Math.sin(t*7+1))*-10}px)`;}
+  if(t>=s&&t<e){const c=document.getElementById('counter');c.style.display='flex';document.getElementById('cnum').textContent=Math.round(o.w0+(o.w1-o.w0)*k);}});
+ const ctr=document.getElementById('counter');R.push(t=>{if(t>=s&&t<e)ctr.style.opacity=1;});}
+
+function sAyah(s,e){const sc=scene(s,e);
+ const p=H(`<div class="abs" style="left:60px;width:900px;top:280px;text-align:center"><span class="pill" style="background:var(--ungt);color:#fff">+ KELAS SPESIAL AYAH</span></div>`,sc);A(p,s+0.2,e,'pop');
+ const h=H(`<h1 class="abs" style="left:60px;width:900px;top:380px;text-align:center;font-size:66px;color:var(--ung)">Peran Suami &amp; Keluarga dalam Kehamilan &amp; Persalinan</h1>`,sc);A(h,s+0.5,e);
+ const d=H(`<p class="abs" style="left:60px;width:900px;top:610px;text-align:center;font-size:34px;font-weight:700">Kamis, 7 Januari 2027 · 18.30 WIB</p>`,sc);A(d,s+0.8,e);
+ const m1=H(`<div class="marker" style="left:370px;top:850px;width:230px;height:230px;margin:-115px 0 0 -115px;border-width:10px"><span class="emo" style="font-size:130px">🤰</span></div>`,sc);A(m1,s+1.0,e,'left');
+ const m2=H(`<div class="marker" style="left:650px;top:850px;width:230px;height:230px;margin:-115px 0 0 -115px;border-width:10px;border-color:var(--blue)"><span class="emo" style="font-size:130px">👨</span></div>`,sc);A(m2,s+1.2,e,'right');
+ const hr=H(`<div class="abs" style="left:465px;top:800px"><span class="emo" style="font-size:90px">💜</span></div>`,sc);A(hr,s+1.8,e,'pop');R.push(t=>{if(t>s+2.4)hr.style.transform=`scale(${1+0.08*Math.max(0,Math.sin(t*6))})`;});
+ const bk=H(`<div class="abs card" style="left:110px;top:1080px;width:800px;display:flex;gap:22px;align-items:center;background:#FDE8F1"><span class="emo" style="font-size:80px">📘</span><div><small>Bonus e-book untuk Ayah</small><strong>Panduan Suami sebagai Birth Companion</strong></div></div>`,sc);A(bk,s+3.0,e,'right');}
+
+function sHarga(s,e,withCta){const sc=scene(s,e);
+ const lab=H(`<p class="abs" style="left:60px;width:900px;top:430px;text-align:center;font-size:40px;font-weight:700;color:var(--mute)">MINGGU KE-</p>`,sc);
+ const num=H(`<h1 class="abs" style="left:60px;width:900px;top:500px;text-align:center;font-size:300px;color:var(--ung);line-height:1">40</h1>`,sc);
+ const flipT=s+1.3;
+ R.push(t=>{const a=cl((t-s)/0.3);lab.style.opacity=a;num.style.opacity=a;
+  if(t<flipT){num.textContent=Math.min(40,36+Math.floor((t-s)*6));lab.textContent='MINGGU KE-';num.style.transform='scaleY(1)';}
+  else{const p=(t-flipT)/0.3;num.textContent=p<0.5?'40':'199K';lab.textContent=p<0.5?'MINGGU KE-':'INVESTASI SATU BATCH';num.style.transform=`scaleY(${Math.abs(1-2*cl(p))})`;}});
+ const s1=H(`<p class="abs" style="left:60px;width:900px;top:850px;text-align:center;font-size:40px;font-weight:700">termasuk Akses Premium sekolahibuhamil.id</p>`,sc);A(s1,Math.min(flipT+0.5,e-1.6),e);
+ const s2=H(`<div class="abs card" style="left:110px;width:800px;top:1000px;text-align:center"><small>Atau ikut per kelas</small><strong style="font-size:44px">79K · <span style="color:var(--pinkd)">49K lewat sekolahibuhamil.id</span></strong></div>`,sc);A(s2,Math.min(flipT+1.3,e-1.3),e);
+ R.push(t=>{if(t>=s&&t<e)document.getElementById('counter').style.display='none';});}
+
+function sCta(s,e){const sc=scene(s,e);
+ const logo=H(`<img class="abs" src="../mockup/logo-sih.png" style="left:345px;top:300px;width:330px">`,sc);A(logo,s+0.1,null,'scale');
+ const h=H(`<h1 class="abs" style="left:60px;width:900px;top:630px;text-align:center;font-size:68px;color:var(--ung)">Hamil bukan perjalanan sendirian.</h1>`,sc);A(h,s+0.4,null);
+ const svg=S('svg',{width:1080,height:1920,class:'abs'},sc);svg.style.left=0;svg.style.top=0;
+ const ek=S('path',{d:'M 110 1000 L 330 1000 L 370 940 L 410 1060 L 450 1000',fill:'none',stroke:'#ED9EB6','stroke-width':12,'stroke-linecap':'round','stroke-linejoin':'round'},svg);drawPath(ek,s+0.5,s+1.0);
+ const hp=S('path',{d:'M 510 1110 C 330 990, 400 860, 510 930 C 620 860, 690 990, 510 1110 Z',fill:'#ED9EB6','fill-opacity':0,stroke:'#ED9EB6','stroke-width':12,'stroke-linejoin':'round'},svg);drawPath(hp,s+0.9,s+1.6);
+ const ek2=S('path',{d:'M 570 1000 L 910 1000',fill:'none',stroke:'#ED9EB6','stroke-width':12,'stroke-linecap':'round'},svg);drawPath(ek2,s+1.4,s+1.8);
+ R.push(t=>{hp.setAttribute('fill-opacity',cl((t-(s+1.6))/0.4));const k=1+0.06*Math.max(0,Math.sin((t-s)*6));if(t>s+2)hp.setAttribute('transform',`translate(510 1020) scale(${k}) translate(-510 -1020)`);});
+ const btn=H(`<div class="abs" style="left:60px;width:900px;top:1210px;text-align:center"><span style="display:inline-block;background:var(--ung);color:#fff;border-radius:999px;padding:26px 56px;font-size:48px;font-weight:800;box-shadow:0 20px 40px -18px rgba(63,52,134,.7)">Daftar di sekolahibuhamil.id</span></div>`,sc);A(btn,s+1.7,null,'pop');
+ R.push(t=>{if(t>s+2.4)btn.firstChild.style.transform=`scale(${1+0.04*Math.max(0,Math.sin((t-s)*5))})`;});}
+
+/* ===== TIMELINES ===== */
+const T1={title:'Trimester 1',color:'#6A5ACD',dates:'Usia kehamilan &lt;12 minggu',w0:1,w1:12,haltes:[['🛡️','Rabu, 2 Des','Hamil Sehat dan Aman','Tanda kehamilan · cek pertama'],['🌱','Rabu, 16 Des','Menyemai Benih Kehidupan','Perubahan tubuh · janin'],['☁️','Rabu, 6 Jan','Memupuk Jiwa yang Tenang','Psikologis · Pregnancy Plan']]};
+const T2={title:'Trimester 2',color:'#E0547F',dates:'Usia kehamilan 13–27 minggu',w0:13,w1:27,ayah:true,haltes:[['🏃','Kamis, 3 Des','Persiapan Fisik','Olahraga · nutrisi &amp; kalori'],['📈','Kamis, 17 Des','Bertumbuh dan Berkembang Indah','Janin · risiko tinggi'],['👨‍👩‍👧','Kamis, 7 Jan','Peran Suami &amp; Keluarga','Spesial semua trimester']]};
+const T3={title:'Trimester 3',color:'#3E9CC4',dates:'Usia kehamilan 28–40 minggu',w0:28,w1:40,ayah:true,haltes:[['🧳','Jumat, 4 Des','Aman, Nyaman dan Tenang','Tempat bersalin · hospital bag'],['⏱️','Jumat, 18 Des','Bila Waktunya Tiba','Tanda &amp; proses persalinan'],['🫁','Jumat, 8 Jan','Menghitung Hari','Nyeri · sesar · relaksasi']]};
+T2.haltes[2][0]='💞';
+if(V==='30'){
+ sHook(0,3);sSolution(3,8);sOrientasi(8,16);
+ road(16,24,{title:'9 kelas reguler',color:'#6A5ACD',dates:'2 Des 2026 – 8 Jan 2027',w0:0,w1:40,ayah:true,haltes:[['🌱','Trimester 1','Hamil sehat &amp; tenang','2 Des · 16 Des · 6 Jan'],['🏃','Trimester 2','Fisik, gizi &amp; peran Ayah','3 Des · 17 Des · 7 Jan'],['🧳','Trimester 3','Siap menyambut persalinan','4 Des · 18 Des · 8 Jan']]});
+ sHarga(24,27);sCta(27,30.1);
+ W(7.55,'#ED9EB6');W(15.55,'#A0D8EE');W(23.55,'#6A5ACD');
+ window.DURATION=30;
+}else{
+ sHook(0,4);sProblem(4,10);sSolution(10,18);sOrientasi(18,30);
+ road(30,46,T1);road(46,60,T2);road(60,72,T3);sAyah(72,80);sHarga(80,86);sCta(86,90.1);
+ W(17.55,'#ED9EB6');W(29.55,'#A0D8EE');W(45.55,'#ED9EB6');W(59.55,'#A0D8EE');W(71.55,'#6A5ACD');W(79.55,'#ED9EB6');W(85.55,'#A0D8EE');
+ window.DURATION=90;
+}
+// wipe engine (single)
+const wEl=document.getElementById('wipe');
+R.push(t=>{const w=WIPES.find(x=>t>=x[0]&&t<x[0]+0.95);if(!w){wEl.style.background='transparent';wEl.style.clipPath='none';wEl.style.webkitMaskImage='none';return;}
+ const p=(t-w[0])/0.45;wEl.style.background=w[1];
+ if(p<=1){wEl.style.webkitMaskImage='none';wEl.style.clipPath=`circle(${io(p)*1200}px at 540px 960px)`;}
+ else{const r=io(p-1)*1200;wEl.style.clipPath='none';wEl.style.webkitMaskImage=`radial-gradient(circle at 540px 960px, transparent ${r}px, #000 ${r+1}px)`;}});
+// dark bg only in first scenes
+const dk=document.getElementById('dark');R.push(t=>{if(t<(V==='30'?3:10))dk.style.opacity=1;});
+const ctr=document.getElementById('counter');R.push(t=>{const inRoad=V==='30'?(t>=16&&t<24):(t>=30&&t<72);if(!inRoad)ctr.style.display='none';});
+window.seek=function(t){for(const f of R)f(t);
+ document.getElementById('b1').style.transform=`translate(${Math.sin(t*0.4)*40}px,${Math.cos(t*0.3)*50}px)`;
+ document.getElementById('b2').style.transform=`translate(${Math.cos(t*0.35)*40}px,${Math.sin(t*0.45)*40}px)`;};
+seek(0);
+</script></body></html>
