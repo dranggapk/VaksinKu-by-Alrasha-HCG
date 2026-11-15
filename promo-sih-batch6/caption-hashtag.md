@@ -70,8 +70,8 @@ Yuk isi tas bekalnya 👉 sekolahibuhamil.id
 
 ---
 
-## 4. Motion Graphic "Perjalanan 40 Minggu" (90 dtk)
-File: `video/perjalanan40-90s.mp4`
+## 4. Motion Graphic "Perjalanan 40 Minggu" (±90 dtk)
+File: `video/perjalanan40-90s-vo.mp4` (dengan voiceover) atau `video/perjalanan40-90s.mp4` (tanpa suara)
 
 **Judul Shorts:** Perjalanan 40 Minggu Bunda, Ditemani Dokter dari Awal 💜
 
@@ -95,7 +95,7 @@ Daftar 👉 sekolahibuhamil.id
 ---
 
 ## 5. Motion Graphic "Perjalanan 40 Minggu" (30 dtk)
-File: `video/perjalanan40-30s.mp4`
+File: `video/perjalanan40-30s-vo.mp4` (dengan voiceover) atau `video/perjalanan40-30s.mp4` (tanpa suara)
 
 **Judul Shorts:** Minggu 0 sampai 40, Ditemani Dokter Spesialis 💓
 
