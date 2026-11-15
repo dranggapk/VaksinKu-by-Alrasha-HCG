@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="id"><head><meta charset="utf-8">
+<style>
+@font-face{font-family:P;src:url(../mockup/fonts/poppins-latin-500-normal.woff2);font-weight:500}
+@font-face{font-family:P;src:url(../mockup/fonts/poppins-latin-700-normal.woff2);font-weight:700}
+@font-face{font-family:P;src:url(../mockup/fonts/poppins-latin-800-normal.woff2);font-weight:800}
+:root{--ung:#6A5ACD;--ungt:#3F3486;--mute:#7c74b0}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:1080px;height:1920px;overflow:hidden}
+body{font-family:P,'Noto Color Emoji',sans-serif;color:var(--ungt);background:#FAF8FF;position:relative}
+.blob{position:absolute;border-radius:50%;filter:blur(6px)}
+#intro{position:absolute;left:60px;width:900px;top:270px;height:1250px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+#poster{position:absolute;left:110px;top:262px;width:860px;height:1075px;border-radius:36px;overflow:hidden;box-shadow:0 40px 80px -30px rgba(63,52,134,.55)}
+#poster img{width:100%;height:100%;object-fit:cover;transform-origin:50% 35%}
+.strip{position:absolute;left:60px;width:900px;top:1370px;height:140px;display:flex;align-items:center;justify-content:center}
+.chip{display:flex;gap:18px;align-items:center;background:#fff;border-radius:999px;padding:20px 38px;font-size:36px;font-weight:700;box-shadow:0 16px 40px -18px rgba(63,52,134,.45);white-space:nowrap}
+.cta{background:var(--ung);color:#fff;font-size:38px;font-weight:800}
+.pill{display:inline-block;padding:12px 28px;border-radius:999px;font-weight:700;font-size:32px;letter-spacing:.04em;background:var(--ung);color:#fff}
+</style></head><body>
+<div class="blob" id="b1" style="width:520px;height:520px;background:#FBD3E0;opacity:.7;left:-180px;top:1250px"></div>
+<div class="blob" id="b2" style="width:460px;height:460px;background:#CFEAF6;opacity:.8;right:-160px;top:40px"></div>
+
+<div id="intro">
+  <img src="../mockup/logo-sih.png" style="width:300px" id="i1">
+  <span class="pill" id="i2" style="margin-top:44px"></span>
+  <h1 id="i3" style="font-size:112px;line-height:1.02;font-weight:800;letter-spacing:-.02em;color:var(--ung);margin-top:30px"></h1>
+</div>
+<div id="poster"><img id="pimg"></div>
+<div class="strip"><div class="chip" id="c1"></div></div>
+<div class="strip"><div class="chip cta" id="c2"></div></div>
+
+<script>
+const CLASSES={
+ "00-orientasi":{tag:"🎁 WEBINAR GRATIS",title:"Together in Pregnancy Journey",when:"📅 Minggu, 29 Nov · 15.30 WIB",cta:"Ikut GRATIS di sekolahibuhamil.id"},
+ "t1-1-hamil-sehat":{tag:"Trimester 1 · Pertemuan 1",title:"Hamil Sehat dan Aman",when:"📅 Rabu, 2 Des · 18.30 WIB"},
+ "t1-2-menyemai-benih":{tag:"Trimester 1 · Pertemuan 2",title:"Menyemai Benih Kehidupan",when:"📅 Rabu, 16 Des · 18.30 WIB"},
+ "t1-3-memupuk-jiwa":{tag:"Trimester 1 · Pertemuan 3",title:"Memupuk Jiwa yang Tenang",when:"📅 Rabu, 6 Jan 2027 · 18.30 WIB"},
+ "t2-1-persiapan-fisik":{tag:"Trimester 2 · Pertemuan 1",title:"Persiapan Fisik Menuju Persalinan",when:"📅 Kamis, 3 Des · 18.30 WIB"},
+ "t2-2-bertumbuh":{tag:"Trimester 2 · Pertemuan 2",title:"Bertumbuh dan Berkembang Indah",when:"📅 Kamis, 17 Des · 18.30 WIB"},
+ "t3-1-aman-nyaman":{tag:"Trimester 3 · Pertemuan 1",title:"Aman, Nyaman dan Tenang",when:"📅 Jumat, 4 Des · 18.30 WIB"},
+ "t3-2-bila-waktunya":{tag:"Trimester 3 · Pertemuan 2",title:"Bila Waktunya Tiba",when:"📅 Jumat, 18 Des · 18.30 WIB"},
+ "t3-3-menghitung-hari":{tag:"Trimester 3 · Pertemuan 3",title:"Menghitung Hari",when:"📅 Jumat, 8 Jan 2027 · 18.30 WIB"},
+};
+const id=new URLSearchParams(location.search).get('id')||'t1-1-hamil-sehat';
+const C=CLASSES[id];
+document.getElementById('pimg').src='../poster/'+id+'.jpg';
+document.getElementById('i2').textContent=C.tag;
+document.getElementById('i3').textContent=C.title;
+document.getElementById('c1').textContent=C.when+' · Online';
+document.getElementById('c2').textContent=C.cta||'Daftar 49K di sekolahibuhamil.id';
+const ease=x=>1-Math.pow(1-Math.min(Math.max(x,0),1),3);
+const cl=x=>Math.min(Math.max(x,0),1);
+const $=i=>document.getElementById(i);
+function show(el,t0,t1,dy){const a=cl((T-t0)/0.5),b=t1?cl((t1-T)/0.4):1;el.style.opacity=Math.min(a,b);el.style.transform=`translateY(${(1-ease(a))*(dy||40)}px)`;}
+let T=0;
+window.seek=function(t){T=t;
+  show($('i1'),0,2.6,20);show($('i2'),0.25,2.6);show($('i3'),0.45,2.6,60);
+  const p=cl((t-2.4)/0.7),pe=ease(p);
+  $('poster').style.opacity=p;$('poster').style.transform=`translateY(${(1-pe)*120}px) scale(${0.92+0.08*pe})`;
+  $('pimg').style.transform=`scale(${1+0.06*cl((t-2.4)/12)})`;
+  show($('c1'),3.4,10.2);show($('c2'),10.4,0);
+  if(t>10.4){const k=Math.sin((t-10.4)*4)*0.02;$('c2').style.transform+=` scale(${1+Math.max(0,k)})`;}
+  $('b1').style.transform=`translate(${Math.sin(t*0.4)*40}px,${Math.cos(t*0.3)*50}px)`;
+  $('b2').style.transform=`translate(${Math.cos(t*0.35)*40}px,${Math.sin(t*0.45)*40}px)`;
+};
+window.DURATION=15;
+seek(0);
+</script></body></html>
