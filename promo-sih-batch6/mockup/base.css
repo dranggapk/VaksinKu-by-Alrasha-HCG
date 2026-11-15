@@ -1,0 +1,20 @@
+@font-face{font-family:P;src:url(fonts/poppins-latin-400-normal.woff2);font-weight:400}
+@font-face{font-family:P;src:url(fonts/poppins-latin-500-normal.woff2);font-weight:500}
+@font-face{font-family:P;src:url(fonts/poppins-latin-600-normal.woff2);font-weight:600}
+@font-face{font-family:P;src:url(fonts/poppins-latin-700-normal.woff2);font-weight:700}
+@font-face{font-family:P;src:url(fonts/poppins-latin-800-normal.woff2);font-weight:800}
+:root{--ung:#6A5ACD;--ungt:#3F3486;--pink:#F6B8D3;--lav:#F1EEFB}
+*{box-sizing:border-box;margin:0}
+body{width:1080px;height:1920px;font-family:P,sans-serif;color:var(--ungt);overflow:hidden;position:relative;
+ background:radial-gradient(900px 700px at 100% 0%,#FBE3EE 0,transparent 70%),radial-gradient(900px 800px at 0% 100%,#E7E2FA 0,transparent 70%),#FAF8FF}
+.safe{position:absolute;left:60px;right:120px;top:260px;bottom:400px}
+.blob{position:absolute;border-radius:50%;filter:blur(2px)}
+.pill{display:inline-block;padding:12px 26px;border-radius:999px;font-weight:700;font-size:30px;letter-spacing:.06em}
+.card{border-radius:44px;overflow:hidden;position:relative;box-shadow:0 30px 60px -20px rgba(63,52,134,.35)}
+.card img{width:100%;height:100%;object-fit:cover;display:block}
+.tag{position:absolute;left:22px;right:22px;bottom:22px;background:rgba(63,52,134,.92);color:#fff;border-radius:24px;padding:18px 22px}
+.tag b{display:block;font-size:30px;font-weight:700;line-height:1.2}
+.tag span{font-size:21px;opacity:.85}
+.chip{background:#fff;border-radius:28px;padding:20px 24px;box-shadow:0 10px 30px -14px rgba(63,52,134,.3)}
+.chip small{display:block;font-size:22px;color:#8a82b8;font-weight:500}
+.chip strong{font-size:31px;font-weight:700;line-height:1.25;display:block}
