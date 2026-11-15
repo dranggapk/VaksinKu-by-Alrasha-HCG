@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="id"><head><meta charset="utf-8">
+<style>
+@font-face{font-family:P;src:url(../mockup/fonts/poppins-latin-400-normal.woff2);font-weight:400}
+@font-face{font-family:P;src:url(../mockup/fonts/poppins-latin-500-normal.woff2);font-weight:500}
+@font-face{font-family:P;src:url(../mockup/fonts/poppins-latin-600-normal.woff2);font-weight:600}
+@font-face{font-family:P;src:url(../mockup/fonts/poppins-latin-700-normal.woff2);font-weight:700}
+@font-face{font-family:P;src:url(../mockup/fonts/poppins-latin-800-normal.woff2);font-weight:800}
+:root{--ung:#6A5ACD;--ungt:#3F3486;--pink:#ED9EB6;--blue:#A0D8EE;--mute:#7c74b0}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:1080px;height:1920px;overflow:hidden}
+body{font-family:P,'Noto Color Emoji',sans-serif;color:var(--ungt);background:#FAF8FF;position:relative}
+.emo{font-family:'Noto Color Emoji';line-height:1}
+.blob{position:absolute;border-radius:50%;filter:blur(6px);will-change:transform}
+/* safe area: top 260, bottom 400, right 120, left 60 */
+.scene{position:absolute;left:60px;width:900px;top:270px;height:1010px;opacity:0;display:flex;flex-direction:column;justify-content:center;align-items:stretch}
+.scene>.pill{align-self:flex-start}
+.cap{position:absolute;left:60px;width:900px;top:1300px;height:200px;display:flex;align-items:center;justify-content:center;text-align:center}
+.cap span{display:inline-block;background:rgba(63,52,134,.94);color:#fff;font-weight:700;font-size:40px;line-height:1.3;padding:16px 28px;border-radius:24px;box-decoration-break:clone;-webkit-box-decoration-break:clone;max-width:900px}
+.cap span b{color:#FFD3E1}
+[data-t]{opacity:0}
+h1{font-weight:800;letter-spacing:-.02em;color:var(--ung);line-height:1.04}
+.pill{display:inline-block;padding:12px 26px;border-radius:999px;font-weight:700;font-size:30px;letter-spacing:.06em}
+.card{background:#fff;border-radius:32px;padding:26px 30px;box-shadow:0 16px 40px -18px rgba(63,52,134,.35)}
+.card small{display:block;font-size:24px;color:var(--mute);font-weight:500}
+.card strong{display:block;font-size:34px;font-weight:700;line-height:1.25}
+.row{display:flex;gap:20px;align-items:center}
+.date{flex:none;width:118px;height:118px;border-radius:26px;background:var(--ung);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1}
+.date b{font-size:46px;font-weight:800}.date i{font-style:normal;font-size:22px;font-weight:600;letter-spacing:.08em;margin-top:4px}
+.cls{display:flex;gap:24px;align-items:center;background:#fff;border-radius:30px;padding:20px;box-shadow:0 14px 34px -18px rgba(63,52,134,.35)}
+.cls strong{font-size:34px;font-weight:700;line-height:1.2}
+.cls small{display:block;font-size:23px;color:var(--mute);font-weight:500;margin-top:4px}
+.center{display:flex;flex-direction:column;align-items:center;text-align:center}
+</style></head><body>
+
+<div class="blob" id="b1" style="width:520px;height:520px;background:#FBD3E0;opacity:.7;left:-180px;top:1150px"></div>
+<div class="blob" id="b2" style="width:460px;height:460px;background:#CFEAF6;opacity:.8;right:-160px;top:60px"></div>
+<div class="blob" id="b3" style="width:300px;height:300px;background:#E3DDFB;opacity:.8;right:-60px;top:1500px"></div>
+
+<!-- S1 HOOK 0-5 -->
+<div class="scene" data-s="0" data-e="5.2">
+  <div class="center">
+    <div data-t="0.1" data-fx="scale" style="width:560px;background:#fff;border-radius:40px;padding:26px 30px;box-shadow:0 30px 60px -24px rgba(63,52,134,.45)">
+      <div style="display:flex;gap:16px;align-items:center;background:#F1EEFB;border-radius:999px;padding:18px 26px;font-size:30px;font-weight:500;text-align:left">
+        <span class="emo" style="font-size:30px">🔍</span><span data-type="0.5" data-text="flek trimester 1, normal?"></span>
+      </div>
+      <div style="margin-top:22px;display:grid;gap:14px">
+        <div data-t="1.6" data-fx="up" style="height:22px;border-radius:12px;background:#ECE8FA;width:90%"></div>
+        <div data-t="1.75" data-fx="up" style="height:22px;border-radius:12px;background:#ECE8FA;width:70%"></div>
+        <div data-t="1.9" data-fx="up" style="height:22px;border-radius:12px;background:#ECE8FA;width:80%"></div>
+      </div>
+    </div>
+    <div style="position:relative;height:0;width:100%">
+      <span class="emo" data-t="1.2" data-fx="pop" style="position:absolute;left:70px;top:-330px;font-size:90px">❓</span>
+      <span class="emo" data-t="1.5" data-fx="pop" style="position:absolute;right:90px;top:-380px;font-size:70px">❔</span>
+      <span class="emo" data-t="1.8" data-fx="pop" style="position:absolute;right:40px;top:-90px;font-size:80px">❓</span>
+    </div>
+    <h1 data-t="2.2" data-fx="up" style="font-size:92px;margin-top:80px">Hamil… dan kepala penuh pertanyaan?</h1>
+  </div>
+</div>
+
+<!-- S2 PROBLEM 5-14 -->
+<div class="scene" data-s="5" data-e="14.2">
+  <div data-t="5.2" data-fx="left" class="card" style="display:flex;gap:28px;align-items:center;padding:34px">
+    <span class="emo" style="font-size:120px">🤰</span>
+    <div><small>Bunda</small><strong style="font-size:46px">“Info mana yang benar?”</strong></div>
+  </div>
+  <div style="display:flex;gap:16px;flex-wrap:wrap;margin:26px 0 0 20px">
+    <span data-t="6.3" data-fx="pop" class="pill" style="background:#FDE8F1;color:#B5537A;font-size:26px">katanya jangan makan nanas…</span>
+    <span data-t="6.8" data-fx="pop" class="pill" style="background:#E6F4FB;color:#2C7FA3;font-size:26px">kata grup WA lain lagi…</span>
+    <span data-t="7.3" data-fx="pop" class="pill" style="background:#EEEAFB;color:var(--ung);font-size:26px">di internet beda lagi…</span>
+  </div>
+  <div data-t="9" data-fx="right" class="card" style="display:flex;gap:28px;align-items:center;padding:34px;margin-top:70px">
+    <span class="emo" style="font-size:120px">👨</span>
+    <div><small>Ayah</small><strong style="font-size:46px">“Aku harus bantu apa?”</strong></div>
+  </div>
+</div>
+
+<!-- S3 INTRO 14-24 -->
+<div class="scene" data-s="14" data-e="24.2">
+  <div class="center">
+    <img data-t="14.2" data-fx="scale" src="../mockup/logo-sih.png" style="width:560px">
+    <span data-t="15.6" data-fx="up" class="pill" style="background:var(--ung);color:#fff;margin-top:40px;font-size:34px">BATCH 6</span>
+    <p data-t="16.4" data-fx="up" style="font-size:40px;font-weight:700;margin-top:28px;line-height:1.3">Kelas online bersama dokter spesialis kebidanan &amp; kandungan</p>
+    <p data-t="17.6" data-fx="up" style="font-size:32px;font-weight:500;margin-top:18px;color:var(--mute)">29 Nov 2026 – 8 Jan 2027 · untuk Bunda &amp; Ayah</p>
+  </div>
+</div>
+
+<!-- S4 ORIENTASI 24-40 -->
+<div class="scene" data-s="24" data-e="40.2">
+  <span data-t="24.2" data-fx="pop" class="pill" style="background:#DDF3E5;color:#2E7D4F">🎁 WEBINAR GRATIS</span>
+  <p data-t="24.5" data-fx="up" style="font-size:30px;font-weight:500;margin-top:20px;color:var(--mute)">Masa Orientasi Siswa SIH Batch 6</p>
+  <h1 data-t="24.8" data-fx="up" style="font-size:100px;margin-top:6px">Together in<br>Pregnancy Journey</h1>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:40px">
+    <div data-t="27" data-fx="up" class="card" style="background:#FDE8F1"><small>Tanggal</small><strong>Minggu,<br>29 Nov 2026</strong></div>
+    <div data-t="27.4" data-fx="up" class="card" style="background:#E6F4FB"><small>Waktu · Online</small><strong>15.30–<br>16.30 WIB</strong></div>
+    <div data-t="29" data-fx="up" class="card" style="background:#EEEAFB;grid-column:1/3"><small>Narasumber</small><strong>dr. Aviasti Pratiwi Andayani, Sp.OG</strong></div>
+    <div data-t="33" data-fx="up" class="card" style="grid-column:1/3"><strong style="font-size:32px">✅ Grup WA bareng bumil, dokter &amp; bidan<br>✅ Doorprize Akses Premium</strong></div>
+  </div>
+</div>
+
+<!-- S5 T1 40-52 -->
+<div class="scene" data-s="40" data-e="52.2">
+  <div class="row" data-t="40.2" data-fx="left"><span class="emo" style="font-size:96px">🌱</span><div><h1 style="font-size:84px">Trimester 1</h1><p style="font-size:30px;font-weight:600;color:var(--mute)">Usia kehamilan di bawah 12 minggu</p></div></div>
+  <div style="display:grid;gap:22px;margin-top:46px">
+    <div class="cls" data-t="41.2" data-fx="up"><div class="date"><b>02</b><i>DES</i></div><div><strong>Hamil Sehat dan Aman</strong><small>Tanda kehamilan · pemeriksaan pertama</small></div></div>
+    <div class="cls" data-t="43.6" data-fx="up"><div class="date"><b>16</b><i>DES</i></div><div><strong>Menyemai Benih Kehidupan</strong><small>Perubahan tubuh · perkembangan janin</small></div></div>
+    <div class="cls" data-t="46" data-fx="up"><div class="date"><b>06</b><i>JAN</i></div><div><strong>Memupuk Jiwa yang Tenang</strong><small>Psikologis kehamilan · Pregnancy Plan</small></div></div>
+  </div>
+</div>
+
+<!-- S6 T2 52-64 -->
+<div class="scene" data-s="52" data-e="64.2">
+  <div class="row" data-t="52.2" data-fx="left"><span class="emo" style="font-size:96px">🌷</span><div><h1 style="font-size:84px">Trimester 2</h1><p style="font-size:30px;font-weight:600;color:var(--mute)">Usia kehamilan 13–27 minggu</p></div></div>
+  <div style="display:grid;gap:22px;margin-top:46px">
+    <div class="cls" data-t="53.2" data-fx="up"><div class="date" style="background:#D9728F"><b>03</b><i>DES</i></div><div><strong>Persiapan Fisik Menuju Persalinan</strong><small>Olahraga · nutrisi &amp; kalori</small></div></div>
+    <div class="cls" data-t="55.6" data-fx="up"><div class="date" style="background:#D9728F"><b>17</b><i>DES</i></div><div><strong>Bertumbuh dan Berkembang Indah</strong><small>Perkembangan janin · kehamilan risiko tinggi</small></div></div>
+    <div class="cls" data-t="58" data-fx="up"><div class="date" style="background:#D9728F"><b>07</b><i>JAN</i></div><div><strong>Peran Suami &amp; Keluarga</strong><small>Spesial semua trimester</small></div></div>
+  </div>
+</div>
+
+<!-- S7 T3 64-76 -->
+<div class="scene" data-s="64" data-e="76.2">
+  <div class="row" data-t="64.2" data-fx="left"><span class="emo" style="font-size:96px">👶</span><div><h1 style="font-size:84px">Trimester 3</h1><p style="font-size:30px;font-weight:600;color:var(--mute)">Usia kehamilan 28–40 minggu</p></div></div>
+  <div style="display:grid;gap:22px;margin-top:46px">
+    <div class="cls" data-t="65.2" data-fx="up"><div class="date" style="background:#3E9CC4"><b>04</b><i>DES</i></div><div><strong>Aman, Nyaman dan Tenang</strong><small>Tempat bersalin · hospital packing</small></div></div>
+    <div class="cls" data-t="67.6" data-fx="up"><div class="date" style="background:#3E9CC4"><b>18</b><i>DES</i></div><div><strong>Bila Waktunya Tiba</strong><small>Tanda &amp; proses persalinan</small></div></div>
+    <div class="cls" data-t="70" data-fx="up"><div class="date" style="background:#3E9CC4"><b>08</b><i>JAN</i></div><div><strong>Menghitung Hari</strong><small>Manajemen nyeri · persiapan sesar</small></div></div>
+  </div>
+</div>
+
+<!-- S8 AYAH 76-89 -->
+<div class="scene" data-s="76" data-e="89.2">
+  <div class="center">
+    <span data-t="76.2" data-fx="pop" class="pill" style="background:var(--ung);color:#fff;font-size:32px">KELAS SPESIAL AYAH</span>
+    <span data-t="76.6" data-fx="scale" class="emo" style="font-size:170px;margin-top:40px;letter-spacing:10px">👨💜🤰</span>
+    <h1 data-t="77.4" data-fx="up" style="font-size:70px;margin-top:36px">Peran Suami &amp; Keluarga dalam Kehamilan &amp; Persalinan</h1>
+    <p data-t="79" data-fx="up" style="font-size:36px;font-weight:700;margin-top:24px">Kamis, 7 Januari 2027 · 18.30 WIB</p>
+    <div data-t="82.5" data-fx="pop" class="card" style="margin-top:40px;display:flex;gap:22px;align-items:center;text-align:left;background:#FDE8F1"><span class="emo" style="font-size:70px">🎁</span><div><small>Bonus e-book</small><strong>Panduan Suami sebagai Birth Companion</strong></div></div>
+  </div>
+</div>
+
+<!-- S9 EKSKUL 89-98 -->
+<div class="scene" data-s="89" data-e="98.2">
+  <span data-t="89.2" data-fx="pop" class="pill" style="background:#E6F4FB;color:#2C7FA3">EKSTRAKURIKULER</span>
+  <h1 data-t="89.5" data-fx="up" style="font-size:80px;margin-top:22px">Mau lebih siap lagi?</h1>
+  <div style="display:grid;gap:24px;margin-top:46px">
+    <div class="cls" data-t="90.6" data-fx="left"><span class="emo" style="font-size:80px;padding:0 10px">📝</span><div><small style="margin:0 0 4px">Minggu, 13 Des · Mini Workshop</small><strong>Ready to Birth Class</strong><small>Praktik menyusun Birth Plan bersama pasangan</small></div></div>
+    <div class="cls" data-t="92.4" data-fx="left"><span class="emo" style="font-size:80px;padding:0 10px">🤱</span><div><small style="margin:0 0 4px">Minggu, 20 Des · Mini Workshop Nifas</small><strong>Rehat yang Bermanfaat</strong><small>Pemulihan masa nifas yang sehat &amp; nyaman</small></div></div>
+  </div>
+</div>
+
+<!-- S10 HARGA 98-108 -->
+<div class="scene" data-s="98" data-e="108.2">
+  <div class="center">
+    <p data-t="98.2" data-fx="up" style="font-size:40px;font-weight:600;color:var(--mute)">Investasi satu batch</p>
+    <h1 data-t="98.6" data-fx="scale" style="font-size:250px;line-height:1;margin-top:10px">199K</h1>
+    <p data-t="99.6" data-fx="up" style="font-size:40px;font-weight:700;margin-top:10px">termasuk Akses Premium<br>sekolahibuhamil.id</p>
+    <div data-t="102.6" data-fx="up" class="card" style="margin-top:56px;width:100%"><small>Atau ikut per kelas</small><strong style="font-size:46px">79K · <span style="color:#D9728F">49K lewat sekolahibuhamil.id</span></strong></div>
+  </div>
+</div>
+
+<!-- S11 CTA 108-116 -->
+<div class="scene" data-s="108" data-e="117">
+  <div class="center">
+    <img data-t="108.2" data-fx="scale" src="../mockup/logo-sih.png" style="width:520px">
+    <h1 data-t="109" data-fx="up" style="font-size:72px;margin-top:40px">Hamil bukan perjalanan sendirian.</h1>
+    <div data-t="111" data-fx="pop" style="margin-top:44px;background:var(--ung);color:#fff;border-radius:999px;padding:26px 54px;font-size:46px;font-weight:800">Daftar di sekolahibuhamil.id</div>
+    <p data-t="112.2" data-fx="up" style="font-size:30px;font-weight:600;margin-top:28px;color:var(--mute)">Together in Pregnancy Journey</p>
+  </div>
+</div>
+
+<div class="cap"><span id="cap"></span></div>
+
+<script>
+const CAPS=[
+[0.3,4.9,"Hamil… dan kepala penuh <b>pertanyaan?</b>"],
+[5.2,9.0,"Bunda bingung harus percaya <b>info yang mana.</b>"],
+[9.0,13.9,"Ayah ingin mendampingi, tapi <b>tidak tahu mulai dari mana.</b>"],
+[14.3,17.0,"Kenalkan, <b>Sekolah Ibu Hamil Batch 6.</b>"],
+[17.0,23.9,"Kelas online bersama <b>dokter spesialis kebidanan dan kandungan</b>, untuk Bunda dan Ayah."],
+[24.3,28.8,"Dibuka dengan <b>Masa Orientasi GRATIS:</b> Together in Pregnancy Journey."],
+[28.8,32.8,"Minggu, 29 November, 15.30 WIB, bersama <b>dr. Aviasti Pratiwi Andayani, Sp.OG.</b>"],
+[32.8,39.8,"Gabung grup WhatsApp bersama bumil, dokter &amp; bidan, plus <b>doorprize Akses Premium!</b>"],
+[40.3,45.8,"<b>Trimester 1:</b> hamil sehat dan aman, mengenal perkembangan janin…"],
+[45.8,51.8,"…sampai menjaga <b>jiwa tetap tenang.</b>"],
+[52.3,57.8,"<b>Trimester 2:</b> persiapan fisik dan nutrisi yang tepat…"],
+[57.8,63.8,"…serta memahami <b>kehamilan risiko tinggi.</b>"],
+[64.3,69.8,"<b>Trimester 3:</b> memilih tempat bersalin, mengenali tanda persalinan…"],
+[69.8,75.8,"…hingga <b>manajemen nyeri</b> dan persiapan jika harus sesar."],
+[76.3,82.3,"Dan untuk <b>Ayah</b>, ada kelas spesial: Peran Suami &amp; Keluarga, 7 Januari."],
+[82.3,88.8,"Bonus e-book <b>Panduan Suami sebagai Birth Companion.</b>"],
+[89.3,97.8,"Mau lebih siap? Ikuti mini workshop <b>Birth Plan</b> dan <b>persiapan masa nifas.</b>"],
+[98.3,102.4,"Satu batch hanya <b>199 ribu</b>, sudah termasuk Akses Premium."],
+[102.4,107.8,"Atau pilih per kelas, <b>mulai 49 ribu.</b>"],
+[108.3,111.0,"<b>Hamil bukan perjalanan sendirian.</b>"],
+[111.0,116.0,"Daftar sekarang di <b>sekolahibuhamil.id</b>"],
+];
+const ease=x=>1-Math.pow(1-Math.min(Math.max(x,0),1),3);
+const back=x=>{x=Math.min(Math.max(x,0),1);const c=1.7;return 1+(c+1)*Math.pow(x-1,3)+c*Math.pow(x-1,2)};
+const scenes=[...document.querySelectorAll('.scene')];
+const els=[...document.querySelectorAll('[data-t]')];
+const typers=[...document.querySelectorAll('[data-type]')];
+const capEl=document.getElementById('cap');let lastCap=null;
+window.seek=function(t){
+  for(const s of scenes){const a=+s.dataset.s,e=+s.dataset.e;
+    let o=t<a||t>e?0:Math.min(1,(t-a)/0.35,(e-t)/0.35);
+    s.style.opacity=o; s.style.transform=`translateY(${(1-ease(Math.min(1,(t-a)/0.5)))*30}px)`; s.style.visibility=o>0?'visible':'hidden';}
+  for(const el of els){const p=(t-(+el.dataset.t))/0.6,fx=el.dataset.fx||'fade',k=ease(p);
+    el.style.opacity=Math.min(1,Math.max(0,p*1.6));
+    let tr='';
+    if(fx==='up')tr=`translateY(${(1-k)*50}px)`;
+    else if(fx==='left')tr=`translateX(${(1-k)*-80}px)`;
+    else if(fx==='right')tr=`translateX(${(1-k)*80}px)`;
+    else if(fx==='scale')tr=`scale(${0.85+0.15*k})`;
+    else if(fx==='pop')tr=`scale(${p<=0?0.5:back(p)})`;
+    el.style.transform=tr;}
+  for(const el of typers){const txt=el.dataset.text,st=+el.dataset.type;const n=Math.max(0,Math.min(txt.length,Math.floor((t-st)*16)));
+    el.textContent=txt.slice(0,n)+((Math.floor(t*2)%2===0&&n<txt.length+8)?'|':'');}
+  const c=CAPS.find(c=>t>=c[0]&&t<c[1]);const html=c?c[2]:'';
+  if(html!==lastCap){capEl.innerHTML=html;capEl.style.display=html?'inline-block':'none';lastCap=html;}
+  if(c){const p=(t-c[0])/0.25;capEl.style.opacity=Math.min(1,p,(c[1]-t)/0.2);capEl.style.transform=`translateY(${(1-ease(p))*14}px)`;}
+  document.getElementById('b1').style.transform=`translate(${Math.sin(t*0.4)*40}px,${Math.cos(t*0.3)*50}px)`;
+  document.getElementById('b2').style.transform=`translate(${Math.cos(t*0.35)*40}px,${Math.sin(t*0.45)*40}px)`;
+  document.getElementById('b3').style.transform=`translate(${Math.sin(t*0.5)*30}px,${Math.cos(t*0.4)*30}px)`;
+};
+window.DURATION=116;
+seek(0);
+</script>
+</body></html>
