@@ -6,7 +6,7 @@
 #
 # 1. mencadangkan database          4. memuat ulang API & server web VaksinKu
 # 2. memasang skrip & Caddyfile baru 5. memperbarui halaman (aplikasi, dashboard klinik)
-# 3. menjalankan migrasi database tambahan (aman diulang)
+# 3. menjalankan migrasi database tambahan & memuat katalog terbaru (aman diulang)
 # Hanya menyentuh /opt/vaksinku dan wadah vaksinku-*; sekolahibuhamil.id tidak disentuh.
 set -eu
 DASAR=/opt/vaksinku
@@ -39,6 +39,10 @@ for m in "$SUMBER"/supabase/migrations/*.sql; do
   sed 's/\r$//' "$m" > "db/init/40_$n"
   echo "   terpasang: $n"
 done
+
+# katalog (klinik, vaksin, price list, dokter) dari src/data_katalog.py; aman diulang
+sed 's/\r$//' "$SUMBER/supabase/seed.sql" | docker exec -i vaksinku-db psql -q -v ON_ERROR_STOP=1 -U vaksinku_admin -d vaksinku
+echo "   katalog vaksin & harga diperbarui"
 
 echo "4/5 Memuat ulang API & server web..."
 # dinyalakan ulang (bukan sinyal) agar API pasti hidup kembali dengan skema terbaru

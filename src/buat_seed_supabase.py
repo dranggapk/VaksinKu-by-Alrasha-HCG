@@ -53,8 +53,7 @@ def main():
     out.append("on conflict (id) do update set kota_id = excluded.kota_id, nama = excluded.nama, alamat = excluded.alamat;\n")
 
     vaksin = []
-    for i, (no, kategori, sediaan, merk, spes, umum) in enumerate(D.HARGA):
-        vid = "v%d-%d" % (int(no), i)
+    for vid, no, kategori, sediaan, merk, spes, umum in D.HARGA:
         antigen = ANTIGEN_SEDIAAN.get(sediaan, ANTIGEN_KATEGORI.get(kategori, []))
         vaksin.append((vid, kategori, sediaan, merk, antigen, rupiah(umum), rupiah(spes)))
     out.append("insert into public.vaksin (id, kategori, sediaan, merek, antigen) values")

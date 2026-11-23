@@ -338,7 +338,7 @@ try {
       from booking b join booking_item bi on bi.booking_id = b.id join pasien p on p.id = bi.pasien_id
       where b.profil_id = '${y.akun.data.akun.id}'`).trim();
     const kodeY = bkY.split('|')[0];
-    ok('aplikasi: reservasi online tercatat di server dengan harga klinik', /^VK-\d{6}-\d{4}\|baru\|10:00:00\|true\|Kiki\|v7-11\|400000$/.test(bkY), bkY || '(kosong)');
+    ok('aplikasi: reservasi online tercatat di server dengan harga klinik', /^VK-\d{6}-\d{4}\|baru\|10:00:00\|true\|Kiki\|v7-11\|350000$/.test(bkY), bkY || '(kosong)');
     ok('aplikasi: detail reservasi menampilkan kode dari server', !!kodeY && y.dom.includes(kodeY) && y.dom.includes('Reservasi online diterima sistem klinik'));
 
     // pasien remaja dengan riwayat beragam, dua vaksin, jam buka pertama (kasus dari lapangan)
@@ -437,7 +437,7 @@ try {
     return tunggu(function () { return (st().transaksi || []).length === 1; }).then(function () { return b; });
   }).then(function (b) {
     var s = st(), t = s.transaksi[0] || {}, l = s.layanan[0] || {};
-    ok('catat vaksinasi: stok berkurang, tagihan terbit', s.stok[0].sisa === 9 && t.total === 400000 && t.status === 'terbuka' &&
+    ok('catat vaksinasi: stok berkurang, tagihan terbit', s.stok[0].sisa === 9 && t.total === 350000 && t.status === 'terbuka' &&
        s.booking.filter(function (x) { return x.id === b.id; })[0].status === 'selesai', t.nomor + ' ' + t.total);
     ok('riwayat pelayanan mencatat batch & vaksinator', l.item && l.item[0].batch === 'FL-01' && !!l.petugas, JSON.stringify(l).slice(0, 100));
     return ke('#/transaksi');
@@ -497,7 +497,7 @@ try {
     const bkAkhir = psql(DB, '-c', `select status from booking where kode = '${kodeY}'`).trim();
     const rd = psql(DB, '-c', `select r.no_batch || '|' || r.diverifikasi || '|' || r.faskes from riwayat_dosis r join pasien p on p.id = r.pasien_id
       where p.nama = 'Kiki' and r.sumber = 'klinik'`).trim();
-    ok('server: booking selesai & riwayat klinik terverifikasi', bkAkhir === 'selesai' && rd === 'FL-01|true|Klinik Alrasha Health Care Center', `${bkAkhir} ${rd}`);
+    ok('server: booking selesai & riwayat klinik terverifikasi', bkAkhir === 'selesai' && rd === 'FL-01|true|Klinik Pratama Alrasha HCC', `${bkAkhir} ${rd}`);
     const ptg = psql(DB, '-c', `select a.peran from anggota_klinik a join auth.users u on u.id = a.user_id where u.email = 'baru@gmail.com'`).trim();
     ok('server: petugas baru terdaftar', ptg === 'petugas', ptg);
     {
@@ -505,7 +505,7 @@ try {
       const Y = { profil: {}, pasien: [], riwayat: [] };
       await sinkron(Y, { api: API, token: y.akun.data.token, akunId: y.akun.data.akun.id, fetch });
       const rk = Y.riwayat.filter((r) => r.sumber === 'klinik')[0];
-      ok('aplikasi pasien: menerima catatan vaksinasi dari dashboard klinik', !!rk && rk.batch === 'FL-01' && rk.diverifikasi && rk.merek === 'Vaxigrip Tetra',
+      ok('aplikasi pasien: menerima catatan vaksinasi dari dashboard klinik', !!rk && rk.batch === 'FL-01' && rk.diverifikasi && rk.merek === 'Vaxigrip TIV',
         rk ? `${rk.label} ${rk.batch}` : JSON.stringify(Y.riwayat));
       if (rk) {
         rk.kunci = ['flu:1']; rk.kunciDipetakan = true;   // dipetakan aplikasi (petakanDosisKlinik)

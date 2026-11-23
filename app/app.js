@@ -564,7 +564,9 @@
       .sort(function (a, b) { return String(a.tanggal).localeCompare(String(b.tanggal)); })
       .forEach(function (r) {
         var p = S.pasien.filter(function (x) { return x.id === r.pasienId; })[0];
-        var v = K.harga.filter(function (x) { return x.merk === r.merek; })[0];
+        // merek bisa berganti nama di katalog (mis. Vaxigrip Tetra → Vaxigrip TIV): cocokkan kategori dari label
+        var v = K.harga.filter(function (x) { return x.merk === r.merek; })[0] ||
+          K.harga.filter(function (x) { return String(r.label || '').indexOf(x.kategori + ' — ') === 0; })[0];
         r.kunciDipetakan = true;
         var kunci = p && v ? kunciDariProduk(p, v.id) : null;
         if (kunci) { r.kunci = kunci; n++; }
@@ -1279,8 +1281,8 @@
       kat: ['BCG', 'Polio', 'DPT', 'Rotavirus', 'Pneumococcus', 'Campak', 'Varicella', 'Hepatitis B', 'Hepatitis A', 'Influenza', 'Typhoid', 'Japanese Encephalitis', 'Flu Singapura'] },
     { id: 'dewasa', label: 'Vaksin Dewasa', sub: 'HPV, flu, tifoid, dll', icon: 'fokus-dewasa', sumber: 'Jadwal PAPDI 2025',
       kat: ['Influenza', 'Pneumococcus', 'Demam Berdarah', 'HPV', 'Typhoid', 'Hepatitis A', 'Hepatitis B', 'Varicella', 'Campak', 'Tetanus'] },
-    { id: 'pranikah', label: 'Pranikah', sub: 'HPV, MMR, tetanus', icon: 'fokus-pranikah', sumber: 'Jadwal pranikah katalog',
-      kat: ['HPV', 'Campak', 'Tetanus'] },
+    { id: 'pranikah', label: 'Pranikah', sub: 'HPV, MMR, tetanus, flu, hepatitis B', icon: 'fokus-pranikah', sumber: 'Jadwal pranikah katalog',
+      kat: ['HPV', 'Campak', 'Tetanus', 'Influenza', 'Hepatitis B'] },
     { id: 'hamil', label: 'Ibu Hamil', sub: 'Flu, Tdap & RSV', icon: 'fokus-hamil', sumber: 'Rekomendasi POGI 2026',
       kat: ['Influenza', 'Tetanus'],
       // dianjurkan tetapi belum ada di price list klinik mitra
@@ -2956,14 +2958,15 @@
         (x.coret ? '<div class="tiny muted" style="text-decoration:line-through;">' + rp(angka(x.coret)) + '</div>' : '') + '</div>' +
         '<div class="disp nowrap" style="font-size:16px;font-weight:800;color:var(--magenta-dark);">' + rp(angka(x.harga)) + '</div></div>';
     });
-    var pt = K.paketTriple;
-    if (promoKlinik() === 'alrasha') body += '<div class="card stack g10" style="border:1.6px solid var(--magenta);">' +
-      '<div class="row mid g8"><span class="disp" style="font-size:15px;font-weight:800;">' + h(pt.nama) + '</span>' +
-      '<span class="chip mag" style="padding:2px 8px;font-size:9.5px;">HEMAT</span></div>' +
-      pt.isi.map(function (i) { return '<div class="row mid g8">' + ic('checkc', 15) + '<span class="small" style="color:var(--ink-2);">' + h(i) + '</span></div>'; }).join('') +
-      '<div class="divider"></div>' +
-      '<div class="row mid g10" style="align-items:baseline;"><span class="disp" style="font-size:21px;font-weight:800;color:var(--magenta-dark);">' + rp(angka(pt.harga)) + '</span>' +
-      '<span class="small muted" style="text-decoration:line-through;">' + rp(angka(pt.coret)) + '</span></div></div>';
+    if (promoKlinik() === 'alrasha') K.paketInternasional.forEach(function (pt) {
+      body += '<div class="card stack g10 paket-int" style="border:1.6px solid var(--magenta);">' +
+        '<div class="row mid g8"><span class="disp" style="font-size:15px;font-weight:800;">' + h(pt.nama) + '</span>' +
+        '<span class="chip mag" style="padding:2px 8px;font-size:9.5px;">LEBIH HEMAT</span></div>' +
+        pt.isi.map(function (i) { return '<div class="row mid g8">' + ic('checkc', 15) + '<span class="small" style="color:var(--ink-2);">' + h(i) + '</span></div>'; }).join('') +
+        '<div class="divider"></div>' +
+        '<div class="row mid g10" style="align-items:baseline;"><span class="disp" style="font-size:21px;font-weight:800;color:var(--magenta-dark);">' + rp(angka(pt.harga)) + '</span>' +
+        '<span class="small muted" style="text-decoration:line-through;">' + rp(angka(pt.coret)) + '</span></div></div>';
+    });
     body += '<div class="card tint row mid g12"><div class="icon-sq" style="background:#fff;">' + ic('doc', 19) + '</div>' +
       '<div class="grow"><div class="small" style="font-weight:700;">Buku Kuning Elektronik (e-ICV)</div>' +
       '<div class="tiny" style="color:var(--ink-2);">Diterbitkan di klinik setelah vaksinasi.</div></div></div>';

@@ -81,9 +81,16 @@ TEST_JS = r"""
     function jmlCocok() { return +((document.querySelector('.onb-isi').textContent.match(/(\d+) jenis vaksin cocok/) || [])[1]); }
     klik('[data-act="toggle-fokus"][data-arg="dewasa"]');
     var jmlDewasa = jmlCocok();
-    ok('rekomendasi dewasa tanpa sediaan anak (Engerix-B Anak, Avaxim Anak)', jmlDewasa === 15, jmlDewasa + ' vaksin');
+    ok('rekomendasi dewasa tanpa sediaan anak (Engerix-B Anak, Avaxim Anak)', jmlDewasa === 17, jmlDewasa + ' vaksin');
     klik('[data-act="toggle-fokus"][data-arg="anak"]');
-    ok('anak + dewasa: sediaan anak dan dewasa sama-sama masuk', jmlCocok() === 28, jmlCocok() + ' vaksin');
+    ok('anak + dewasa: sediaan anak dan dewasa sama-sama masuk', jmlCocok() === 30, jmlCocok() + ' vaksin');
+    // katalog VaksinKu 2026: harga baru, produk baru, id lama tetap
+    function hv(id) { return (K2.harga.filter(function (v) { return v.id === id; })[0] || {}); }
+    ok('katalog 2026: Influenza Vaxigrip TIV 3 strain Rp350.000 (id tetap v7-11)', hv('v7-11').merk === 'Vaxigrip TIV' && hv('v7-11').umum === '350.000');
+    ok('katalog 2026: produk baru Yellow Fever, Twinrix, MenQuadfi, MR Group 2 orang',
+       hv('v18-30').merk === 'Stamaril' && hv('v19-31').merk === 'Twinrix' && hv('v20-32').merk === 'MenQuadfi' && hv('v10-29').umum === '625.000');
+    ok('katalog 2026: dua paket internasional (Apotek Mini Rp590.000, Triple Rp800.000)', K2.paketInternasional.length === 2 &&
+       K2.paketInternasional[0].harga === '590.000' && K2.paketInternasional[1].harga === '800.000');
     klik('[data-act="toggle-fokus"][data-arg="anak"]');
     klik('[data-act="toggle-fokus"][data-arg="dewasa"]');
     klik('[data-act="toggle-fokus"][data-arg="hamil"]');
@@ -341,7 +348,7 @@ TEST_JS = r"""
       isiKd = JSON.parse(decodeURIComponent(escape(atob(b64))));
     } catch (e) {}
     ok('pesan reservasi memuat kode data', !!kd, kd ? kd[0].length + ' karakter' : pesanBk.slice(-60));
-    ok('pesan reservasi menyebut klinik mitra', pesanBk.indexOf('Klinik mitra: Klinik Alrasha Health Care Center (Kota Tanjungpinang)') >= 0);
+    ok('pesan reservasi menyebut klinik mitra', pesanBk.indexOf('Klinik mitra: Klinik Pratama Alrasha HCC (Kota Tanjungpinang)') >= 0);
     ok('kode data sesuai reservasi', !!isiKd && isiKd.k === b.kode && isiKd.t === b.tanggal && isiKd.j === b.jam &&
        JSON.stringify(isiKd.v) === JSON.stringify(b.vaksinIds), isiKd ? isiKd.k + ' · ' + isiKd.v.length + ' vaksin' : '-');
     var pk = st().pasien.filter(function (x) { return x.id === b.pasienIds[0]; })[0] || {};
@@ -667,7 +674,7 @@ TEST_JS = r"""
       if (kirimCatatanKlinik) {   // catatan dari dashboard klinik: belum membawa kunci dosis
         kirimCatatanKlinik = false;
         S.riwayat.push({ id: 'k1', sid: 'rk-1', pasienId: S.pasien[0].id, label: 'Influenza — Vaxigrip Tetra', kunci: [],
-          tanggal: isoLokal(new Date()), merek: 'Vaxigrip Tetra', batch: 'FL-01', sumber: 'klinik', diverifikasi: true });
+          tanggal: isoLokal(new Date()), merek: 'Vaxigrip TIV', batch: 'FL-01', sumber: 'klinik', diverifikasi: true });
       }
       S.pasien.forEach(function (p) { if (p.tglLahir) { p.sid = p.sid || 'sid-' + p.id; S.sinkron.dikenal[p.sid] = 'x'; } });
       return Promise.resolve({ dikirim: 0, diterima: 0, dihapus: 0 });

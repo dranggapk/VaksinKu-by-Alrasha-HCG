@@ -65,6 +65,7 @@ ANTIGEN_KATEGORI = {
     "Typhoid (Tipes)": ["tif"], "Tetanus": ["td"], "Campak + Rubella": ["mr"], "Varicella": ["var"],
     "Hepatitis B": ["hepb"], "Hepatitis A": ["hepa"], "HPV (Kanker Serviks)": ["hpv"],
     "Demam Berdarah": ["dbd"], "Japanese Encephalitis": ["je"], "Flu Singapura": ["hfmd"],
+    "Hepatitis A + B": ["hepa", "hepb"],
 }
 ANTIGEN_SEDIAAN = {
     "Polio Oral": ["polio"], "Polio IPV": ["ipv"],
@@ -97,9 +98,9 @@ def ilustrasi_cover():
 
 def katalog_js():
     harga = []
-    for no, kategori, sediaan, merk, spes, umum in D.HARGA:
+    for vid, no, kategori, sediaan, merk, spes, umum in D.HARGA:
         harga.append({
-            "id": "v%d-%d" % (int(no), len(harga)),
+            "id": vid,
             "kategori": kategori, "sediaan": sediaan, "merk": merk,
             "spesialis": "" if spes == "—" else spes, "umum": umum,
             "antigen": ANTIGEN_SEDIAAN.get(sediaan, ANTIGEN_KATEGORI.get(kategori, [])),
@@ -130,10 +131,7 @@ def katalog_js():
         "hargaInternasional": [
             {"nama": n, "harga": hrg, "coret": coret} for n, hrg, coret in D.HARGA_INTERNASIONAL
         ],
-        "paketTriple": {
-            "nama": D.PAKET_TRIPLE["nama"], "isi": D.PAKET_TRIPLE["isi"],
-            "harga": D.PAKET_TRIPLE["harga"], "coret": D.PAKET_TRIPLE["coret"],
-        },
+        "paketInternasional": D.PAKET_INTERNASIONAL,
         "jadwalIDAI": J.IDAI,
         "jadwalKIA": J.KIA,
         "kiaKolom": J.KIA_KOLOM,

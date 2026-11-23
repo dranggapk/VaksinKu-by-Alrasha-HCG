@@ -66,7 +66,7 @@ select uji.catat('akun baru otomatis punya profil', (select count(*) from public
 
 -- ============================================================ 2. pengunjung belum masuk
 set role anon;
-select uji.catat('anon: price list terbuka', (select count(*) from public.harga_klinik) = 58);
+select uji.catat('anon: price list terbuka', (select count(*) from public.harga_klinik) = 66);
 select uji.harus_gagal('anon: data pasien tertutup', 'select * from public.pasien', 'permission denied');
 select uji.harus_gagal('anon: tidak bisa booking',
   'select public.buat_booking(''alrasha-hcc'',''klinik'','''',current_date,''09:00'',''umum'','''',false,''[]'')', 'permission denied');
@@ -109,8 +109,8 @@ select uji.simpan('b1', (select (public.buat_booking('alrasha-hcc', 'klinik', ''
 select uji.catat('booking: dibuat dengan status baru & kode VK-',
   (select status = 'baru' and kode like 'VK-%' from public.booking where id = uji.ambil('b1')::uuid),
   (select kode from public.booking where id = uji.ambil('b1')::uuid));
-select uji.catat('booking: harga ditetapkan server dari price list (Rp400.000)',
-  (select harga from public.booking_item where booking_id = uji.ambil('b1')::uuid) = 400000);
+select uji.catat('booking: harga ditetapkan server dari price list (Rp350.000)',
+  (select harga from public.booking_item where booking_id = uji.ambil('b1')::uuid) = 350000);
 select uji.catat('booking: lokasi klinik tersimpan di profil',
   (select klinik_id from public.profil where id = '00000000-0000-0000-0000-0000000000a1') = 'alrasha-hcc');
 select uji.harus_gagal('booking: tidak bisa memesan untuk pasien keluarga lain',
@@ -210,7 +210,7 @@ select uji.catat('pelayanan: stok batch berkurang 1 dan tercatat di buku mutasi'
 select uji.catat('pelayanan: riwayat dosis terverifikasi dengan No. Batch',
   exists (select 1 from public.riwayat_dosis where sumber = 'klinik' and diverifikasi and no_batch = 'VXG-2611A' and kunci = '{flu:1}'));
 select uji.catat('pelayanan: tagihan terbit sesuai harga booking',
-  (select total from public.tagihan) = 400000, (select nomor || ' ' || total from public.tagihan));
+  (select total from public.tagihan) = 350000, (select nomor || ' ' || total from public.tagihan));
 select uji.catat('pelayanan: booking otomatis selesai',
   (select status from public.booking where id = uji.ambil('b1')::uuid) = 'selesai');
 select uji.simpan('tagihan', (select id::text from public.tagihan limit 1));
@@ -227,12 +227,12 @@ delete from public.riwayat_dosis where sumber = 'klinik';
 select uji.catat('pasien: catatan klinik tidak bisa diubah atau dihapus',
   exists (select 1 from public.riwayat_dosis where sumber = 'klinik' and no_batch = 'VXG-2611A'));
 select uji.harus_gagal('pasien: tidak bisa mencatat pembayaran',
-  format('select public.terima_pembayaran(%L, 400000, ''Tunai'')', uji.ambil('tagihan')), 'tidak ditemukan');
+  format('select public.terima_pembayaran(%L, 350000, ''Tunai'')', uji.ambil('tagihan')), 'tidak ditemukan');
 select uji.sebagai('00000000-0000-0000-0000-0000000000b1');
 select uji.catat('keluarga lain: tidak melihat booking, tagihan, layanan Ibu Sari',
   (select count(*) from public.booking) = 0 and (select count(*) from public.tagihan) = 0 and (select count(*) from public.layanan) = 0);
 select uji.sebagai('00000000-0000-0000-0000-0000000000c1');
-select public.terima_pembayaran(uji.ambil('tagihan')::uuid, 400000, 'QRIS');
+select public.terima_pembayaran(uji.ambil('tagihan')::uuid, 350000, 'QRIS');
 select uji.catat('pembayaran: tagihan lunas', (select status from public.tagihan) = 'lunas');
 reset role;
 
@@ -245,7 +245,7 @@ update public.harga_klinik set harga_umum = 410000 where vaksin_id = 'v7-11';
 reset role;
 select uji.catat('harga: petugas biasa tidak bisa mengubah price list; admin hanya kliniknya',
   (select harga_umum from public.harga_klinik where klinik_id = 'alrasha-hcc' and vaksin_id = 'v7-11') = 410000
-  and (select harga_umum from public.harga_klinik where klinik_id = 'alrasha-ibumas' and vaksin_id = 'v7-11') = 400000);
+  and (select harga_umum from public.harga_klinik where klinik_id = 'alrasha-ibumas' and vaksin_id = 'v7-11') = 350000);
 set role authenticated;
 select uji.sebagai('00000000-0000-0000-0000-0000000000c2');
 insert into public.anggota_klinik (user_id, klinik_id, peran) values ('00000000-0000-0000-0000-0000000000b1', 'alrasha-hcc', 'petugas');
