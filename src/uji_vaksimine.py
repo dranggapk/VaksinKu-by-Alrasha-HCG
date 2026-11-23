@@ -69,6 +69,9 @@ TEST_JS = r"""
           ganti('#/' + r);
           ok('layar ' + r + ' terbuka', teks().length > 50 && !/VaksinKu(?![A-Za-z])/.test(teks()));
         });
+      ganti('#/chat');
+      ok('WhatsApp CS Jasmine 0812-9234-2188', K.brand.callCenter === '0812-9234-2188' && teks().indexOf('0812-9234-2188') >= 0 &&
+         teks().indexOf('0811-7744-74') < 0);
       ganti('#/tentang');
       ok('tentang: nama grup Jasmine MQ Medika', teks().indexOf('Jasmine MQ Medika') >= 0);
     } catch (e) { hasil.push('GAGAL | pengecualian: ' + e.message + ' @ ' + (e.stack || '').split('\n')[1]); }

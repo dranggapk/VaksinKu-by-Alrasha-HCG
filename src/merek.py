@@ -37,9 +37,9 @@ MEREK = {
         "jalur": "/vaksimine",                # disajikan di vaksinku.app/vaksimine/
         "klinik": "jasmine-mq", "kota": "bandung",
         "situs": "https://vaksinku.app/vaksimine",
-        "brand": {"group": "Jasmine MQ Medika", "instagram": "@jasmine_mqmedika", "website": "jasminemqmedika"},
-        # Nomor WhatsApp CS Jasmine: isi "call_center" di "brand" (format 0812-xxxx-xxxx) setelah
-        # nomor lengkap diterima; sampai saat itu reservasi WhatsApp masih ke CS bawaan.
+        # callCenter = WhatsApp CS Jasmine: tujuan reservasi, konsultasi, dan kontak di aplikasi
+        "brand": {"group": "Jasmine MQ Medika", "instagram": "@jasmine_mqmedika", "website": "jasminemqmedika",
+                  "callCenter": "0812-9234-2188"},
         # Kebijakan Privasi Vaksimine: pengendali data PT. Jasmine Sentosa Nugraha.
         "privasi": [
             ("PT. Alrasha Anugerah Abadi", "PT. Jasmine Sentosa Nugraha"),
@@ -48,7 +48,8 @@ MEREK = {
             ('untuk aplikasi di <a href="https://vaksinku.app">vaksinku.app</a>',
              'untuk aplikasi di <a href="https://vaksinku.app/vaksimine/">vaksinku.app/vaksimine</a>'),
             ("Jl. Hang Lekir, Batu 10, No. 18–20, Tanjungpinang, Kepulauan Riau", "Kota Bandung, Jawa Barat"),
-            ('    WhatsApp: <a href="https://wa.me/62811774474">0811-7744-74</a><br>\n', ""),
+            ('WhatsApp: <a href="https://wa.me/62811774474">0811-7744-74</a>',
+             'WhatsApp: <a href="https://wa.me/6281292342188">0812-9234-2188</a>'),
             ('Situs: <a href="https://vaksinku.app">vaksinku.app</a> · <a href="https://www.alrashaibumas.com" rel="noopener">www.alrashaibumas.com</a>',
              'Situs: <a href="https://vaksinku.app/vaksimine/">vaksinku.app/vaksimine</a> · Instagram @jasmine_mqmedika'),
         ],
