@@ -38,6 +38,20 @@ MEREK = {
         "klinik": "jasmine-mq", "kota": "bandung",
         "situs": "https://vaksinku.app/vaksimine",
         "brand": {"group": "Jasmine MQ Medika", "instagram": "@jasmine_mqmedika", "website": "jasminemqmedika"},
+        # Nomor WhatsApp CS Jasmine: isi "call_center" di "brand" (format 0812-xxxx-xxxx) setelah
+        # nomor lengkap diterima; sampai saat itu reservasi WhatsApp masih ke CS bawaan.
+        # Kebijakan Privasi Vaksimine: pengendali data PT. Jasmine Sentosa Nugraha.
+        "privasi": [
+            ("PT. Alrasha Anugerah Abadi", "PT. Jasmine Sentosa Nugraha"),
+            ('<link rel="canonical" href="https://vaksinku.app/privasi.html">',
+             '<link rel="canonical" href="https://vaksinku.app/vaksimine/privasi.html">'),
+            ('untuk aplikasi di <a href="https://vaksinku.app">vaksinku.app</a>',
+             'untuk aplikasi di <a href="https://vaksinku.app/vaksimine/">vaksinku.app/vaksimine</a>'),
+            ("Jl. Hang Lekir, Batu 10, No. 18–20, Tanjungpinang, Kepulauan Riau", "Kota Bandung, Jawa Barat"),
+            ('    WhatsApp: <a href="https://wa.me/62811774474">0811-7744-74</a><br>\n', ""),
+            ('Situs: <a href="https://vaksinku.app">vaksinku.app</a> · <a href="https://www.alrashaibumas.com" rel="noopener">www.alrashaibumas.com</a>',
+             'Situs: <a href="https://vaksinku.app/vaksimine/">vaksinku.app/vaksimine</a> · Instagram @jasmine_mqmedika'),
+        ],
         "logo_full": "vaksimine/logo-vaksimine.png",
         "logo_mark": "vaksimine/logo-vaksimine-kecil.png",
         "banner": [{
@@ -115,6 +129,9 @@ def tulis_privasi(cfg):
     with open(os.path.join(ROOT, "situs", "privasi.html"), encoding="utf-8") as f:
         s = f.read()
     s = re.sub(r"VaksinKu(?![A-Za-z])", cfg["nama"], s).replace("by Alrasha Health Care Group", cfg["oleh"])
+    for lama, baru in cfg.get("privasi", []):
+        assert lama in s, "teks privasi tidak ditemukan: " + lama[:60]
+        s = s.replace(lama, baru)
     with open(os.path.join(ROOT, cfg["folder"], "privasi.html"), "w", encoding="utf-8") as f:
         f.write(s)
 
