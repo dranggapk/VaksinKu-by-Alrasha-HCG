@@ -99,6 +99,8 @@ IDAI = [
     dosis("tif1", "Tifoid", "Tifoid 1", "tif:1", 24, 24, T18),
     dosis("tif", "Tifoid", "Tifoid ulangan", "tif:t", 60, T18, T18, jenis="booster", ulang=36, ket="Diulang setiap 3 tahun"),
 
+    # Tetap mengikuti IDAI 2024 & izin BPOM Qdenga (6–45 tahun), walau katalog 2026 menulis 4 tahun
+    # (keputusan pengelola, 24 Nov 2026).
     dosis("dbd1", "Dengue", "Dengue 1", "dbd:1", 72, T18, T18, ket="Usia 6–45 tahun"),
     dosis("dbd2", "Dengue", "Dengue 2", "dbd:2", 75, T18, T18, ket="3 bulan setelah dosis 1"),
 

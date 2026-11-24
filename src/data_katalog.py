@@ -139,6 +139,7 @@ JADWAL_ANAK = [
     ("24 bulan", None, ["Japanese Encephalitis (JE) 2", "Tifoid (Tipes) 1", "Influenza (Flu) tiap 1 tahun"]),
     ("3–4 tahun", None, ["Influenza (Flu) tiap 1 tahun"]),
     ("5 tahun", None, ["Combo DTP 5 (DTaP-IPV)", "MMR 2", "Influenza (Flu) tiap 1 tahun", "Tifoid (Tipes) tiap 3 tahun"]),
+    # DBD mengikuti IDAI (6 tahun), bukan 4 tahun seperti di katalog 2026 — lihat src/jadwal_anak.py
     ("6 tahun", None, ["Influenza (Flu) tiap 1 tahun", "Demam Berdarah (DBD) 1"]),
     ("6 tahun 3 bulan", None, ["Demam Berdarah (DBD) 2"]),
     ("7–8 tahun", None, ["Influenza (Flu) tiap 1 tahun", "Tifoid (Tipes) tiap 3 tahun"]),
