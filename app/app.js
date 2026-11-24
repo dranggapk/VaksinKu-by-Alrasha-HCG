@@ -3685,30 +3685,36 @@
      Banner yang sudah lewat masanya cukup dihapus barisnya. Kosongkan
      seluruh daftar dan bagian ini hilang dari Beranda dengan sendirinya. */
   var ALRASHA = ['alrasha-hcc', 'alrasha-ibumas'];
+  // Banner promo Katalog VaksinKu 2026 (dibuat src/buat_banner_2026.py dari harga katalog).
   var BANNER_SEMUA = [
     {
-      gambar: 'banner/bundling-hpv.webp',
-      alt: 'Bundling HPV 3 dosis: HPV 4 Rp1,7 juta, HPV 9 Rp6,8 juta. Konsultasi sekarang.',
-      act: 'go', arg: 'chat-baru', klinik: ALRASHA
+      gambar: 'banner/haji-umrah-2026.webp',
+      alt: 'Paket vaksin haji dan umrah: Paket Triple Rp800.000, Bundling Apotek Mini Rp590.000. Polio (IPV) Rp320.000, Meningitis Rp365.000.',
+      act: 'go', arg: 'internasional', klinik: ALRASHA
     },
     {
-      gambar: 'banner/hpv4-diperpanjang.webp',
-      alt: 'Promo diperpanjang: vaksin HPV 4 Rp650 ribu per dosis, diskon 50%.',
+      gambar: 'banner/influenza-2026.webp',
+      alt: 'Vaksin influenza 3 strain, 1 dosis setiap tahun: Flubio Rp345.000, Vaxigrip TIV Rp350.000.',
       act: 'go', arg: 'booking', klinik: ALRASHA
     },
     {
-      gambar: 'banner/little-protection.webp',
-      alt: 'Little Protection Package: PCV, Rotavirus, dan Infanrix Hexa Rp2.825.000.',
+      gambar: 'banner/hpv-2026.webp',
+      alt: 'Vaksin HPV untuk mencegah kanker serviks: HPV 4 Rp650.000 per dosis, HPV 9 Gardasil 9 Rp2.350.000 per dosis.',
       act: 'go', arg: 'booking', klinik: ALRASHA
     },
     {
-      gambar: 'banner/influenza-bareng.webp',
-      alt: 'Vaksin influenza bareng: 1 vaksin Rp345.000, duo Rp670.000, triple Rp1.000.000.',
+      gambar: 'banner/anak-2026.webp',
+      alt: 'Vaksin dasar si kecil: Infanrix Hexa Rp1.060.000, PCV 20 Rp1.150.000, Rotavirus Rotateq Rp475.000 per dosis.',
       act: 'go', arg: 'booking', klinik: ALRASHA
     },
     {
-      gambar: 'banner/vaksin-dewasa.webp',
-      alt: 'Vaksin dewasa: Hepatitis B Rp900.000, HPV 9 Rp6.800.000, HPV 4 Rp1.800.000 untuk 3 dosis.',
+      gambar: 'banner/pranikah-2026.webp',
+      alt: 'Vaksin pranikah: HPV 4 Rp650.000, MMR Rp575.000, Tetanus Tdap Rp525.000, Hepatitis B Rp325.000, Influenza mulai Rp345.000 per dosis.',
+      act: 'go', arg: 'booking', klinik: ALRASHA
+    },
+    {
+      gambar: 'banner/vaksin-baru-2026.webp',
+      alt: 'Vaksin baru tersedia: Yellow Fever Stamaril Rp550.000, Hepatitis A+B Twinrix Rp750.000, Meningitis Konjugat MenQuadfi Rp900.000.',
       act: 'go', arg: 'booking', klinik: ALRASHA
     }
   ];

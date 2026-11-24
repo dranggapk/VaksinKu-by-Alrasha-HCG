@@ -173,7 +173,7 @@ TEST_JS = r"""
     /* 1d. mitra klinik: pilih kota & klinik */
     ok('pengguna baru diminta memilih kota & klinik', document.body.textContent.indexOf('Pilih kota & klinik mitra') > 0);
     ok('belum pilih klinik: banner promo tetap tampil', !!document.getElementById('promo-rel') &&
-       document.querySelectorAll('#promo-rel .promo-kartu').length === 5);
+       document.querySelectorAll('#promo-rel .promo-kartu').length === 6);
     ok('belum pilih klinik: banner diberi keterangan klinik promo', /Promo klinik mitra di Tanjungpinang/.test((document.querySelector('.promo-catatan') || {}).textContent || ''),
        (document.querySelector('.promo-catatan') || {}).textContent);
     klik('#promo-rel .promo-kartu');
