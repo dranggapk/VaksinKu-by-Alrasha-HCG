@@ -1,0 +1,91 @@
+# VaksinKu di VPS bersama sekolahibuhamil.id — semua milik VaksinKu ada di /opt/vaksinku.
+#
+#   web   Caddy internal: halaman aplikasi, /api → api, /auth → auth
+#   api   PostgREST: API dari database; akses dibatasi peran + RLS
+#   auth  layanan masuk Google → sesi VaksinKu
+#   db    PostgreSQL 16 milik VaksinKu sendiri (bukan database sekolahibuhamil.id)
+#
+# Jaringan:
+#   vaksinku-edge    hanya web + Caddy sih-deployment (pintu masuk dari internet)
+#   vaksinku-dalam   internal, tanpa akses internet: web, api, auth, db
+#   vaksinku-keluar  hanya auth, untuk mengambil kunci publik Google
+# Rahasia ada di .env (dibuat pasang.sh), tidak pernah masuk repositori.
+name: vaksinku
+
+services:
+  web:
+    image: caddy:2-alpine
+    container_name: vaksinku-web
+    restart: unless-stopped
+    volumes:
+      - ./web/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./situs:/srv:ro
+    networks: [edge, dalam]
+    mem_limit: 128m
+    cpus: 0.5
+
+  db:
+    image: postgres:16-alpine
+    container_name: vaksinku-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: vaksinku
+      POSTGRES_USER: vaksinku_admin
+      POSTGRES_PASSWORD: ${DB_ADMIN_PASSWORD:?isi .env dengan pasang.sh}
+      AUTHENTICATOR_PASSWORD: ${AUTHENTICATOR_PASSWORD:?isi .env dengan pasang.sh}
+      TZ: Asia/Jakarta
+    volumes:
+      - ./data/db:/var/lib/postgresql/data
+      - ./db/init:/docker-entrypoint-initdb.d:ro
+    networks: [dalam]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U vaksinku_admin -d vaksinku"]
+      interval: 10s
+      retries: 10
+    mem_limit: 768m
+    cpus: 1
+
+  api:
+    image: postgrest/postgrest:v12.2.3
+    container_name: vaksinku-api
+    restart: unless-stopped
+    environment:
+      PGRST_DB_URI: postgres://authenticator:${AUTHENTICATOR_PASSWORD}@db:5432/vaksinku
+      PGRST_DB_SCHEMAS: public
+      PGRST_DB_ANON_ROLE: anon
+      PGRST_JWT_SECRET: ${JWT_SECRET:?isi .env dengan pasang.sh}
+      PGRST_OPENAPI_MODE: disabled
+      PGRST_DB_MAX_ROWS: "1000"
+    depends_on:
+      db: { condition: service_healthy }
+    networks: [dalam]
+    mem_limit: 128m
+    cpus: 0.5
+
+  auth:
+    image: node:22-alpine
+    container_name: vaksinku-auth
+    restart: unless-stopped
+    command: ["node", "/app/server.mjs"]
+    user: node
+    read_only: true
+    volumes:
+      - ./auth:/app:ro
+    environment:
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      PGRST_JWT_SECRET: ${JWT_SECRET}
+      API_URL: http://api:3000
+    depends_on: [api]
+    networks: [dalam, keluar]
+    mem_limit: 128m
+    cpus: 0.5
+
+networks:
+  edge:
+    name: vaksinku-edge
+    external: true
+  dalam:
+    name: vaksinku-dalam
+    internal: true
+  keluar:
+    name: vaksinku-keluar

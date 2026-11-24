@@ -1,0 +1,6 @@
+# Skrip dijalankan di Linux (VPS): selalu akhir baris LF, juga saat diambil di Windows.
+*.sh text eol=lf
+*.sql text eol=lf
+*.mjs text eol=lf
+Caddyfile text eol=lf
+*.yml text eol=lf
